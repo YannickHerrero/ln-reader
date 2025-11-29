@@ -218,11 +218,11 @@ export function getClickedWordAndSentence(clientX: number, clientY: number): Wor
 export function isClickOnText(target: EventTarget | null): boolean {
   if (!target || !(target instanceof HTMLElement)) return false
 
-  // Check if we're inside reader-content
-  const readerContent = target.closest('.reader-content')
+  // Check if we're inside reader content container
+  const readerContent = target.closest('.reader-content, .book-content-container')
   if (!readerContent) return false
 
-  // If clicked directly on the reader-content div itself (background), return false
+  // If clicked directly on the container div itself (background), return false
   // Only return true if clicked on actual content elements
   const tagName = target.tagName.toLowerCase()
   const textTags = ['p', 'span', 'a', 'em', 'strong', 'ruby', 'rt', 'rb', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote']
