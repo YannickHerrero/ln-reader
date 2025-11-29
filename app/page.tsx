@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
-import { UploadButton } from '@/components/upload-button'
 import { LibraryGrid } from '@/components/library-grid'
 import { DictionaryWelcome } from '@/components/DictionaryWelcome'
 import { Button } from '@/components/ui/button'
@@ -37,14 +36,11 @@ export default function Home() {
       <header className="border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold">LN Reader</h1>
-          <div className="flex items-center gap-4">
-            <Link href="/settings">
-              <Button variant="ghost" size="icon">
-                <Settings className="h-5 w-5" />
-              </Button>
-            </Link>
-            <UploadButton onFileSelect={handleFileSelect} disabled={isUploading} />
-          </div>
+          <Link href="/settings">
+            <Button variant="ghost" size="icon">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -54,7 +50,11 @@ export default function Home() {
             Loading library...
           </div>
         ) : (
-          <LibraryGrid books={books || []} />
+          <LibraryGrid
+            books={books || []}
+            onFileSelect={handleFileSelect}
+            isUploading={isUploading}
+          />
         )}
       </main>
     </div>
