@@ -1,12 +1,14 @@
 'use client'
 
 import { useRef, useCallback, type RefObject, type MouseEvent, type TouchEvent } from 'react'
+import { isClickOnText, getClickedWordAndSentence, type WordSelection } from './use-word-selection'
 
 interface UseTouchNavigationOptions {
   direction: 'ltr' | 'vertical-rl'
   onNext: () => void
   onPrev: () => void
   onCenter: () => void
+  onWordSelect: (selection: WordSelection) => void
 }
 
 interface UseTouchNavigationResult {
@@ -21,17 +23,18 @@ export function useTouchNavigation(
   containerRef: RefObject<HTMLElement | null>,
   options: UseTouchNavigationOptions
 ): UseTouchNavigationResult {
-  const { direction, onNext, onPrev, onCenter } = options
-  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const { direction, onNext, onPrev, onCenter, onWordSelect } = options
+  const touchStartRef = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null)
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
     touchStartRef.current = {
       x: e.touches[0].clientX,
       y: e.touches[0].clientY,
+      target: e.target,
     }
   }, [])
 
-  const handleTapPosition = useCallback(
+  const handleTapOnBackground = useCallback(
     (clientX: number) => {
       const container = containerRef.current
       if (!container) return
@@ -61,6 +64,16 @@ export function useTouchNavigation(
       }
     },
     [containerRef, direction, onNext, onPrev, onCenter]
+  )
+
+  const handleTapOnText = useCallback(
+    (clientX: number, clientY: number) => {
+      const selection = getClickedWordAndSentence(clientX, clientY)
+      if (selection) {
+        onWordSelect(selection)
+      }
+    },
+    [onWordSelect]
   )
 
   const handleTouchEnd = useCallback(
@@ -95,20 +108,30 @@ export function useTouchNavigation(
           }
         }
       } else if (absDeltaX < 10 && absDeltaY < 10) {
-        // It's a tap, not a swipe - handle based on position
-        handleTapPosition(touchEnd.x)
+        // It's a tap, not a swipe
+        // Check if tap is on text or background
+        if (isClickOnText(touchStartRef.current.target)) {
+          handleTapOnText(touchEnd.x, touchEnd.y)
+        } else {
+          handleTapOnBackground(touchEnd.x)
+        }
       }
 
       touchStartRef.current = null
     },
-    [direction, onNext, onPrev, handleTapPosition]
+    [direction, onNext, onPrev, handleTapOnBackground, handleTapOnText]
   )
 
   const handleClick = useCallback(
     (e: MouseEvent) => {
-      handleTapPosition(e.clientX)
+      // Check if click is on text or background
+      if (isClickOnText(e.target)) {
+        handleTapOnText(e.clientX, e.clientY)
+      } else {
+        handleTapOnBackground(e.clientX)
+      }
     },
-    [handleTapPosition]
+    [handleTapOnBackground, handleTapOnText]
   )
 
   return {

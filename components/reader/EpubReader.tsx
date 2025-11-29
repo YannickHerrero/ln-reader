@@ -12,6 +12,8 @@ import { ReaderContent } from './ReaderContent'
 import { ReaderNavigation } from './ReaderNavigation'
 import { ReaderBottomSheet } from './ReaderBottomSheet'
 import { ReaderProgress } from './ReaderProgress'
+import { WordLookupSheet } from './WordLookupSheet'
+import type { WordSelection } from '@/hooks/use-word-selection'
 
 interface EpubReaderProps {
   bookId: number
@@ -21,6 +23,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [isWordLookupOpen, setIsWordLookupOpen] = useState(false)
+  const [selectedWord, setSelectedWord] = useState<WordSelection | null>(null)
 
   const { settings, setSettings, isHydrated } = useReaderSettings()
 
@@ -89,6 +93,11 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     setIsSheetOpen(true)
   }, [])
 
+  const handleWordSelect = useCallback((selection: WordSelection) => {
+    setSelectedWord(selection)
+    setIsWordLookupOpen(true)
+  }, [])
+
   const { handleTouchStart, handleTouchEnd, handleClick } = useTouchNavigation(
     containerRef,
     {
@@ -96,6 +105,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
       onNext: handleNext,
       onPrev: handlePrev,
       onCenter: handleCenter,
+      onWordSelect: handleWordSelect,
     }
   )
 
@@ -107,6 +117,40 @@ export function EpubReader({ bookId }: EpubReaderProps) {
   useEffect(() => {
     recalculate()
   }, [settings.fontSize, settings.lineHeight, settings.direction, recalculate])
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't handle if a sheet is open
+      if (isSheetOpen || isWordLookupOpen) return
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          // In vertical-rl mode, left = next (pages flow right-to-left)
+          if (settings.direction === 'vertical-rl') {
+            handleNext()
+          } else {
+            handlePrev()
+          }
+          break
+        case 'ArrowRight':
+          // In vertical-rl mode, right = prev
+          if (settings.direction === 'vertical-rl') {
+            handlePrev()
+          } else {
+            handleNext()
+          }
+          break
+        case ' ':
+          e.preventDefault()
+          setIsSheetOpen(true)
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handlePrev, handleNext, settings.direction, isSheetOpen, isWordLookupOpen])
 
   if (!isHydrated) {
     return (
@@ -181,6 +225,13 @@ export function EpubReader({ bookId }: EpubReaderProps) {
         onOpenChange={setIsSheetOpen}
         settings={settings}
         onSettingsChange={setSettings}
+      />
+
+      {/* Word lookup bottom sheet */}
+      <WordLookupSheet
+        open={isWordLookupOpen}
+        onOpenChange={setIsWordLookupOpen}
+        selection={selectedWord}
       />
     </div>
   )
