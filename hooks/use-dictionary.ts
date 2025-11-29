@@ -70,15 +70,20 @@ export function useDictionaryStatus() {
 export function useDictionaryImport() {
   const [isImporting, setIsImporting] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [statusMessage, setStatusMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const startImport = useCallback(async () => {
     setIsImporting(true)
     setProgress(0)
+    setStatusMessage('')
     setError(null)
 
     try {
-      await importDictionary((p) => setProgress(p))
+      await importDictionary((p, status) => {
+        setProgress(p)
+        if (status) setStatusMessage(status)
+      })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed')
     } finally {
@@ -90,5 +95,5 @@ export function useDictionaryImport() {
     await clearDictionary()
   }, [])
 
-  return { startImport, clear, isImporting, progress, error }
+  return { startImport, clear, isImporting, progress, statusMessage, error }
 }
