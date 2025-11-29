@@ -62,6 +62,7 @@ export function WordLookupSheet({
 }: WordLookupSheetProps) {
   const { results, isLoading } = useDictionaryLookup(selection?.word ?? null)
   const status = useDictionaryStatus()
+  const { html: wordHtml } = useFurigana(selection?.word ?? null)
   const { html: sentenceHtml, isLoading: isFuriganaLoading } = useFurigana(selection?.sentence ?? null)
 
   return (
@@ -73,8 +74,15 @@ export function WordLookupSheet({
         <div className="p-4">
           {selection ? (
             <div className="space-y-4">
-              <div className="text-center">
-                <span className="text-4xl font-medium">{selection.word}</span>
+              <div>
+                {wordHtml ? (
+                  <span
+                    className="text-2xl font-medium furigana-word"
+                    dangerouslySetInnerHTML={{ __html: wordHtml }}
+                  />
+                ) : (
+                  <span className="text-2xl font-medium">{selection.word}</span>
+                )}
               </div>
               <div className="bg-muted rounded-lg p-3">
                 <p className="text-muted-foreground text-sm">Sentence:</p>
