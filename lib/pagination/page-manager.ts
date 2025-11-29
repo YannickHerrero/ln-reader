@@ -13,6 +13,7 @@ import {
   type RefObject,
   useEffect,
 } from 'react'
+import type { PageManagerApi } from './types'
 
 export interface UsePageManagerOptions {
   /** Content element ref (inner container) */
@@ -33,21 +34,6 @@ export interface UsePageManagerOptions {
   onNextSection?: () => void
   /** Callback when page changes */
   onPageChange?: (virtualScrollPos: number, isUser: boolean) => void
-}
-
-export interface PageManagerApi {
-  /** Current virtual scroll position */
-  virtualScrollPos: number
-  /** Navigate to next page */
-  nextPage: () => void
-  /** Navigate to previous page */
-  prevPage: () => void
-  /** Flip page by multiplier (1 = next, -1 = prev) */
-  flipPage: (multiplier: 1 | -1) => void
-  /** Scroll to specific position */
-  scrollTo: (pos: number, isUser: boolean) => void
-  /** Force recalculation */
-  recalculate: () => void
 }
 
 /**
