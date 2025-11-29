@@ -65,6 +65,15 @@ function extractGlossaryText(item: unknown): string[] {
   if (typeof item === 'string') return [item]
   if (typeof item !== 'object' || item === null) return []
 
+  // Handle arrays by recursing into each element
+  if (Array.isArray(item)) {
+    const results: string[] = []
+    for (const child of item) {
+      results.push(...extractGlossaryText(child))
+    }
+    return results
+  }
+
   const obj = item as Record<string, unknown>
 
   // Handle structured-content wrapper
@@ -86,17 +95,12 @@ function extractGlossaryText(item: unknown): string[] {
     return []
   }
 
-  // Recurse into content arrays
-  const results: string[] = []
-  if (Array.isArray(obj.content)) {
-    for (const child of obj.content) {
-      results.push(...extractGlossaryText(child))
-    }
-  } else if (obj.content) {
-    results.push(...extractGlossaryText(obj.content))
+  // Recurse into content
+  if (obj.content) {
+    return extractGlossaryText(obj.content)
   }
 
-  return results
+  return []
 }
 
 // Convert structured content to plain text definitions
