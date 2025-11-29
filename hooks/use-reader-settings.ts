@@ -12,10 +12,10 @@ export interface ReaderSettings {
 const STORAGE_KEY = 'ln-reader-settings'
 
 const DEFAULT_SETTINGS: ReaderSettings = {
-  theme: 'light',
+  theme: 'dark',
   fontSize: 18,
   lineHeight: 1.6,
-  direction: 'ltr',
+  direction: 'vertical-rl',
 }
 
 function subscribeToStorage(callback: () => void) {
