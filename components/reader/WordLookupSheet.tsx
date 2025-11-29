@@ -65,7 +65,7 @@ export function WordLookupSheet({
   const status = useDictionaryStatus()
   const { html: wordHtml } = useFurigana(selection?.word ?? null)
   const { html: sentenceHtml, isLoading: isFuriganaLoading } = useFurigana(selection?.sentence ?? null)
-  const { translation, isLoading: isTranslating } = useTranslation(selection?.sentence ?? null)
+  const { translation, isLoading: isTranslating, isAvailable: isTranslationAvailable } = useTranslation(selection?.sentence ?? null)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -112,19 +112,21 @@ export function WordLookupSheet({
                     />
                   )}
                 </div>
-                <div className="border-t border-border pt-2">
-                  <p className="text-muted-foreground text-xs mb-1">Translation</p>
-                  {isTranslating ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      <span>Translating...</span>
-                    </div>
-                  ) : translation ? (
-                    <p className="text-sm">{translation}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">Translation unavailable</p>
-                  )}
-                </div>
+                {isTranslationAvailable !== false && (
+                  <div className="border-t border-border pt-2">
+                    <p className="text-muted-foreground text-xs mb-1">Translation</p>
+                    {isTranslating ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span>Translating...</span>
+                      </div>
+                    ) : translation ? (
+                      <p className="text-sm">{translation}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground italic">Translation unavailable</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ) : (

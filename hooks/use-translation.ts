@@ -4,6 +4,19 @@ import { useState, useEffect, useCallback } from 'react'
 
 const CACHE_KEY = 'ln-reader-translations'
 
+async function checkTranslationAvailable(): Promise<boolean> {
+  if (typeof window === 'undefined') return false
+
+  try {
+    const res = await fetch('/api/translate/status')
+    if (!res.ok) return false
+    const { available } = await res.json()
+    return available
+  } catch {
+    return false
+  }
+}
+
 // Simple hash function for cache keys
 function hashString(str: string): string {
   let hash = 0
@@ -50,6 +63,7 @@ export function useTranslation(text: string | null) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null)
 
   const fetchTranslation = useCallback(async (textToTranslate: string) => {
     const cacheKey = hashString(textToTranslate)
@@ -80,7 +94,12 @@ export function useTranslation(text: string | null) {
   }, [])
 
   useEffect(() => {
-    if (!text) return
+    // Check availability on mount
+    checkTranslationAvailable().then(setIsAvailable)
+  }, [])
+
+  useEffect(() => {
+    if (!text || isAvailable === false) return
 
     // Check cache first
     const cached = getCachedTranslation(text)
@@ -89,13 +108,15 @@ export function useTranslation(text: string | null) {
       return
     }
 
-    // Fetch if not cached
-    fetchTranslation(text)
-  }, [text, fetchTranslation])
+    // Only fetch if we know translation is available
+    if (isAvailable === true) {
+      fetchTranslation(text)
+    }
+  }, [text, isAvailable, fetchTranslation])
 
   // Reset when text becomes null
   const translationResult = text ? translation : null
   const errorResult = text ? error : null
 
-  return { translation: translationResult, isLoading, error: errorResult }
+  return { translation: translationResult, isLoading, error: errorResult, isAvailable }
 }
