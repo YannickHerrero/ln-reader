@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Plus } from 'lucide-react'
 
 interface ImportCardProps {
@@ -39,14 +39,12 @@ export function ImportCard({ onFileSelect, disabled }: ImportCardProps) {
         onClick={handleClick}
         className={`overflow-hidden border-2 border-dashed transition-colors cursor-pointer hover:border-primary hover:bg-muted/50 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
-        <div className="aspect-[2/3] flex items-center justify-center">
+        <div className="aspect-[2/3] flex flex-col items-center justify-center gap-2">
           <Plus className="h-12 w-12 text-muted-foreground" />
-        </div>
-        <CardContent className="p-3">
-          <h3 className="font-medium text-sm text-center text-muted-foreground">
+          <span className="font-medium text-sm text-muted-foreground">
             Import EPUB
-          </h3>
-        </CardContent>
+          </span>
+        </div>
       </Card>
     </>
   )
