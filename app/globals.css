@@ -125,7 +125,8 @@
 .reader-paginator {
   height: 100%;
   overflow: hidden;
-  padding: 0 1rem;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
 }
 
 .reader-content {
