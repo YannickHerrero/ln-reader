@@ -466,3 +466,15 @@
   max-height: 100%;
   object-fit: contain;
 }
+
+/* Furigana styling for word lookup sheet */
+.furigana-sentence ruby {
+  ruby-align: center;
+}
+
+.furigana-sentence ruby rt {
+  font-size: 0.5em;
+  line-height: 1;
+  font-weight: normal;
+  color: var(--muted-foreground);
+}

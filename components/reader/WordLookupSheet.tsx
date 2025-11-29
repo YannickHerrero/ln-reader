@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import type { WordSelection } from '@/hooks/use-word-selection'
 import { useDictionaryLookup, useDictionaryStatus, useDictionaryImport } from '@/hooks/use-dictionary'
+import { useFurigana } from '@/hooks/use-furigana'
 import { DictionaryResults } from './DictionaryResults'
 
 interface WordLookupSheetProps {
@@ -61,6 +62,7 @@ export function WordLookupSheet({
 }: WordLookupSheetProps) {
   const { results, isLoading } = useDictionaryLookup(selection?.word ?? null)
   const status = useDictionaryStatus()
+  const { html: sentenceHtml, isLoading: isFuriganaLoading } = useFurigana(selection?.sentence ?? null)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -76,7 +78,14 @@ export function WordLookupSheet({
               </div>
               <div className="bg-muted rounded-lg p-3">
                 <p className="text-muted-foreground text-sm">Sentence:</p>
-                <p className="mt-1">{selection.sentence}</p>
+                {isFuriganaLoading || !sentenceHtml ? (
+                  <p className="mt-1">{selection.sentence}</p>
+                ) : (
+                  <p
+                    className="mt-1 furigana-sentence"
+                    dangerouslySetInnerHTML={{ __html: sentenceHtml }}
+                  />
+                )}
               </div>
 
               {/* Dictionary results section */}
