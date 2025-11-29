@@ -1,10 +1,12 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { EpubMetadata, EpubFile, ReadingProgress } from './types'
+import type { EpubMetadata, EpubFile, ReadingProgress, DictionaryEntry, DictionaryMeta } from './types'
 
 const db = new Dexie('LNReaderDB') as Dexie & {
   metadata: EntityTable<EpubMetadata, 'id'>
   files: EntityTable<EpubFile, 'id'>
   progress: EntityTable<ReadingProgress, 'id'>
+  dictionary: EntityTable<DictionaryEntry, 'id'>
+  dictionaryMeta: EntityTable<DictionaryMeta, 'id'>
 }
 
 db.version(1).stores({
@@ -37,5 +39,14 @@ db.version(3).stores({
   })
 })
 
+// Version 4: Add dictionary tables for JMDict lookup
+db.version(4).stores({
+  metadata: '++id, title, author, addedAt, lastReadAt',
+  files: '++id, metadataId',
+  progress: '++id, &metadataId',
+  dictionary: '++id, word, reading, reading2, reading3, frequency',
+  dictionaryMeta: '++id, &key',
+})
+
 export { db }
-export type { EpubMetadata, EpubFile, ReadingProgress }
+export type { EpubMetadata, EpubFile, ReadingProgress, DictionaryEntry, DictionaryMeta }

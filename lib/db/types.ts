@@ -27,3 +27,20 @@ export interface ReadingProgress {
   progress: number
   lastRead: Date
 }
+
+export interface DictionaryEntry {
+  id?: number
+  word: string
+  reading: string
+  reading2: string
+  reading3: string
+  frequency: number
+  definitions: string[]
+  jmdictId: number
+}
+
+export interface DictionaryMeta {
+  id?: number
+  key: string
+  value: string
+}
