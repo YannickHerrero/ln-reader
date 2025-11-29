@@ -12,3 +12,11 @@ export interface EpubFile {
   metadataId: number
   blob: Blob
 }
+
+export interface ReadingProgress {
+  id?: number
+  metadataId: number
+  chapterIndex: number
+  pageIndex: number
+  lastRead: Date
+}
