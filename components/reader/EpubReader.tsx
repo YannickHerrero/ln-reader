@@ -13,6 +13,7 @@ import { ReaderNavigation } from './ReaderNavigation'
 import { ReaderBottomSheet } from './ReaderBottomSheet'
 import { ReaderProgress } from './ReaderProgress'
 import { WordLookupSheet } from './WordLookupSheet'
+import { VerticalReader, useVerticalReaderNavigation } from './VerticalReader'
 import type { WordSelection } from '@/hooks/use-word-selection'
 
 interface EpubReaderProps {
@@ -26,7 +27,13 @@ export function EpubReader({ bookId }: EpubReaderProps) {
   const [isWordLookupOpen, setIsWordLookupOpen] = useState(false)
   const [selectedWord, setSelectedWord] = useState<WordSelection | null>(null)
 
+  // Vertical reader page state (for carousel mode)
+  const [verticalPage, setVerticalPage] = useState(0)
+  const [verticalTotalPages, setVerticalTotalPages] = useState(0)
+  const verticalNav = useVerticalReaderNavigation()
+
   const { settings, setSettings, isHydrated } = useReaderSettings()
+  const isVerticalMode = settings.direction === 'vertical-rl'
 
   const {
     chapters,
@@ -40,20 +47,36 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     saveProgress,
   } = useEpubReader(bookId)
 
+  // LTR pagination (CSS columns mode)
   const {
-    currentPage,
-    totalPages,
-    nextPage,
-    prevPage,
-    goToPage,
+    currentPage: ltrPage,
+    totalPages: ltrTotalPages,
+    nextPage: ltrNextPage,
+    prevPage: ltrPrevPage,
+    goToPage: ltrGoToPage,
     recalculate,
   } = usePagination(containerRef, {
     direction: settings.direction,
     onPageChange: (page) => {
-      // Save progress when page changes
-      saveProgress(currentChapterIndex, page)
+      if (!isVerticalMode) {
+        saveProgress(currentChapterIndex, page)
+      }
     },
   })
+
+  // Use appropriate page values based on mode
+  const currentPage = isVerticalMode ? verticalPage : ltrPage
+  const totalPages = isVerticalMode ? verticalTotalPages : ltrTotalPages
+
+  // Handle vertical reader page changes
+  const handleVerticalPageChange = useCallback(
+    (page: number, total: number) => {
+      setVerticalPage(page)
+      setVerticalTotalPages(total)
+      saveProgress(currentChapterIndex, page)
+    },
+    [currentChapterIndex, saveProgress]
+  )
 
   // Restore saved page position when chapter loads (only once per chapter)
   const restoredChapterRef = useRef<number | null>(null)
@@ -66,34 +89,58 @@ export function EpubReader({ bookId }: EpubReaderProps) {
       restoredChapterRef.current = currentChapterIndex
       // Wait for content to render, then go to saved page
       const timer = setTimeout(() => {
-        goToPage(savedProgress.pageIndex)
+        if (isVerticalMode) {
+          verticalNav.goToPage(savedProgress.pageIndex)
+        } else {
+          ltrGoToPage(savedProgress.pageIndex)
+        }
       }, 200)
       return () => clearTimeout(timer)
     }
-  }, [savedProgress, currentChapterIndex, goToPage])
+  }, [savedProgress, currentChapterIndex, isVerticalMode, ltrGoToPage, verticalNav])
 
   const handleNext = useCallback(() => {
-    // Try next page first, if at end of chapter, go to next chapter
-    const hasMorePages = nextPage()
-    if (!hasMorePages && currentChapterIndex < chapters.length - 1) {
-      nextChapter()
-      // Reset to page 0 for new chapter
-      setTimeout(() => goToPage(0), 100)
+    if (isVerticalMode) {
+      const canScroll = verticalPage < verticalTotalPages - 1
+      if (canScroll) {
+        verticalNav.nextPage()
+      } else if (currentChapterIndex < chapters.length - 1) {
+        nextChapter()
+        setTimeout(() => verticalNav.goToPage(0), 100)
+      }
+    } else {
+      const hasMorePages = ltrNextPage()
+      if (!hasMorePages && currentChapterIndex < chapters.length - 1) {
+        nextChapter()
+        setTimeout(() => ltrGoToPage(0), 100)
+      }
     }
-  }, [nextPage, currentChapterIndex, chapters.length, nextChapter, goToPage])
+  }, [isVerticalMode, verticalPage, verticalTotalPages, verticalNav, ltrNextPage, currentChapterIndex, chapters.length, nextChapter, ltrGoToPage])
 
   const handlePrev = useCallback(() => {
-    // Try prev page first, if at start of chapter, go to prev chapter
-    const hasMorePages = prevPage()
-    if (!hasMorePages && currentChapterIndex > 0) {
-      prevChapter()
-      // Go to last page of previous chapter after it loads
-      setTimeout(() => {
-        recalculate()
-        goToPage(totalPages - 1)
-      }, 200)
+    if (isVerticalMode) {
+      const canScroll = verticalPage > 0
+      if (canScroll) {
+        verticalNav.prevPage()
+      } else if (currentChapterIndex > 0) {
+        prevChapter()
+        // Go to last page after chapter loads
+        setTimeout(() => {
+          const total = verticalNav.getTotalPages()
+          verticalNav.goToPage(total - 1)
+        }, 300)
+      }
+    } else {
+      const hasMorePages = ltrPrevPage()
+      if (!hasMorePages && currentChapterIndex > 0) {
+        prevChapter()
+        setTimeout(() => {
+          recalculate()
+          ltrGoToPage(ltrTotalPages - 1)
+        }, 200)
+      }
     }
-  }, [prevPage, currentChapterIndex, prevChapter, recalculate, goToPage, totalPages])
+  }, [isVerticalMode, verticalPage, verticalNav, ltrPrevPage, currentChapterIndex, prevChapter, recalculate, ltrGoToPage, ltrTotalPages])
 
   const handleOpenSettings = useCallback(() => {
     setIsSheetOpen(true)
@@ -201,14 +248,24 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
       {/* Reader area */}
       <main className="flex-1 overflow-hidden pt-12 pb-16">
-        <ReaderNavigation onClick={handleClick}>
-          <ReaderContent
-            ref={containerRef}
+        {isVerticalMode ? (
+          <VerticalReader
             content={processedContent}
             settings={settings}
-            onContentReady={handleContentReady}
+            onPageChange={handleVerticalPageChange}
+            onOpenSettings={handleOpenSettings}
+            onWordSelect={handleWordSelect}
           />
-        </ReaderNavigation>
+        ) : (
+          <ReaderNavigation onClick={handleClick}>
+            <ReaderContent
+              ref={containerRef}
+              content={processedContent}
+              settings={settings}
+              onContentReady={handleContentReady}
+            />
+          </ReaderNavigation>
+        )}
       </main>
 
       {/* Progress bar and navigation buttons */}
