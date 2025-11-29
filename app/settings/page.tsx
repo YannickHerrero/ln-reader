@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Check, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useDictionaryStatus, useDictionaryImport } from '@/hooks/use-dictionary'
 
 export default function SettingsPage() {
   const status = useDictionaryStatus()
-  const { clear } = useDictionaryImport()
+  const { clear, isClearing } = useDictionaryImport()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   return (
@@ -28,7 +28,14 @@ export default function SettingsPage() {
         <div className="max-w-2xl">
           <h2 className="text-lg font-semibold mb-4">Dictionary</h2>
 
-          {status.installed ? (
+          {isClearing ? (
+            <div className="border rounded-lg p-4">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Clearing dictionary...</span>
+              </div>
+            </div>
+          ) : status.installed ? (
             <div className="border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

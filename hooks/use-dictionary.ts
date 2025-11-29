@@ -69,6 +69,7 @@ export function useDictionaryStatus() {
 
 export function useDictionaryImport() {
   const [isImporting, setIsImporting] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
   const [progress, setProgress] = useState(0)
   const [statusMessage, setStatusMessage] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -92,8 +93,13 @@ export function useDictionaryImport() {
   }, [])
 
   const clear = useCallback(async () => {
-    await clearDictionary()
+    setIsClearing(true)
+    try {
+      await clearDictionary()
+    } finally {
+      setIsClearing(false)
+    }
   }, [])
 
-  return { startImport, clear, isImporting, progress, statusMessage, error }
+  return { startImport, clear, isImporting, isClearing, progress, statusMessage, error }
 }
