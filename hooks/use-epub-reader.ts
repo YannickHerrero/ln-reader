@@ -17,7 +17,12 @@ interface UseEpubReaderResult {
   nextChapter: () => void
   prevChapter: () => void
   savedProgress: ReadingProgress | null
-  saveProgress: (chapterIndex: number, pageIndex: number) => Promise<void>
+  /** Save progress using character count (new system) */
+  saveProgress: (
+    chapterIndex: number,
+    exploredCharCount: number,
+    bookCharCount: number
+  ) => Promise<void>
 }
 
 export function useEpubReader(bookId: number): UseEpubReaderResult {
@@ -156,11 +161,19 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
   }, [currentChapterIndex])
 
   const saveProgress = useCallback(
-    async (chapterIndex: number, pageIndex: number) => {
+    async (
+      chapterIndex: number,
+      exploredCharCount: number,
+      bookCharCount: number
+    ) => {
+      const progress = bookCharCount > 0 ? exploredCharCount / bookCharCount : 0
+
       const progressData: Omit<ReadingProgress, 'id'> = {
         metadataId: bookId,
         chapterIndex,
-        pageIndex,
+        exploredCharCount,
+        bookCharCount,
+        progress,
         lastRead: new Date(),
       }
 
@@ -173,7 +186,7 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
       if (existing?.id) {
         await db.progress.update(existing.id, progressData)
       } else {
-        await db.progress.add(progressData)
+        await db.progress.add(progressData as ReadingProgress)
       }
 
       setSavedProgress({ ...progressData, id: existing?.id })

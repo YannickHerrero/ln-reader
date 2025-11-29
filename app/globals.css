@@ -121,6 +121,157 @@
   }
 }
 
+/* ==============================================
+   Book Reader Styles (TTU-style pagination)
+   ============================================== */
+
+/* Main scroll container */
+.book-content {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  margin: auto;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+}
+
+/* Content container with CSS columns */
+.book-content-container {
+  column-width: var(--book-content-column-width, 100vw);
+  column-gap: 40px;
+  column-fill: auto;
+  height: var(--book-content-height, 95vh);
+  font-size: var(--reader-font-size, 18px);
+  line-height: var(--reader-line-height, 1.6);
+  color: var(--foreground);
+  transition: transform 0.3s ease;
+}
+
+/* Vertical reading mode */
+.book-content--vertical-rl {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+.book-content--vertical-rl .book-content-container {
+  column-width: var(--book-content-height, 100vh);
+  width: 100%;
+  height: auto;
+}
+
+/* Prevent text cut-off at page boundaries */
+.book-content-container p,
+.book-content-container h1,
+.book-content-container h2,
+.book-content-container h3,
+.book-content-container h4,
+.book-content-container h5,
+.book-content-container h6,
+.book-content-container li,
+.book-content-container blockquote,
+.book-content-container ruby {
+  break-inside: avoid;
+  orphans: 2;
+  widows: 2;
+}
+
+/* EPUB content styling */
+.book-content-container p {
+  margin-bottom: 1em;
+  text-align: justify;
+}
+
+.book-content-container h1,
+.book-content-container h2,
+.book-content-container h3,
+.book-content-container h4,
+.book-content-container h5,
+.book-content-container h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+.book-content-container h1 {
+  font-size: 1.5em;
+}
+
+.book-content-container h2 {
+  font-size: 1.3em;
+}
+
+.book-content-container h3 {
+  font-size: 1.1em;
+}
+
+/* Images */
+.book-content-container img {
+  max-width: var(--book-content-width, 100%);
+  max-height: var(--book-content-height, 80vh);
+  height: auto;
+  margin: 1em auto;
+  display: block;
+}
+
+.book-content--vertical-rl .book-content-container img {
+  writing-mode: horizontal-tb;
+  max-height: 100%;
+  max-width: 80vw;
+}
+
+/* Furigana (ruby) styling */
+.book-content-container ruby {
+  ruby-align: center;
+}
+
+.book-content-container ruby rt {
+  font-size: 0.5em;
+  line-height: 1;
+  font-weight: normal;
+  user-select: none;
+}
+
+.book-content--vertical-rl .book-content-container ruby rt {
+  font-size: 0.4em;
+}
+
+/* Links in EPUB */
+.book-content-container a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Lists */
+.book-content-container ul,
+.book-content-container ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.book-content-container li {
+  margin-bottom: 0.25em;
+}
+
+/* Block quotes */
+.book-content-container blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+}
+
+.book-content--vertical-rl .book-content-container blockquote {
+  border-left: none;
+  border-top: 3px solid var(--border);
+  padding-left: 0;
+  padding-top: 1em;
+}
+
+/* ==============================================
+   Legacy Reader Styles (for backwards compatibility)
+   ============================================== */
+
 /* Reader Styles */
 .reader-paginator {
   height: 100%;
@@ -159,10 +310,8 @@
 .reader-content[data-direction="vertical-rl"] {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  /* For vertical text, disable CSS columns - let natural vertical flow handle it */
   column-width: auto;
   columns: auto;
-  /* Height constraint forces horizontal overflow for pagination */
   height: 100%;
   width: max-content;
 }

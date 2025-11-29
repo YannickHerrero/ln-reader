@@ -1,19 +1,15 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useEpubReader } from '@/hooks/use-epub-reader'
 import { useReaderSettings } from '@/hooks/use-reader-settings'
-import { usePagination } from '@/hooks/use-pagination'
-import { useTouchNavigation } from '@/hooks/use-touch-navigation'
-import { ReaderContent } from './ReaderContent'
-import { ReaderNavigation } from './ReaderNavigation'
+import { BookReader } from './BookReader'
 import { ReaderBottomSheet } from './ReaderBottomSheet'
 import { ReaderProgress } from './ReaderProgress'
 import { WordLookupSheet } from './WordLookupSheet'
-import { VerticalReader, useVerticalReaderNavigation } from './VerticalReader'
 import type { WordSelection } from '@/hooks/use-word-selection'
 
 interface EpubReaderProps {
@@ -22,18 +18,15 @@ interface EpubReaderProps {
 
 export function EpubReader({ bookId }: EpubReaderProps) {
   const router = useRouter()
-  const containerRef = useRef<HTMLDivElement>(null)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isWordLookupOpen, setIsWordLookupOpen] = useState(false)
   const [selectedWord, setSelectedWord] = useState<WordSelection | null>(null)
 
-  // Vertical reader page state (for carousel mode)
-  const [verticalPage, setVerticalPage] = useState(0)
-  const [verticalTotalPages, setVerticalTotalPages] = useState(0)
-  const verticalNav = useVerticalReaderNavigation()
+  // Character count state
+  const [exploredCharCount, setExploredCharCount] = useState(0)
+  const [bookCharCount, setBookCharCount] = useState(0)
 
   const { settings, setSettings, isHydrated } = useReaderSettings()
-  const isVerticalMode = settings.direction === 'vertical-rl'
 
   const {
     chapters,
@@ -47,39 +40,24 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     saveProgress,
   } = useEpubReader(bookId)
 
-  // LTR pagination (CSS columns mode)
-  const {
-    currentPage: ltrPage,
-    totalPages: ltrTotalPages,
-    nextPage: ltrNextPage,
-    prevPage: ltrPrevPage,
-    goToPage: ltrGoToPage,
-    recalculate,
-  } = usePagination(containerRef, {
-    direction: settings.direction,
-    onPageChange: (page) => {
-      if (!isVerticalMode) {
-        saveProgress(currentChapterIndex, page)
-      }
-    },
-  })
+  // Track restored state per chapter
+  const restoredChapterRef = useRef<number | null>(null)
+  const [savedCharCountForChapter, setSavedCharCountForChapter] = useState(0)
 
-  // Use appropriate page values based on mode
-  const currentPage = isVerticalMode ? verticalPage : ltrPage
-  const totalPages = isVerticalMode ? verticalTotalPages : ltrTotalPages
+  // Handle character count changes from BookReader
+  const handleCharCountChange = useCallback(
+    (explored: number, total: number) => {
+      setExploredCharCount(explored)
+      setBookCharCount(total)
 
-  // Handle vertical reader page changes
-  const handleVerticalPageChange = useCallback(
-    (page: number, total: number) => {
-      setVerticalPage(page)
-      setVerticalTotalPages(total)
-      saveProgress(currentChapterIndex, page)
+      // Auto-save progress (debounced in practice since this fires on every page change)
+      saveProgress(currentChapterIndex, explored, total)
     },
     [currentChapterIndex, saveProgress]
   )
 
-  // Restore saved page position when chapter loads (only once per chapter)
-  const restoredChapterRef = useRef<number | null>(null)
+  // Calculate saved char count for current chapter (effect-based to avoid ref access during render)
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (
       savedProgress &&
@@ -87,60 +65,13 @@ export function EpubReader({ bookId }: EpubReaderProps) {
       restoredChapterRef.current !== currentChapterIndex
     ) {
       restoredChapterRef.current = currentChapterIndex
-      // Wait for content to render, then go to saved page
-      const timer = setTimeout(() => {
-        if (isVerticalMode) {
-          verticalNav.goToPage(savedProgress.pageIndex)
-        } else {
-          ltrGoToPage(savedProgress.pageIndex)
-        }
-      }, 200)
-      return () => clearTimeout(timer)
+      setSavedCharCountForChapter(savedProgress.exploredCharCount || 0)
+    } else if (restoredChapterRef.current !== currentChapterIndex) {
+      // Reset for new chapter
+      setSavedCharCountForChapter(0)
     }
-  }, [savedProgress, currentChapterIndex, isVerticalMode, ltrGoToPage, verticalNav])
-
-  const handleNext = useCallback(() => {
-    if (isVerticalMode) {
-      const canScroll = verticalPage < verticalTotalPages - 1
-      if (canScroll) {
-        verticalNav.nextPage()
-      } else if (currentChapterIndex < chapters.length - 1) {
-        nextChapter()
-        setTimeout(() => verticalNav.goToPage(0), 100)
-      }
-    } else {
-      const hasMorePages = ltrNextPage()
-      if (!hasMorePages && currentChapterIndex < chapters.length - 1) {
-        nextChapter()
-        setTimeout(() => ltrGoToPage(0), 100)
-      }
-    }
-  }, [isVerticalMode, verticalPage, verticalTotalPages, verticalNav, ltrNextPage, currentChapterIndex, chapters.length, nextChapter, ltrGoToPage])
-
-  const handlePrev = useCallback(() => {
-    if (isVerticalMode) {
-      const canScroll = verticalPage > 0
-      if (canScroll) {
-        verticalNav.prevPage()
-      } else if (currentChapterIndex > 0) {
-        prevChapter()
-        // Go to last page after chapter loads
-        setTimeout(() => {
-          const total = verticalNav.getTotalPages()
-          verticalNav.goToPage(total - 1)
-        }, 300)
-      }
-    } else {
-      const hasMorePages = ltrPrevPage()
-      if (!hasMorePages && currentChapterIndex > 0) {
-        prevChapter()
-        setTimeout(() => {
-          recalculate()
-          ltrGoToPage(ltrTotalPages - 1)
-        }, 200)
-      }
-    }
-  }, [isVerticalMode, verticalPage, verticalNav, ltrPrevPage, currentChapterIndex, prevChapter, recalculate, ltrGoToPage, ltrTotalPages])
+  }, [savedProgress, currentChapterIndex])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleOpenSettings = useCallback(() => {
     setIsSheetOpen(true)
@@ -151,57 +82,35 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     setIsWordLookupOpen(true)
   }, [])
 
-  const { handleClick } = useTouchNavigation(containerRef, {
-    onCenter: handleOpenSettings,
-    onWordSelect: handleWordSelect,
-  })
+  // Handle chapter navigation
+  const handleNextChapter = useCallback(() => {
+    if (currentChapterIndex < chapters.length - 1) {
+      restoredChapterRef.current = null // Allow restore for new chapter
+      nextChapter()
+    }
+  }, [currentChapterIndex, chapters.length, nextChapter])
 
-  const handleContentReady = useCallback(() => {
-    recalculate()
-  }, [recalculate])
+  const handlePrevChapter = useCallback(() => {
+    if (currentChapterIndex > 0) {
+      restoredChapterRef.current = null // Allow restore for new chapter
+      prevChapter()
+    }
+  }, [currentChapterIndex, prevChapter])
 
-  // Recalculate pagination when settings or content change
-  useEffect(() => {
-    // Delay to allow CSS columns to render
-    const timer = setTimeout(() => {
-      recalculate()
-    }, 150)
-    return () => clearTimeout(timer)
-  }, [settings.fontSize, settings.lineHeight, settings.direction, processedContent, recalculate])
-
-  // Keyboard navigation
+  // Keyboard shortcuts for settings
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle if a sheet is open
       if (isSheetOpen || isWordLookupOpen) return
 
-      switch (e.key) {
-        case 'ArrowLeft':
-          // In vertical-rl mode, left = next (pages flow right-to-left)
-          if (settings.direction === 'vertical-rl') {
-            handleNext()
-          } else {
-            handlePrev()
-          }
-          break
-        case 'ArrowRight':
-          // In vertical-rl mode, right = prev
-          if (settings.direction === 'vertical-rl') {
-            handlePrev()
-          } else {
-            handleNext()
-          }
-          break
-        case ' ':
-          e.preventDefault()
-          setIsSheetOpen(true)
-          break
+      if (e.key === ' ') {
+        e.preventDefault()
+        setIsSheetOpen(true)
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handlePrev, handleNext, settings.direction, isSheetOpen, isWordLookupOpen])
+  }, [isSheetOpen, isWordLookupOpen])
 
   if (!isHydrated) {
     return (
@@ -248,34 +157,26 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
       {/* Reader area */}
       <main className="flex-1 overflow-hidden pt-12 pb-16">
-        {isVerticalMode ? (
-          <VerticalReader
-            content={processedContent}
-            settings={settings}
-            onPageChange={handleVerticalPageChange}
-            onOpenSettings={handleOpenSettings}
-            onWordSelect={handleWordSelect}
-          />
-        ) : (
-          <ReaderNavigation onClick={handleClick}>
-            <ReaderContent
-              ref={containerRef}
-              content={processedContent}
-              settings={settings}
-              onContentReady={handleContentReady}
-            />
-          </ReaderNavigation>
-        )}
+        <BookReader
+          content={processedContent}
+          settings={settings}
+          savedCharCount={savedCharCountForChapter}
+          onCharCountChange={handleCharCountChange}
+          onPrevChapter={handlePrevChapter}
+          onNextChapter={handleNextChapter}
+          onOpenSettings={handleOpenSettings}
+          onWordSelect={handleWordSelect}
+        />
       </main>
 
-      {/* Progress bar and navigation buttons */}
+      {/* Progress bar */}
       <ReaderProgress
-        currentPage={currentPage}
-        totalPages={totalPages}
+        exploredCharCount={exploredCharCount}
+        bookCharCount={bookCharCount}
         currentChapter={currentChapterIndex}
         totalChapters={chapters.length}
-        onPrev={handlePrev}
-        onNext={handleNext}
+        onPrevChapter={handlePrevChapter}
+        onNextChapter={handleNextChapter}
       />
 
       {/* Settings bottom sheet */}

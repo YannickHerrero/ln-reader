@@ -17,6 +17,13 @@ export interface ReadingProgress {
   id?: number
   metadataId: number
   chapterIndex: number
-  pageIndex: number
+  /** @deprecated Use exploredCharCount instead */
+  pageIndex?: number
+  /** Number of characters read in current chapter */
+  exploredCharCount: number
+  /** Total characters in book (for calculating progress) */
+  bookCharCount: number
+  /** Progress ratio (0-1) */
+  progress: number
   lastRead: Date
 }
