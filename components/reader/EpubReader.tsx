@@ -55,9 +55,15 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     },
   })
 
-  // Restore saved page position when chapter loads
+  // Restore saved page position when chapter loads (only once per chapter)
+  const restoredChapterRef = useRef<number | null>(null)
   useEffect(() => {
-    if (savedProgress && savedProgress.chapterIndex === currentChapterIndex) {
+    if (
+      savedProgress &&
+      savedProgress.chapterIndex === currentChapterIndex &&
+      restoredChapterRef.current !== currentChapterIndex
+    ) {
+      restoredChapterRef.current = currentChapterIndex
       // Wait for content to render, then go to saved page
       const timer = setTimeout(() => {
         goToPage(savedProgress.pageIndex)
@@ -89,7 +95,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     }
   }, [prevPage, currentChapterIndex, prevChapter, recalculate, goToPage, totalPages])
 
-  const handleCenter = useCallback(() => {
+  const handleOpenSettings = useCallback(() => {
     setIsSheetOpen(true)
   }, [])
 
@@ -98,25 +104,23 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     setIsWordLookupOpen(true)
   }, [])
 
-  const { handleTouchStart, handleTouchEnd, handleClick } = useTouchNavigation(
-    containerRef,
-    {
-      direction: settings.direction,
-      onNext: handleNext,
-      onPrev: handlePrev,
-      onCenter: handleCenter,
-      onWordSelect: handleWordSelect,
-    }
-  )
+  const { handleClick } = useTouchNavigation(containerRef, {
+    onCenter: handleOpenSettings,
+    onWordSelect: handleWordSelect,
+  })
 
   const handleContentReady = useCallback(() => {
     recalculate()
   }, [recalculate])
 
-  // Recalculate pagination when settings change
+  // Recalculate pagination when settings or content change
   useEffect(() => {
-    recalculate()
-  }, [settings.fontSize, settings.lineHeight, settings.direction, recalculate])
+    // Delay to allow CSS columns to render
+    const timer = setTimeout(() => {
+      recalculate()
+    }, 150)
+    return () => clearTimeout(timer)
+  }, [settings.fontSize, settings.lineHeight, settings.direction, processedContent, recalculate])
 
   // Keyboard navigation
   useEffect(() => {
@@ -183,7 +187,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
   return (
     <div className="bg-background fixed inset-0 flex flex-col">
-      {/* Header - shown when sheet is open or on hover */}
+      {/* Header */}
       <header className="bg-background/80 absolute top-0 right-0 left-0 z-10 flex items-center gap-2 p-2 backdrop-blur-sm">
         <Button
           variant="ghost"
@@ -196,12 +200,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
       </header>
 
       {/* Reader area */}
-      <main className="flex-1 overflow-hidden pt-12 pb-12">
-        <ReaderNavigation
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onClick={handleClick}
-        >
+      <main className="flex-1 overflow-hidden pt-12 pb-16">
+        <ReaderNavigation onClick={handleClick}>
           <ReaderContent
             ref={containerRef}
             content={processedContent}
@@ -211,12 +211,14 @@ export function EpubReader({ bookId }: EpubReaderProps) {
         </ReaderNavigation>
       </main>
 
-      {/* Progress bar */}
+      {/* Progress bar and navigation buttons */}
       <ReaderProgress
         currentPage={currentPage}
         totalPages={totalPages}
         currentChapter={currentChapterIndex}
         totalChapters={chapters.length}
+        onPrev={handlePrev}
+        onNext={handleNext}
       />
 
       {/* Settings bottom sheet */}

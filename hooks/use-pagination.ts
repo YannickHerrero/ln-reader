@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, type RefObject } from 'react'
+import { useState, useCallback, useEffect, useRef, type RefObject } from 'react'
 
 interface UsePaginationOptions {
   direction: 'ltr' | 'vertical-rl'
@@ -24,42 +24,115 @@ export function usePagination(
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
+  // Use refs to avoid recreating callbacks and causing infinite loops
+  const totalPagesRef = useRef(totalPages)
+  const directionRef = useRef(direction)
+  const onPageChangeRef = useRef(onPageChange)
+
+  // Keep refs in sync
+  useEffect(() => {
+    totalPagesRef.current = totalPages
+  }, [totalPages])
+
+  useEffect(() => {
+    directionRef.current = direction
+  }, [direction])
+
+  useEffect(() => {
+    onPageChangeRef.current = onPageChange
+  }, [onPageChange])
+
   const recalculate = useCallback(() => {
     const container = containerRef.current
     if (!container) return
 
-    const scrollWidth = container.scrollWidth
-    const clientWidth = container.clientWidth
+    const content = container.querySelector('.reader-content') as HTMLElement
+    if (!content) return
 
-    if (clientWidth > 0) {
-      const pages = Math.max(1, Math.ceil(scrollWidth / clientWidth))
+    // Force layout recalculation
+    void container.offsetHeight
+
+    // Temporarily reset transform to measure true content size
+    const savedTransform = content.style.transform
+    content.style.transform = 'translateX(0)'
+
+    // Wait for layout to update
+    void content.offsetWidth
+
+    const pageWidth = container.clientWidth
+    const totalWidth = content.scrollWidth
+
+    console.log('[Pagination] recalculate:', {
+      direction,
+      containerClientWidth: container.clientWidth,
+      containerClientHeight: container.clientHeight,
+      containerScrollWidth: container.scrollWidth,
+      containerScrollHeight: container.scrollHeight,
+      contentScrollWidth: content.scrollWidth,
+      contentScrollHeight: content.scrollHeight,
+      contentOffsetWidth: content.offsetWidth,
+      contentOffsetHeight: content.offsetHeight,
+      pageWidth,
+      totalWidth,
+      calculatedPages: Math.ceil(totalWidth / pageWidth),
+    })
+
+    // Restore transform
+    content.style.transform = savedTransform
+
+    if (pageWidth > 0 && totalWidth > 0) {
+      const pages = Math.max(1, Math.ceil(totalWidth / pageWidth))
       setTotalPages(pages)
 
       // Ensure current page is valid
       setCurrentPage((prev) => Math.min(prev, pages - 1))
     }
-  }, [containerRef])
+  }, [containerRef, direction])
 
   const goToPage = useCallback(
     (page: number) => {
       const container = containerRef.current
       if (!container) return
 
-      const clampedPage = Math.max(0, Math.min(page, totalPages - 1))
+      const content = container.querySelector('.reader-content') as HTMLElement
+      if (!content) return
 
-      if (direction === 'ltr') {
-        container.scrollLeft = clampedPage * container.clientWidth
+      const currentTotalPages = totalPagesRef.current
+      const currentDirection = directionRef.current
+
+      const clampedPage = Math.max(0, Math.min(page, currentTotalPages - 1))
+      const pageWidth = container.clientWidth
+
+      let transform: string
+      if (currentDirection === 'vertical-rl') {
+        // For vertical Japanese text, content starts at right, pages flow right-to-left
+        // Page 0 shows rightmost content, so we need to offset by (totalWidth - containerWidth)
+        // Then each page moves LEFT (reduces the offset)
+        const totalWidth = content.scrollWidth
+        const maxOffset = totalWidth - pageWidth
+        const offset = maxOffset - (clampedPage * pageWidth)
+        transform = `translateX(-${Math.max(0, offset)}px)`
       } else {
-        // Vertical-rl: pages flow right-to-left
-        // Page 0 is at the rightmost position
-        const maxScroll = container.scrollWidth - container.clientWidth
-        container.scrollLeft = maxScroll - clampedPage * container.clientWidth
+        // For LTR text, pages flow left-to-right
+        // Page 0 is at the left, higher pages move right (negative translateX)
+        transform = `translateX(-${clampedPage * pageWidth}px)`
       }
 
+      console.log('[Pagination] goToPage:', {
+        direction: currentDirection,
+        page,
+        clampedPage,
+        totalPages: currentTotalPages,
+        pageWidth,
+        contentScrollWidth: content.scrollWidth,
+        transform,
+      })
+
+      content.style.transform = transform
       setCurrentPage(clampedPage)
-      onPageChange?.(clampedPage)
+      onPageChangeRef.current?.(clampedPage)
     },
-    [containerRef, direction, totalPages, onPageChange]
+    [containerRef]
   )
 
   const nextPage = useCallback((): boolean => {

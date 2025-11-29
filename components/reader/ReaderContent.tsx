@@ -39,7 +39,7 @@ export const ReaderContent = forwardRef<HTMLDivElement, ReaderContentProps>(
     return (
       <div
         ref={ref}
-        className="reader-paginator h-full w-full overflow-hidden"
+        className="reader-paginator h-full w-full"
         style={containerStyle}
         data-direction={direction}
       >

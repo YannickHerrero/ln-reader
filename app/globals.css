@@ -123,31 +123,47 @@
 
 /* Reader Styles */
 .reader-paginator {
-  column-width: 100vw;
-  column-gap: 0;
-  column-fill: auto;
-  overflow-x: hidden;
-  overflow-y: hidden;
+  height: 100%;
+  overflow: hidden;
   padding: 0 1rem;
-}
-
-.reader-paginator[data-direction="vertical-rl"] {
-  writing-mode: vertical-rl;
-  column-width: calc(100vh - 6rem);
-  height: auto;
-  width: 100vw;
 }
 
 .reader-content {
   font-size: var(--reader-font-size, 18px);
   line-height: var(--reader-line-height, 1.6);
   color: var(--foreground);
-  max-width: 100%;
+  height: 100%;
+  column-width: 100vw;
+  column-gap: 2rem;
+  column-fill: auto;
+  transition: transform 0.3s ease;
+}
+
+/* Prevent text cut-off at page boundaries */
+.reader-content p,
+.reader-content h1,
+.reader-content h2,
+.reader-content h3,
+.reader-content h4,
+.reader-content h5,
+.reader-content h6,
+.reader-content li,
+.reader-content blockquote,
+.reader-content ruby {
+  break-inside: avoid;
+  orphans: 2;
+  widows: 2;
 }
 
 .reader-content[data-direction="vertical-rl"] {
   writing-mode: vertical-rl;
   text-orientation: mixed;
+  /* For vertical text, disable CSS columns - let natural vertical flow handle it */
+  column-width: auto;
+  columns: auto;
+  /* Height constraint forces horizontal overflow for pagination */
+  height: 100%;
+  width: max-content;
 }
 
 /* EPUB content styling */
