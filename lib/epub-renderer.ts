@@ -45,36 +45,61 @@ export async function processChapterContent(
 ): Promise<{ html: string; blobUrls: string[] }> {
   const parser = new DOMParser()
   const doc = parser.parseFromString(html, 'text/html')
-  const images = doc.querySelectorAll('img')
   const blobUrls: string[] = []
 
+  const mimeTypes: Record<string, string> = {
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    webp: 'image/webp',
+  }
+
+  async function processImageSrc(src: string): Promise<string | null> {
+    if (!src || src.startsWith('data:') || src.startsWith('blob:')) {
+      return null
+    }
+
+    try {
+      const resolvedPath = resolveEpubPath(chapterHref, src)
+      const data = await epub.getFile(resolvedPath)
+
+      if (data) {
+        const ext = src.split('.').pop()?.toLowerCase() || 'png'
+        const mimeType = mimeTypes[ext] || 'image/png'
+        const blob = new Blob([data], { type: mimeType })
+        const blobUrl = URL.createObjectURL(blob)
+        blobUrls.push(blobUrl)
+        return blobUrl
+      }
+    } catch (error) {
+      console.warn(`Failed to load image: ${src}`, error)
+    }
+    return null
+  }
+
+  // Process <img> elements
+  const images = doc.querySelectorAll('img')
   for (const img of images) {
     const src = img.getAttribute('src')
-    if (src && !src.startsWith('data:') && !src.startsWith('blob:')) {
-      try {
-        const resolvedPath = resolveEpubPath(chapterHref, src)
-        const data = await epub.getFile(resolvedPath)
+    if (src) {
+      const blobUrl = await processImageSrc(src)
+      if (blobUrl) {
+        img.src = blobUrl
+      }
+    }
+  }
 
-        if (data) {
-          // Determine MIME type from extension
-          const ext = src.split('.').pop()?.toLowerCase() || 'png'
-          const mimeTypes: Record<string, string> = {
-            png: 'image/png',
-            jpg: 'image/jpeg',
-            jpeg: 'image/jpeg',
-            gif: 'image/gif',
-            svg: 'image/svg+xml',
-            webp: 'image/webp',
-          }
-          const mimeType = mimeTypes[ext] || 'image/png'
-
-          const blob = new Blob([data], { type: mimeType })
-          const blobUrl = URL.createObjectURL(blob)
-          blobUrls.push(blobUrl)
-          img.src = blobUrl
-        }
-      } catch (error) {
-        console.warn(`Failed to load image: ${src}`, error)
+  // Process SVG <image> elements (xlink:href or href)
+  const svgImages = doc.querySelectorAll('image')
+  for (const img of svgImages) {
+    const src = img.getAttribute('xlink:href') || img.getAttribute('href')
+    if (src) {
+      const blobUrl = await processImageSrc(src)
+      if (blobUrl) {
+        img.removeAttribute('xlink:href')
+        img.setAttribute('href', blobUrl)
       }
     }
   }
