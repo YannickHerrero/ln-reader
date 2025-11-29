@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { EpubReader } from '@/components/reader/EpubReader'
 
 interface ReadPageProps {
   params: Promise<{ id: string }>
@@ -6,20 +6,15 @@ interface ReadPageProps {
 
 export default async function ReadPage({ params }: ReadPageProps) {
   const { id } = await params
+  const bookId = parseInt(id, 10)
 
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-bold">Reader</h1>
-      <p className="text-muted-foreground">Book ID: {id}</p>
-      <p className="text-sm text-muted-foreground">
-        Reader implementation coming soon...
-      </p>
-      <Link
-        href="/"
-        className="text-sm text-primary underline-offset-4 hover:underline"
-      >
-        Back to Library
-      </Link>
-    </div>
-  )
+  if (isNaN(bookId)) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-destructive">Invalid book ID</p>
+      </div>
+    )
+  }
+
+  return <EpubReader bookId={bookId} />
 }

@@ -120,3 +120,123 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Reader Styles */
+.reader-paginator {
+  column-width: 100vw;
+  column-gap: 0;
+  column-fill: auto;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  padding: 0 1rem;
+}
+
+.reader-paginator[data-direction="vertical-rl"] {
+  writing-mode: vertical-rl;
+  column-width: calc(100vh - 6rem);
+  height: auto;
+  width: 100vw;
+}
+
+.reader-content {
+  font-size: var(--reader-font-size, 18px);
+  line-height: var(--reader-line-height, 1.6);
+  color: var(--foreground);
+  max-width: 100%;
+}
+
+.reader-content[data-direction="vertical-rl"] {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* EPUB content styling */
+.reader-content p {
+  margin-bottom: 1em;
+  text-align: justify;
+}
+
+.reader-content h1,
+.reader-content h2,
+.reader-content h3,
+.reader-content h4,
+.reader-content h5,
+.reader-content h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: bold;
+}
+
+.reader-content h1 {
+  font-size: 1.5em;
+}
+
+.reader-content h2 {
+  font-size: 1.3em;
+}
+
+.reader-content h3 {
+  font-size: 1.1em;
+}
+
+.reader-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  height: auto;
+  margin: 1em auto;
+  display: block;
+}
+
+.reader-content[data-direction="vertical-rl"] img {
+  writing-mode: horizontal-tb;
+  max-height: 100%;
+  max-width: 80vw;
+}
+
+/* Furigana (ruby) styling */
+.reader-content ruby {
+  ruby-align: center;
+}
+
+.reader-content ruby rt {
+  font-size: 0.5em;
+  line-height: 1;
+  font-weight: normal;
+}
+
+.reader-content[data-direction="vertical-rl"] ruby rt {
+  font-size: 0.4em;
+}
+
+/* Links in EPUB */
+.reader-content a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Lists */
+.reader-content ul,
+.reader-content ol {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.reader-content li {
+  margin-bottom: 0.25em;
+}
+
+/* Block quotes */
+.reader-content blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 1em;
+  margin: 1em 0;
+  font-style: italic;
+}
+
+.reader-content[data-direction="vertical-rl"] blockquote {
+  border-left: none;
+  border-top: 3px solid var(--border);
+  padding-left: 0;
+  padding-top: 1em;
+}
