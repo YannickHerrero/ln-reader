@@ -20,14 +20,14 @@ interface WordLookupSheetProps {
 }
 
 function DictionaryImportPrompt() {
-  const { startImport, isImporting, progress, error } = useDictionaryImport()
+  const { startImport, isImporting, progress, statusMessage, error } = useDictionaryImport()
 
   if (isImporting) {
     return (
       <div className="flex flex-col items-center gap-2 py-4">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">
-          Importing dictionary... {Math.round(progress * 100)}%
+          {statusMessage || `Importing... ${Math.round(progress * 100)}%`}
         </p>
         <div className="w-full max-w-xs h-2 bg-muted rounded-full overflow-hidden">
           <div
@@ -42,7 +42,7 @@ function DictionaryImportPrompt() {
   return (
     <div className="flex flex-col items-center gap-3 py-4">
       <p className="text-sm text-muted-foreground text-center">
-        Import the dictionary to see word definitions
+        Import the dictionary to see word definitions (~15MB)
       </p>
       <Button onClick={startImport} variant="outline" size="sm" className="gap-2">
         <Book className="h-4 w-4" />

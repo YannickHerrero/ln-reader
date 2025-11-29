@@ -7,7 +7,7 @@ import { useState } from 'react'
 
 export function DictionaryImportButton() {
   const status = useDictionaryStatus()
-  const { startImport, clear, isImporting, progress, error } = useDictionaryImport()
+  const { startImport, clear, isImporting, progress, statusMessage, error } = useDictionaryImport()
   const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   if (isImporting) {
@@ -15,7 +15,7 @@ export function DictionaryImportButton() {
       <div className="flex flex-col gap-2 w-full max-w-xs">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span>Importing dictionary... {Math.round(progress * 100)}%</span>
+          <span>{statusMessage || `Importing... ${Math.round(progress * 100)}%`}</span>
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
@@ -69,7 +69,7 @@ export function DictionaryImportButton() {
         <p className="text-sm text-destructive">{error}</p>
       )}
       <p className="text-xs text-muted-foreground">
-        JMDict dictionary for word lookups (~50MB)
+        JMDict dictionary for word lookups (~15MB download)
       </p>
     </div>
   )
