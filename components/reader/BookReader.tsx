@@ -31,8 +31,6 @@ interface BookReaderProps {
   onPrevChapter?: () => void
   /** Callback when navigating to next chapter */
   onNextChapter?: () => void
-  /** Callback when user clicks center area (open settings) */
-  onOpenSettings?: () => void
   /** Callback when user selects a word */
   onWordSelect?: (selection: WordSelection) => void
 }
@@ -46,7 +44,6 @@ export function BookReader({
   onCharCountChange,
   onPrevChapter,
   onNextChapter,
-  onOpenSettings,
   onWordSelect,
 }: BookReaderProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -54,6 +51,7 @@ export function BookReader({
   const [calculator, setCalculator] = useState<CharacterStatsCalculator | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
   const restoredRef = useRef(false)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
   // Derive loading state from calculator presence
   const isLoading = !calculator && !!content
@@ -183,43 +181,56 @@ export function BookReader({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [pageManager, verticalMode])
 
-  // Mouse wheel navigation
+  // Swipe gesture navigation
   useEffect(() => {
-    let lastWheelTime = 0
-    const throttleMs = 100
+    const container = scrollRef.current
+    if (!container) return
 
-    const handleWheel = (e: WheelEvent) => {
-      const now = Date.now()
-      if (now - lastWheelTime < throttleMs) return
-      lastWheelTime = now
-
-      let multiplier = (e.deltaX < 0 ? -1 : 1) * (verticalMode ? -1 : 1)
-      if (!e.deltaX) {
-        multiplier = e.deltaY < 0 ? -1 : 1
-      }
-      pageManager.flipPage(multiplier as 1 | -1)
+    const handleTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0]
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY }
     }
 
-    document.body.addEventListener('wheel', handleWheel, { passive: true })
-    return () => document.body.removeEventListener('wheel', handleWheel)
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchStartRef.current) return
+
+      const touch = e.changedTouches[0]
+      const deltaX = touch.clientX - touchStartRef.current.x
+      const deltaY = touch.clientY - touchStartRef.current.y
+      const minSwipeDistance = 50
+
+      // Only handle horizontal swipes (must be more horizontal than vertical)
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+        // In vertical-rl mode: swipe left = prev (RTL reading), swipe right = next
+        // In LTR mode: swipe left = next, swipe right = prev
+        const direction = deltaX < 0 ? 1 : -1
+        pageManager.flipPage((verticalMode ? -direction : direction) as 1 | -1)
+      }
+
+      touchStartRef.current = null
+    }
+
+    container.addEventListener('touchstart', handleTouchStart, { passive: true })
+    container.addEventListener('touchend', handleTouchEnd, { passive: true })
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouchStart)
+      container.removeEventListener('touchend', handleTouchEnd)
+    }
   }, [pageManager, verticalMode])
 
-  // Click handling
+  // Click handling (word selection only)
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      // Check if click is on text (for word lookup)
+      // Only handle word lookup on text clicks
       if (isClickOnText(e.target)) {
         const selection = getClickedWordAndSentence(e.clientX, e.clientY)
         if (selection && onWordSelect) {
           onWordSelect(selection)
-          return
         }
       }
-
-      // Otherwise, open settings on background click
-      onOpenSettings?.()
     },
-    [onWordSelect, onOpenSettings]
+    [onWordSelect]
   )
 
   // CSS variables for styling

@@ -1,6 +1,6 @@
 'use client'
 
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ReaderProgressProps {
@@ -16,6 +16,8 @@ interface ReaderProgressProps {
   onPrevChapter: () => void
   /** Navigate to next chapter */
   onNextChapter: () => void
+  /** Open settings sheet */
+  onOpenSettings: () => void
 }
 
 /**
@@ -32,6 +34,7 @@ export function ReaderProgress({
   totalChapters,
   onPrevChapter,
   onNextChapter,
+  onOpenSettings,
 }: ReaderProgressProps) {
   const progress = bookCharCount > 0 ? (exploredCharCount / bookCharCount) * 100 : 0
 
@@ -57,13 +60,23 @@ export function ReaderProgress({
           <ChevronLeft className="h-6 w-6" />
         </Button>
 
-        <div className="text-muted-foreground flex flex-col items-center text-xs">
-          <span>
-            {formatNumber(exploredCharCount)} / {formatNumber(bookCharCount)} chars
-          </span>
-          <span>
-            Chapter {currentChapter + 1}/{totalChapters}
-          </span>
+        <div className="flex items-center gap-2">
+          <div className="text-muted-foreground flex flex-col items-center text-xs">
+            <span>
+              {formatNumber(exploredCharCount)} / {formatNumber(bookCharCount)} chars
+            </span>
+            <span>
+              Chapter {currentChapter + 1}/{totalChapters}
+            </span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onOpenSettings}
+            aria-label="Settings"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
 
         <Button

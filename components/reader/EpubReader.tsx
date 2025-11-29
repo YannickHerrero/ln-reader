@@ -164,7 +164,6 @@ export function EpubReader({ bookId }: EpubReaderProps) {
           onCharCountChange={handleCharCountChange}
           onPrevChapter={handlePrevChapter}
           onNextChapter={handleNextChapter}
-          onOpenSettings={handleOpenSettings}
           onWordSelect={handleWordSelect}
         />
       </main>
@@ -177,6 +176,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
         totalChapters={chapters.length}
         onPrevChapter={handlePrevChapter}
         onNextChapter={handleNextChapter}
+        onOpenSettings={handleOpenSettings}
       />
 
       {/* Settings bottom sheet */}
