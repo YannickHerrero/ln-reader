@@ -41,14 +41,14 @@ export interface ProcessedEpubData {
 export async function processEpub(file: File): Promise<ProcessedEpubData> {
   const epub = await loadEpubBook(file)
 
-  // 1. Extract image blobs from EPUB
-  const blobs = await extractImageBlobs(epub)
+  // 1. Process chapters and collect image paths
+  const { chapters, imagePaths } = processChapters(epub)
 
-  // 2. Extract and scope CSS
+  // 2. Extract image blobs using the paths found in chapters
+  const blobs = await extractImageBlobs(epub, imagePaths)
+
+  // 3. Extract and scope CSS
   const styleSheet = await extractAndScopeCSS(epub)
-
-  // 3. Process each chapter's HTML
-  const chapters = processChapters(epub)
 
   // 4. Get cover image
   const coverUrl = await epub.getCoverImageData()
@@ -106,15 +106,15 @@ function resolveEpubPath(chapterHref: string, relativePath: string): string {
 }
 
 /**
- * Extract all image blobs from the EPUB
+ * Extract image blobs from the EPUB using paths found in chapters
  */
-async function extractImageBlobs(epub: Epub): Promise<Record<string, Blob>> {
+async function extractImageBlobs(
+  epub: Epub,
+  imagePaths: Set<string>
+): Promise<Record<string, Blob>> {
   const blobs: Record<string, Blob> = {}
 
-  if (!epub.resources) return blobs
-
-  for (const path of Object.keys(epub.resources)) {
-    // Check if it's an image file
+  for (const path of imagePaths) {
     const ext = path.split('.').pop()?.toLowerCase()
     if (!ext || !MIME_TYPES[ext]) continue
 
@@ -251,28 +251,35 @@ function scopeCSS(css: string, parentSelector: string): string {
 
 /**
  * Process all chapters, replacing image URLs with dummy placeholders
+ * Returns chapters and all image paths found
  */
-function processChapters(epub: Epub): ProcessedChapter[] {
+function processChapters(epub: Epub): {
+  chapters: ProcessedChapter[]
+  imagePaths: Set<string>
+} {
   const chapters: ProcessedChapter[] = []
+  const imagePaths = new Set<string>()
 
   for (const chapter of epub.chapters || []) {
     const parser = new DOMParser()
     const doc = parser.parseFromString(chapter.content, 'text/html')
 
-    // Replace <img> src with dummy URLs
+    // Replace <img> src with dummy URLs and collect paths
     for (const img of doc.querySelectorAll('img')) {
       const src = img.getAttribute('src')
       if (src && !src.startsWith('data:')) {
         const resolvedPath = resolveEpubPath(chapter.href, src)
+        imagePaths.add(resolvedPath)
         img.setAttribute('src', `${DUMMY_IMG_PREFIX}${resolvedPath}`)
       }
     }
 
-    // Replace SVG <image> href with dummy URLs
+    // Replace SVG <image> href with dummy URLs and collect paths
     for (const img of doc.querySelectorAll('image')) {
       const src = img.getAttribute('xlink:href') || img.getAttribute('href')
       if (src && !src.startsWith('data:')) {
         const resolvedPath = resolveEpubPath(chapter.href, src)
+        imagePaths.add(resolvedPath)
         img.removeAttribute('xlink:href')
         img.setAttribute('href', `${DUMMY_IMG_PREFIX}${resolvedPath}`)
       }
@@ -289,7 +296,7 @@ function processChapters(epub: Epub): ProcessedChapter[] {
     })
   }
 
-  return chapters
+  return { chapters, imagePaths }
 }
 
 /**

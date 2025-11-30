@@ -375,7 +375,7 @@ export function BookReader({
         dangerouslySetInnerHTML={{ __html: content }}
       />
       {isLoading && (
-        <div className="bg-background/80 absolute inset-0 flex items-center justify-center">
+        <div className="bg-background absolute inset-0 flex items-center justify-center">
           <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
         </div>
       )}

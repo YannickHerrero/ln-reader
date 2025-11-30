@@ -133,9 +133,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-background flex h-screen flex-col items-center justify-center gap-2">
+      <div className="bg-background flex h-screen items-center justify-center">
         <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground">Loading book...</p>
       </div>
     )
   }
