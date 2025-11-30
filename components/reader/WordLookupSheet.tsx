@@ -69,11 +69,11 @@ export function WordLookupSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-auto max-h-[60vh]">
+      <SheetContent side="bottom" className="h-auto max-h-[70vh]">
         <SheetHeader>
           <SheetTitle>Word Lookup</SheetTitle>
         </SheetHeader>
-        <div className="p-4">
+        <div className="p-4 pb-8">
           {selection ? (
             <div className="space-y-4">
               {/* Word with furigana */}
