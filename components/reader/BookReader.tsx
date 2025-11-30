@@ -18,6 +18,49 @@ import {
   type WordSelection,
 } from '@/hooks/use-word-selection'
 
+/**
+ * Wait for CSS column layout to stabilize by polling scroll dimensions
+ * Returns a promise that resolves when scrollWidth/scrollHeight stops changing
+ */
+function waitForStableLayout(
+  element: HTMLElement,
+  vertical: boolean,
+  maxAttempts = 50
+): Promise<void> {
+  return new Promise((resolve) => {
+    let lastSize = vertical ? element.scrollHeight : element.scrollWidth
+    let stableCount = 0
+    let attempts = 0
+
+    const check = () => {
+      const currentSize = vertical ? element.scrollHeight : element.scrollWidth
+
+      if (currentSize === lastSize && currentSize > 0) {
+        stableCount++
+        // Consider stable after 3 consecutive frames with same size
+        if (stableCount >= 3) {
+          resolve()
+          return
+        }
+      } else {
+        stableCount = 0
+        lastSize = currentSize
+      }
+
+      attempts++
+      if (attempts >= maxAttempts) {
+        // Give up after max attempts, proceed anyway
+        resolve()
+        return
+      }
+
+      requestAnimationFrame(check)
+    }
+
+    requestAnimationFrame(check)
+  })
+}
+
 interface BookReaderProps {
   /** HTML content to display */
   content: string | null
@@ -121,9 +164,15 @@ export function BookReader({
     // Reset calculator for new content
     setCalculator(null)
 
-    // Wait for DOM to render
-    const timer = setTimeout(() => {
-      if (!contentRef.current || !scrollRef.current) return
+    let cancelled = false
+
+    // Wait for CSS columns to stabilize before initializing
+    const init = async () => {
+      if (!scrollRef.current || !contentRef.current) return
+
+      await waitForStableLayout(scrollRef.current, verticalMode)
+
+      if (cancelled || !contentRef.current || !scrollRef.current) return
 
       const calc = new CharacterStatsCalculator(
         contentRef.current,
@@ -137,9 +186,13 @@ export function BookReader({
 
       // Report initial char count
       onCharCountChange?.(0, calc.charCount)
-    }, 150)
+    }
 
-    return () => clearTimeout(timer)
+    init()
+
+    return () => {
+      cancelled = true
+    }
   }, [content, verticalMode, fontSize, lineHeight, onCharCountChange])
   /* eslint-enable react-hooks/set-state-in-effect */
 
