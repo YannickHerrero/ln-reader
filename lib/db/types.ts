@@ -5,6 +5,10 @@ export interface EpubMetadata {
   coverUrl: string | null
   addedAt: Date
   lastReadAt: Date | null
+  /** Character count per chapter (calculated at import time) */
+  chapterCharCounts?: number[]
+  /** Total character count for the entire book */
+  totalCharCount?: number
 }
 
 export interface EpubFile {

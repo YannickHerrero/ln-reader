@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { loadEpubBook, type Epub, type EpubChapter } from 'epubix'
 import { db, type ReadingProgress } from '@/lib/db'
 import { processChapterContent, revokeBlobUrls } from '@/lib/epub-renderer'
-import { countHtmlCharacters } from '@/lib/pagination/get-character-count'
 
 interface UseEpubReaderResult {
   epub: Epub | null
@@ -52,8 +51,11 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
       setError(null)
 
       try {
-        // Get the file from IndexedDB
-        const file = await db.files.where('metadataId').equals(bookId).first()
+        // Get the file and metadata from IndexedDB
+        const [file, metadata] = await Promise.all([
+          db.files.where('metadataId').equals(bookId).first(),
+          db.metadata.get(bookId),
+        ])
         if (!file) {
           throw new Error('Book file not found')
         }
@@ -66,16 +68,18 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
         const loadedChapters = loadedEpub.chapters || []
         setChapters(loadedChapters)
 
-        // Calculate character counts for all chapters
-        let accumulated = 0
+        // Build accumulated array from cached character counts
+        const chapterCharCounts = metadata?.chapterCharCounts || []
         const accChars: number[] = []
-        for (const chapter of loadedChapters) {
+        let accumulated = 0
+        for (const count of chapterCharCounts) {
           accChars.push(accumulated)
-          accumulated += countHtmlCharacters(chapter.content)
+          accumulated += count
         }
+
         if (mounted) {
           setAccumulatedChapterChars(accChars)
-          setTotalBookCharCount(accumulated)
+          setTotalBookCharCount(metadata?.totalCharCount || 0)
         }
 
         // Load saved progress
