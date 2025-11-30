@@ -204,19 +204,25 @@
   font-size: 1.1em;
 }
 
-/* Images */
+/* Images - full page display */
 .book-content-container img {
+  break-before: column;
+  break-after: column;
+  width: var(--book-content-width, 100%);
+  height: var(--book-content-height, 80vh);
   max-width: var(--book-content-width, 100%);
   max-height: var(--book-content-height, 80vh);
-  height: auto;
-  margin: 1em auto;
+  object-fit: contain;
+  margin: 0;
   display: block;
 }
 
 .book-content--vertical-rl .book-content-container img {
   writing-mode: horizontal-tb;
-  max-height: 100%;
+  width: auto;
+  height: var(--book-content-height, 100%);
   max-width: 80vw;
+  max-height: var(--book-content-height, 100%);
 }
 
 /* Furigana (ruby) styling */

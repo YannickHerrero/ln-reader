@@ -19,13 +19,35 @@ import {
 } from '@/hooks/use-word-selection'
 
 /**
+ * Wait for all images in an element to load
+ */
+function waitForImages(element: HTMLElement, maxWait = 2000): Promise<void> {
+  const images = element.querySelectorAll('img')
+  if (images.length === 0) return Promise.resolve()
+
+  return Promise.race([
+    Promise.all(
+      Array.from(images).map((img) =>
+        img.complete
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              img.onload = () => resolve()
+              img.onerror = () => resolve()
+            })
+      )
+    ).then(() => {}),
+    new Promise<void>((resolve) => setTimeout(resolve, maxWait)),
+  ])
+}
+
+/**
  * Wait for CSS column layout to stabilize by polling scroll dimensions
  * Returns a promise that resolves when scrollWidth/scrollHeight stops changing
  */
 function waitForStableLayout(
   element: HTMLElement,
   vertical: boolean,
-  maxAttempts = 50
+  maxAttempts = 60
 ): Promise<void> {
   return new Promise((resolve) => {
     let lastSize = vertical ? element.scrollHeight : element.scrollWidth
@@ -37,8 +59,8 @@ function waitForStableLayout(
 
       if (currentSize === lastSize && currentSize > 0) {
         stableCount++
-        // Consider stable after 3 consecutive frames with same size
-        if (stableCount >= 3) {
+        // Consider stable after 5 consecutive frames with same size
+        if (stableCount >= 5) {
           resolve()
           return
         }
@@ -59,6 +81,25 @@ function waitForStableLayout(
 
     requestAnimationFrame(check)
   })
+}
+
+/**
+ * Wait for images to load, then wait for layout to stabilize
+ */
+async function waitForImagesAndLayout(
+  element: HTMLElement,
+  vertical: boolean
+): Promise<void> {
+  // Wait for fonts if available
+  if (document.fonts?.ready) {
+    await document.fonts.ready
+  }
+
+  // Wait for images to load
+  await waitForImages(element)
+
+  // Then wait for layout to stabilize
+  await waitForStableLayout(element, vertical)
 }
 
 interface BookReaderProps {
@@ -166,22 +207,15 @@ export function BookReader({
 
     let cancelled = false
 
-    // Wait for CSS columns to stabilize before initializing
+    // Wait for images and CSS columns to stabilize before initializing
     const init = async () => {
       if (!scrollRef.current || !contentRef.current) return
 
-      await waitForStableLayout(scrollRef.current, verticalMode)
+      await waitForImagesAndLayout(scrollRef.current, verticalMode)
 
       if (cancelled || !contentRef.current || !scrollRef.current) return
 
-      const calc = new CharacterStatsCalculator(
-        contentRef.current,
-        verticalMode ? 'horizontal' : 'vertical',
-        'ltr',
-        scrollRef.current,
-        document
-      )
-      calc.updateParagraphPos(0)
+      const calc = new CharacterStatsCalculator(contentRef.current)
       setCalculator(calc)
 
       // Report initial char count
@@ -196,28 +230,32 @@ export function BookReader({
   }, [content, verticalMode, fontSize, lineHeight, onCharCountChange])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Restore saved position
+  // Restore saved position using scroll percentage
   useEffect(() => {
     if (
       calculator &&
       savedCharCount > 0 &&
       !restoredRef.current &&
-      containerSize.width > 0
+      containerSize.width > 0 &&
+      scrollRef.current
     ) {
       restoredRef.current = true
-      const scrollPos = calculator.getScrollPosByCharCount(savedCharCount)
+      const scrollSize = verticalMode
+        ? scrollRef.current.scrollHeight
+        : scrollRef.current.scrollWidth
+      const viewportSize = verticalMode
+        ? scrollRef.current.clientHeight
+        : scrollRef.current.clientWidth
+      const scrollPos = calculator.getScrollPosByCharCount(
+        savedCharCount,
+        scrollSize,
+        viewportSize
+      )
       if (scrollPos >= 0) {
         pageManager.scrollTo(scrollPos, false)
       }
     }
-  }, [calculator, savedCharCount, pageManager, containerSize.width])
-
-  // Recalculate positions on resize
-  useEffect(() => {
-    if (calculator && containerSize.width > 0 && containerSize.height > 0) {
-      calculator.updateParagraphPos(pageManager.virtualScrollPos)
-    }
-  }, [calculator, containerSize.width, containerSize.height, pageManager.virtualScrollPos])
+  }, [calculator, savedCharCount, pageManager, containerSize.width, verticalMode])
 
   // Keyboard navigation
   useEffect(() => {
