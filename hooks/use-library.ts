@@ -1,16 +1,49 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type EpubMetadata } from '@/lib/db'
 import { processEpub } from '@/lib/epub-processor'
+import { useLibrarySettings, type LibrarySortOrder } from './use-library-settings'
 
 export type BookWithProgress = EpubMetadata & {
   readingProgress?: number // 0-1 ratio
 }
 
+function sortBooks(books: BookWithProgress[], sortOrder: LibrarySortOrder): BookWithProgress[] {
+  return [...books].sort((a, b) => {
+    switch (sortOrder) {
+      case 'last-opened':
+        if (a.lastReadAt && b.lastReadAt) {
+          return b.lastReadAt.getTime() - a.lastReadAt.getTime()
+        }
+        if (a.lastReadAt && !b.lastReadAt) return -1
+        if (!a.lastReadAt && b.lastReadAt) return 1
+        return b.addedAt.getTime() - a.addedAt.getTime()
+
+      case 'last-added':
+        return b.addedAt.getTime() - a.addedAt.getTime()
+
+      case 'progress':
+        return (b.readingProgress ?? 0) - (a.readingProgress ?? 0)
+
+      case 'title':
+        return a.title.localeCompare(b.title, 'ja')
+
+      case 'author':
+        return a.author.localeCompare(b.author, 'ja')
+
+      default:
+        return 0
+    }
+  })
+}
+
 export function useLibrary() {
-  const books = useLiveQuery(async () => {
-    const metadata = await db.metadata.orderBy('addedAt').reverse().toArray()
+  const { settings } = useLibrarySettings()
+
+  const rawBooks = useLiveQuery(async () => {
+    const metadata = await db.metadata.toArray()
     const allProgress = await db.progress.toArray()
 
     // Create a map of metadataId -> progress
@@ -25,6 +58,11 @@ export function useLibrary() {
       readingProgress: book.id ? progressMap.get(book.id) : undefined,
     }))
   })
+
+  const books = useMemo(() => {
+    if (!rawBooks) return undefined
+    return sortBooks(rawBooks, settings.sortOrder)
+  }, [rawBooks, settings.sortOrder])
 
   /**
    * Import and process an EPUB file
