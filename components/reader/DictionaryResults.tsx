@@ -51,8 +51,8 @@ export function DictionaryResults({ entries, searchWord }: DictionaryResultsProp
   const displayEntries = entries.slice(0, 10)
 
   return (
-    <div className="max-h-[30vh] overflow-y-auto">
-      <div className="space-y-3 pr-2">
+    <div>
+      <div className="space-y-3">
         {displayEntries.map((entry, index) => (
           <DefinitionCard key={entry.id ?? index} entry={entry} index={index} />
         ))}

@@ -71,34 +71,20 @@ export function WordLookupSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-auto max-h-[70vh]">
         <SheetHeader>
-          <SheetTitle>Word Lookup</SheetTitle>
+          <SheetTitle>
+            {wordHtml ? (
+              <span
+                className="furigana-word"
+                dangerouslySetInnerHTML={{ __html: wordHtml }}
+              />
+            ) : (
+              <span>{selection?.word ?? 'Word Lookup'}</span>
+            )}
+          </SheetTitle>
         </SheetHeader>
-        <div className="p-4 pb-8">
+        <div className="p-4 pb-8 overflow-y-auto">
           {selection ? (
             <div className="space-y-4">
-              {/* Word with furigana */}
-              <div>
-                {wordHtml ? (
-                  <span
-                    className="text-2xl font-medium furigana-word"
-                    dangerouslySetInnerHTML={{ __html: wordHtml }}
-                  />
-                ) : (
-                  <span className="text-2xl font-medium">{selection.word}</span>
-                )}
-              </div>
-
-              {/* Dictionary results section */}
-              {!status.installed && !status.importing ? (
-                <DictionaryImportPrompt />
-              ) : isLoading ? (
-                <div className="flex justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <DictionaryResults entries={results} searchWord={selection.word} />
-              )}
-
               {/* Sentence with translation */}
               <div className="bg-muted rounded-lg p-3 space-y-2">
                 <div>
@@ -128,6 +114,17 @@ export function WordLookupSheet({
                   </div>
                 )}
               </div>
+
+              {/* Dictionary results section */}
+              {!status.installed && !status.importing ? (
+                <DictionaryImportPrompt />
+              ) : isLoading ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <DictionaryResults entries={results} searchWord={selection.word} />
+              )}
             </div>
           ) : (
             <div className="text-muted-foreground text-center">
