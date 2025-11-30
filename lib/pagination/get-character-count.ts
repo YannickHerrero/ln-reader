@@ -63,3 +63,51 @@ function getRawCharacterCount(node: Node): number {
 export function getCharacterCount(node: Node): number {
   return isNodeGaiji(node) ? 1 : getRawCharacterCount(node)
 }
+
+/**
+ * Count characters in HTML content string
+ * Creates a temporary DOM element to parse the HTML
+ * Excludes furigana (RT elements) and hidden elements
+ */
+export function countHtmlCharacters(html: string): number {
+  if (typeof document === 'undefined') return 0
+
+  const container = document.createElement('div')
+  container.innerHTML = html
+
+  let totalChars = 0
+
+  // Recursive function to traverse and count
+  function traverse(node: Node): void {
+    // Skip furigana
+    if (node.nodeName === 'RT') return
+
+    // Skip hidden elements
+    if (
+      node instanceof HTMLElement &&
+      (node.getAttribute('aria-hidden') || node.hasAttribute('hidden'))
+    ) {
+      return
+    }
+
+    // Count text nodes
+    if (node.nodeType === Node.TEXT_NODE) {
+      totalChars += getRawCharacterCount(node)
+      return
+    }
+
+    // Count gaiji images
+    if (isNodeGaiji(node)) {
+      totalChars += 1
+      return
+    }
+
+    // Recurse into children
+    for (const child of Array.from(node.childNodes)) {
+      traverse(child)
+    }
+  }
+
+  traverse(container)
+  return totalChars
+}

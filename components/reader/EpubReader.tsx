@@ -22,9 +22,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
   const [isWordLookupOpen, setIsWordLookupOpen] = useState(false)
   const [selectedWord, setSelectedWord] = useState<WordSelection | null>(null)
 
-  // Character count state
+  // Character count state (explored chars in current chapter)
   const [exploredCharCount, setExploredCharCount] = useState(0)
-  const [bookCharCount, setBookCharCount] = useState(0)
 
   const { settings, setSettings, isHydrated } = useReaderSettings()
 
@@ -37,6 +36,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     nextChapter,
     prevChapter,
     savedProgress,
+    accumulatedChapterChars,
+    totalBookCharCount,
     saveProgress,
   } = useEpubReader(bookId)
 
@@ -48,9 +49,6 @@ export function EpubReader({ bookId }: EpubReaderProps) {
   const handleCharCountChange = useCallback(
     (explored: number, total: number) => {
       setExploredCharCount(explored)
-      setBookCharCount(total)
-
-      // Auto-save progress (debounced in practice since this fires on every page change)
       saveProgress(currentChapterIndex, explored, total)
     },
     [currentChapterIndex, saveProgress]
@@ -170,13 +168,16 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
       {/* Progress bar */}
       <ReaderProgress
-        exploredCharCount={exploredCharCount}
-        bookCharCount={bookCharCount}
-        currentChapter={currentChapterIndex}
-        totalChapters={chapters.length}
+        progress={
+          totalBookCharCount > 0
+            ? (((accumulatedChapterChars[currentChapterIndex] || 0) + exploredCharCount) / totalBookCharCount) * 100
+            : 0
+        }
         onPrevChapter={handlePrevChapter}
         onNextChapter={handleNextChapter}
         onOpenSettings={handleOpenSettings}
+        canGoPrev={currentChapterIndex > 0}
+        canGoNext={currentChapterIndex < chapters.length - 1}
       />
 
       {/* Settings bottom sheet */}

@@ -71,12 +71,22 @@ export function BookReader({
     onNextSection: onNextChapter,
     onPageChange: useCallback(
       (pos: number) => {
-        if (calculator) {
-          const explored = calculator.getCharCountByScrollPos(pos)
+        if (calculator && scrollRef.current) {
+          // Use scroll percentage instead of paragraph position mapping
+          // This works better with CSS columns where off-screen text nodes have 0 rect
+          const scrollSize = verticalMode
+            ? scrollRef.current.scrollHeight
+            : scrollRef.current.scrollWidth
+          const viewportSize = verticalMode
+            ? scrollRef.current.clientHeight
+            : scrollRef.current.clientWidth
+          const maxScroll = Math.max(scrollSize - viewportSize, 1)
+          const scrollPercent = Math.min(pos / maxScroll, 1)
+          const explored = Math.round(scrollPercent * calculator.charCount)
           onCharCountChange?.(explored, calculator.charCount)
         }
       },
-      [calculator, onCharCountChange]
+      [calculator, onCharCountChange, verticalMode]
     ),
   })
 

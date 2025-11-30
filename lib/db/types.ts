@@ -21,9 +21,9 @@ export interface ReadingProgress {
   pageIndex?: number
   /** Number of characters read in current chapter */
   exploredCharCount: number
-  /** Total characters in book (for calculating progress) */
+  /** Total characters in current chapter */
   bookCharCount: number
-  /** Progress ratio (0-1) */
+  /** Whole-book progress ratio (0-1), based on chapter position */
   progress: number
   lastRead: Date
 }
