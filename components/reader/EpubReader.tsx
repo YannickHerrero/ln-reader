@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { BookReader } from './BookReader'
 import { ReaderBottomSheet } from './ReaderBottomSheet'
 import { ReaderProgress } from './ReaderProgress'
 import { WordLookupSheet } from './WordLookupSheet'
+import { debounce } from '@/lib/utils'
 import type { WordSelection } from '@/hooks/use-word-selection'
 
 interface EpubReaderProps {
@@ -22,8 +23,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
   const [isWordLookupOpen, setIsWordLookupOpen] = useState(false)
   const [selectedWord, setSelectedWord] = useState<WordSelection | null>(null)
 
-  // Character count state (explored chars in current chapter)
-  const [exploredCharCount, setExploredCharCount] = useState(0)
+  // Scroll percentage state (0-1)
+  const [scrollPercent, setScrollPercent] = useState(0)
 
   const { settings, setSettings, isHydrated } = useReaderSettings()
 
@@ -36,7 +37,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     error,
     nextChapter,
     prevChapter,
-    savedProgress,
+    savedScrollPercent,
     accumulatedChapterChars,
     totalBookCharCount,
     saveProgress,
@@ -44,33 +45,55 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
   // Track restored state per chapter
   const restoredChapterRef = useRef<number | null>(null)
-  const [savedCharCountForChapter, setSavedCharCountForChapter] = useState(0)
+  const [savedScrollPercentForChapter, setSavedScrollPercentForChapter] = useState(0)
 
-  // Handle character count changes from BookReader
-  const handleCharCountChange = useCallback(
-    (explored: number, total: number) => {
-      setExploredCharCount(explored)
-      saveProgress(currentChapterIndex, explored, total)
-    },
-    [currentChapterIndex, saveProgress]
+  // Debounced save progress to avoid excessive IndexedDB writes
+  const debouncedSaveProgress = useMemo(
+    () => debounce(saveProgress, 1000),
+    [saveProgress]
   )
 
-  // Calculate saved char count for current chapter (effect-based to avoid ref access during render)
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => debouncedSaveProgress.cancel()
+  }, [debouncedSaveProgress])
+
+  // Handle scroll percentage changes from BookReader
+  const handleScrollPercentChange = useCallback(
+    (percent: number) => {
+      setScrollPercent(percent)
+      debouncedSaveProgress(currentChapterIndex, percent)
+    },
+    [currentChapterIndex, debouncedSaveProgress]
+  )
+
+  // Calculate saved scroll percent for current chapter
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (
-      savedProgress &&
-      savedProgress.chapterIndex === currentChapterIndex &&
-      restoredChapterRef.current !== currentChapterIndex
-    ) {
+    if (restoredChapterRef.current !== currentChapterIndex) {
       restoredChapterRef.current = currentChapterIndex
-      setSavedCharCountForChapter(savedProgress.exploredCharCount || 0)
-    } else if (restoredChapterRef.current !== currentChapterIndex) {
-      // Reset for new chapter
-      setSavedCharCountForChapter(0)
+      setSavedScrollPercentForChapter(savedScrollPercent)
+      setScrollPercent(savedScrollPercent)
     }
-  }, [savedProgress, currentChapterIndex])
+  }, [savedScrollPercent, currentChapterIndex])
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Calculate whole-book progress using character-weighted approach
+  const totalProgress = useMemo(() => {
+    if (totalBookCharCount <= 0) return 0
+
+    const charsBeforeChapter = accumulatedChapterChars[currentChapterIndex] || 0
+    const currentChapterChars = chapters[currentChapterIndex]?.charCount || 0
+    const charsInCurrentChapter = scrollPercent * currentChapterChars
+
+    return ((charsBeforeChapter + charsInCurrentChapter) / totalBookCharCount) * 100
+  }, [
+    totalBookCharCount,
+    accumulatedChapterChars,
+    currentChapterIndex,
+    chapters,
+    scrollPercent,
+  ])
 
   const handleOpenSettings = useCallback(() => {
     setIsSheetOpen(true)
@@ -159,8 +182,8 @@ export function EpubReader({ bookId }: EpubReaderProps) {
           content={processedContent}
           styleSheet={styleSheet}
           settings={settings}
-          savedCharCount={savedCharCountForChapter}
-          onCharCountChange={handleCharCountChange}
+          savedScrollPercent={savedScrollPercentForChapter}
+          onScrollPercentChange={handleScrollPercentChange}
           onPrevChapter={handlePrevChapter}
           onNextChapter={handleNextChapter}
           onWordSelect={handleWordSelect}
@@ -169,11 +192,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
 
       {/* Progress bar */}
       <ReaderProgress
-        progress={
-          totalBookCharCount > 0
-            ? (((accumulatedChapterChars[currentChapterIndex] || 0) + exploredCharCount) / totalBookCharCount) * 100
-            : 0
-        }
+        progress={totalProgress}
         onPrevChapter={handlePrevChapter}
         onNextChapter={handleNextChapter}
         onOpenSettings={handleOpenSettings}

@@ -23,18 +23,14 @@ interface UseEpubReaderResult {
   nextChapter: () => void
   /** Navigate to previous chapter */
   prevChapter: () => void
-  /** Saved reading progress */
-  savedProgress: ReadingProgress | null
+  /** Saved scroll percentage for current chapter (0-1) */
+  savedScrollPercent: number
   /** Accumulated character counts per chapter (chars before each chapter) */
   accumulatedChapterChars: number[]
   /** Total character count for the entire book */
   totalBookCharCount: number
-  /** Save progress using character count */
-  saveProgress: (
-    chapterIndex: number,
-    exploredCharCount: number,
-    chapterCharCount: number
-  ) => Promise<void>
+  /** Save progress using scroll percentage */
+  saveProgress: (chapterIndex: number, scrollPercent: number) => Promise<void>
 }
 
 export function useEpubReader(bookId: number): UseEpubReaderResult {
@@ -42,7 +38,7 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [savedProgress, setSavedProgress] = useState<ReadingProgress | null>(null)
+  const [savedScrollPercent, setSavedScrollPercent] = useState(0)
   const [accumulatedChapterChars, setAccumulatedChapterChars] = useState<number[]>([])
   const [totalBookCharCount, setTotalBookCharCount] = useState(0)
 
@@ -96,8 +92,8 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
           .first()
 
         if (progress && mounted) {
-          setSavedProgress(progress)
           setCurrentChapterIndex(progress.chapterIndex)
+          setSavedScrollPercent(progress.scrollPercent || 0)
         }
 
         // Update lastReadAt
@@ -169,21 +165,20 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
   }, [currentChapterIndex])
 
   const saveProgress = useCallback(
-    async (
-      chapterIndex: number,
-      exploredCharCount: number,
-      chapterCharCount: number
-    ) => {
-      // Calculate whole-book progress using actual character counts
-      const charsBeforeCurrentChapter = accumulatedChapterChars[chapterIndex] || 0
-      const totalExploredChars = charsBeforeCurrentChapter + exploredCharCount
-      const progress = totalBookCharCount > 0 ? totalExploredChars / totalBookCharCount : 0
+    async (chapterIndex: number, scrollPercent: number) => {
+      // Calculate whole-book progress using character-weighted approach
+      const charsBeforeChapter = accumulatedChapterChars[chapterIndex] || 0
+      const currentChapterChars = chapters[chapterIndex]?.charCount || 0
+      const charsInCurrentChapter = scrollPercent * currentChapterChars
+      const progress =
+        totalBookCharCount > 0
+          ? (charsBeforeChapter + charsInCurrentChapter) / totalBookCharCount
+          : 0
 
       const progressData: Omit<ReadingProgress, 'id'> = {
         metadataId: bookId,
         chapterIndex,
-        exploredCharCount,
-        bookCharCount: chapterCharCount,
+        scrollPercent,
         progress,
         lastRead: new Date(),
       }
@@ -199,10 +194,8 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
       } else {
         await db.progress.add(progressData as ReadingProgress)
       }
-
-      setSavedProgress({ ...progressData, id: existing?.id })
     },
-    [bookId, accumulatedChapterChars, totalBookCharCount]
+    [bookId, accumulatedChapterChars, chapters, totalBookCharCount]
   )
 
   return {
@@ -215,7 +208,7 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
     goToChapter,
     nextChapter,
     prevChapter,
-    savedProgress,
+    savedScrollPercent,
     accumulatedChapterChars,
     totalBookCharCount,
     saveProgress,

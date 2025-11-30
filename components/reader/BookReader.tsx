@@ -10,7 +10,6 @@ import {
 } from 'react'
 import { Loader2 } from 'lucide-react'
 import { usePageManager } from '@/lib/pagination/page-manager'
-import { CharacterStatsCalculator } from '@/lib/pagination/character-stats-calculator'
 import type { ReaderSettings } from '@/hooks/use-reader-settings'
 import {
   getClickedWordAndSentence,
@@ -42,7 +41,6 @@ function waitForImages(element: HTMLElement, maxWait = 2000): Promise<void> {
 
 /**
  * Wait for CSS column layout to stabilize by polling scroll dimensions
- * Returns a promise that resolves when scrollWidth/scrollHeight stops changing
  */
 function waitForStableLayout(
   element: HTMLElement,
@@ -59,7 +57,6 @@ function waitForStableLayout(
 
       if (currentSize === lastSize && currentSize > 0) {
         stableCount++
-        // Consider stable after 5 consecutive frames with same size
         if (stableCount >= 5) {
           resolve()
           return
@@ -71,7 +68,6 @@ function waitForStableLayout(
 
       attempts++
       if (attempts >= maxAttempts) {
-        // Give up after max attempts, proceed anyway
         resolve()
         return
       }
@@ -90,15 +86,10 @@ async function waitForImagesAndLayout(
   element: HTMLElement,
   vertical: boolean
 ): Promise<void> {
-  // Wait for fonts if available
   if (document.fonts?.ready) {
     await document.fonts.ready
   }
-
-  // Wait for images to load
   await waitForImages(element)
-
-  // Then wait for layout to stabilize
   await waitForStableLayout(element, vertical)
 }
 
@@ -109,10 +100,10 @@ interface BookReaderProps {
   styleSheet?: string
   /** Reader settings (font size, line height, direction) */
   settings: ReaderSettings
-  /** Saved character count position to restore */
-  savedCharCount?: number
-  /** Callback when character count changes */
-  onCharCountChange?: (explored: number, total: number) => void
+  /** Saved scroll percentage to restore (0-1) */
+  savedScrollPercent?: number
+  /** Callback when scroll percentage changes */
+  onScrollPercentChange?: (percent: number) => void
   /** Callback when navigating to previous chapter */
   onPrevChapter?: () => void
   /** Callback when navigating to next chapter */
@@ -127,24 +118,59 @@ export function BookReader({
   content,
   styleSheet,
   settings,
-  savedCharCount = 0,
-  onCharCountChange,
+  savedScrollPercent = 0,
+  onScrollPercentChange,
   onPrevChapter,
   onNextChapter,
   onWordSelect,
 }: BookReaderProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const [calculator, setCalculator] = useState<CharacterStatsCalculator | null>(null)
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  const [isReady, setIsReady] = useState(false)
   const restoredRef = useRef(false)
   const touchStartRef = useRef<{ x: number; y: number } | null>(null)
 
-  // Derive loading state from calculator presence
-  const isLoading = !calculator && !!content
-
   const { fontSize, lineHeight, direction } = settings
   const verticalMode = direction === 'vertical-rl'
+
+  // Derive loading state
+  const isLoading = !isReady && !!content
+
+  /**
+   * Calculate scroll percentage from current scroll position
+   */
+  const getScrollPercent = useCallback(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl) return 0
+
+    const scrollSize = verticalMode ? scrollEl.scrollHeight : scrollEl.scrollWidth
+    const viewportSize = verticalMode ? scrollEl.clientHeight : scrollEl.clientWidth
+    const maxScroll = scrollSize - viewportSize
+    const currentScroll = verticalMode ? scrollEl.scrollTop : scrollEl.scrollLeft
+
+    return maxScroll > 0 ? currentScroll / maxScroll : 0
+  }, [verticalMode])
+
+  /**
+   * Scroll to a given percentage
+   */
+  const scrollToPercent = useCallback(
+    (percent: number) => {
+      const scrollEl = scrollRef.current
+      if (!scrollEl) return
+
+      const scrollSize = verticalMode ? scrollEl.scrollHeight : scrollEl.scrollWidth
+      const viewportSize = verticalMode ? scrollEl.clientHeight : scrollEl.clientWidth
+      const maxScroll = scrollSize - viewportSize
+      const targetScroll = percent * maxScroll
+
+      scrollEl.scrollTo({
+        [verticalMode ? 'top' : 'left']: targetScroll,
+      })
+    },
+    [verticalMode]
+  )
 
   // Inject scoped stylesheet from EPUB
   useEffect(() => {
@@ -159,6 +185,12 @@ export function BookReader({
     }
   }, [styleSheet])
 
+  // Handle page change - report scroll percentage
+  const handlePageChange = useCallback(() => {
+    const percent = getScrollPercent()
+    onScrollPercentChange?.(percent)
+  }, [getScrollPercent, onScrollPercentChange])
+
   // Page manager hook
   const pageManager = usePageManager({
     contentRef,
@@ -169,16 +201,7 @@ export function BookReader({
     pageGap: PAGE_GAP,
     onPrevSection: onPrevChapter,
     onNextSection: onNextChapter,
-    onPageChange: useCallback(
-      (pos: number) => {
-        if (calculator) {
-          // Use binary search on paragraph positions for accurate character count
-          const explored = calculator.getCharCountByScrollPos(pos)
-          onCharCountChange?.(explored, calculator.charCount)
-        }
-      },
-      [calculator, onCharCountChange]
-    ),
+    onPageChange: handlePageChange,
   })
 
   // Measure container size
@@ -199,45 +222,25 @@ export function BookReader({
     return () => observer.disconnect()
   }, [])
 
-  // Initialize calculator when content or settings change
+  // Wait for content to be ready (images loaded, layout stable)
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     restoredRef.current = false
+    setIsReady(false)
 
     if (!contentRef.current || !scrollRef.current || !content) {
-      setCalculator(null)
       return
     }
 
-    // Reset calculator for new content
-    setCalculator(null)
-
     let cancelled = false
 
-    // Wait for images and CSS columns to stabilize before initializing
     const init = async () => {
-      if (!scrollRef.current || !contentRef.current) return
+      if (!scrollRef.current) return
 
       await waitForImagesAndLayout(scrollRef.current, verticalMode)
 
-      if (cancelled || !contentRef.current || !scrollRef.current) return
-
-      // Create calculator with full position mapping
-      const calc = new CharacterStatsCalculator(
-        contentRef.current,
-        verticalMode ? 'vertical' : 'horizontal',
-        'ltr',
-        scrollRef.current,
-        document
-      )
-
-      // Build paragraph position map after layout is stable
-      calc.updateParagraphPos(0)
-
-      setCalculator(calc)
-
-      // Report initial char count
-      onCharCountChange?.(0, calc.charCount)
+      if (cancelled) return
+      setIsReady(true)
     }
 
     init()
@@ -245,25 +248,45 @@ export function BookReader({
     return () => {
       cancelled = true
     }
-  }, [content, verticalMode, fontSize, lineHeight, onCharCountChange])
+  }, [content, verticalMode, fontSize, lineHeight])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Restore saved position using exact binary search on paragraph positions
+  // Restore saved scroll position
   useEffect(() => {
     if (
-      calculator &&
-      savedCharCount > 0 &&
+      isReady &&
+      savedScrollPercent > 0 &&
       !restoredRef.current &&
       containerSize.width > 0
     ) {
       restoredRef.current = true
-      // Use binary search on accumulated char counts to find exact scroll position
-      const scrollPos = calculator.getScrollPosByCharCount(savedCharCount)
-      if (scrollPos >= 0) {
-        pageManager.scrollTo(scrollPos, false)
-      }
+      scrollToPercent(savedScrollPercent)
+      onScrollPercentChange?.(savedScrollPercent)
     }
-  }, [calculator, savedCharCount, pageManager, containerSize.width])
+  }, [isReady, savedScrollPercent, containerSize.width, scrollToPercent, onScrollPercentChange])
+
+  // Track scroll percentage on scroll events
+  useEffect(() => {
+    const scrollEl = scrollRef.current
+    if (!scrollEl || !isReady) return
+
+    let rafId: number | null = null
+
+    const handleScroll = () => {
+      if (rafId) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        const percent = getScrollPercent()
+        onScrollPercentChange?.(percent)
+      })
+    }
+
+    scrollEl.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      scrollEl.removeEventListener('scroll', handleScroll)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [isReady, getScrollPercent, onScrollPercentChange])
 
   // Keyboard navigation
   useEffect(() => {
@@ -308,10 +331,7 @@ export function BookReader({
       const deltaY = touch.clientY - touchStartRef.current.y
       const minSwipeDistance = 50
 
-      // Only handle horizontal swipes (must be more horizontal than vertical)
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-        // In vertical-rl mode: swipe left = prev (RTL reading), swipe right = next
-        // In LTR mode: swipe left = next, swipe right = prev
         const direction = deltaX < 0 ? 1 : -1
         pageManager.flipPage((verticalMode ? -direction : direction) as 1 | -1)
       }
@@ -331,7 +351,6 @@ export function BookReader({
   // Click handling (word selection only)
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      // Only handle word lookup on text clicks
       if (isClickOnText(e.target)) {
         const selection = getClickedWordAndSentence(e.clientX, e.clientY)
         if (selection && onWordSelect) {
