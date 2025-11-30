@@ -104,10 +104,10 @@ export function WordLookupSheet({
                 <div>
                   <p className="text-muted-foreground text-xs mb-1">Sentence</p>
                   {isFuriganaLoading || !sentenceHtml ? (
-                    <p className="text-sm">{selection.sentence}</p>
+                    <p className="text-base">{selection.sentence}</p>
                   ) : (
                     <p
-                      className="text-sm furigana-sentence"
+                      className="text-base furigana-sentence"
                       dangerouslySetInnerHTML={{ __html: sentenceHtml }}
                     />
                   )}
