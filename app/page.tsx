@@ -8,7 +8,6 @@ import { DictionaryWelcome } from '@/components/DictionaryWelcome'
 import { Button } from '@/components/ui/button'
 import { useLibrary } from '@/hooks/use-library'
 import { useDictionaryStatus } from '@/hooks/use-dictionary'
-import { parseEpubMetadata } from '@/lib/epub'
 
 export default function Home() {
   const { books, addBook, isLoading } = useLibrary()
@@ -18,8 +17,8 @@ export default function Home() {
   const handleFileSelect = async (file: File) => {
     setIsUploading(true)
     try {
-      const metadata = await parseEpubMetadata(file)
-      await addBook(file, metadata)
+      // addBook now handles all EPUB processing (HTML, CSS, images, char counts)
+      await addBook(file)
     } catch (error) {
       console.error('Failed to add book:', error)
     } finally {

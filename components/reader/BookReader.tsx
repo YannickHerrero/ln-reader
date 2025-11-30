@@ -105,6 +105,8 @@ async function waitForImagesAndLayout(
 interface BookReaderProps {
   /** HTML content to display */
   content: string | null
+  /** Scoped CSS stylesheet from EPUB */
+  styleSheet?: string
   /** Reader settings (font size, line height, direction) */
   settings: ReaderSettings
   /** Saved character count position to restore */
@@ -123,6 +125,7 @@ const PAGE_GAP = 40
 
 export function BookReader({
   content,
+  styleSheet,
   settings,
   savedCharCount = 0,
   onCharCountChange,
@@ -143,6 +146,19 @@ export function BookReader({
   const { fontSize, lineHeight, direction } = settings
   const verticalMode = direction === 'vertical-rl'
 
+  // Inject scoped stylesheet from EPUB
+  useEffect(() => {
+    if (!styleSheet) return
+
+    const style = document.createElement('style')
+    style.textContent = styleSheet
+    document.head.appendChild(style)
+
+    return () => {
+      style.remove()
+    }
+  }, [styleSheet])
+
   // Page manager hook
   const pageManager = usePageManager({
     contentRef,
@@ -155,22 +171,13 @@ export function BookReader({
     onNextSection: onNextChapter,
     onPageChange: useCallback(
       (pos: number) => {
-        if (calculator && scrollRef.current) {
-          // Use scroll percentage instead of paragraph position mapping
-          // This works better with CSS columns where off-screen text nodes have 0 rect
-          const scrollSize = verticalMode
-            ? scrollRef.current.scrollHeight
-            : scrollRef.current.scrollWidth
-          const viewportSize = verticalMode
-            ? scrollRef.current.clientHeight
-            : scrollRef.current.clientWidth
-          const maxScroll = Math.max(scrollSize - viewportSize, 1)
-          const scrollPercent = Math.min(pos / maxScroll, 1)
-          const explored = Math.round(scrollPercent * calculator.charCount)
+        if (calculator) {
+          // Use binary search on paragraph positions for accurate character count
+          const explored = calculator.getCharCountByScrollPos(pos)
           onCharCountChange?.(explored, calculator.charCount)
         }
       },
-      [calculator, onCharCountChange, verticalMode]
+      [calculator, onCharCountChange]
     ),
   })
 
@@ -215,7 +222,18 @@ export function BookReader({
 
       if (cancelled || !contentRef.current || !scrollRef.current) return
 
-      const calc = new CharacterStatsCalculator(contentRef.current)
+      // Create calculator with full position mapping
+      const calc = new CharacterStatsCalculator(
+        contentRef.current,
+        verticalMode ? 'vertical' : 'horizontal',
+        'ltr',
+        scrollRef.current,
+        document
+      )
+
+      // Build paragraph position map after layout is stable
+      calc.updateParagraphPos(0)
+
       setCalculator(calc)
 
       // Report initial char count
@@ -230,32 +248,22 @@ export function BookReader({
   }, [content, verticalMode, fontSize, lineHeight, onCharCountChange])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Restore saved position using scroll percentage
+  // Restore saved position using exact binary search on paragraph positions
   useEffect(() => {
     if (
       calculator &&
       savedCharCount > 0 &&
       !restoredRef.current &&
-      containerSize.width > 0 &&
-      scrollRef.current
+      containerSize.width > 0
     ) {
       restoredRef.current = true
-      const scrollSize = verticalMode
-        ? scrollRef.current.scrollHeight
-        : scrollRef.current.scrollWidth
-      const viewportSize = verticalMode
-        ? scrollRef.current.clientHeight
-        : scrollRef.current.clientWidth
-      const scrollPos = calculator.getScrollPosByCharCount(
-        savedCharCount,
-        scrollSize,
-        viewportSize
-      )
+      // Use binary search on accumulated char counts to find exact scroll position
+      const scrollPos = calculator.getScrollPosByCharCount(savedCharCount)
       if (scrollPos >= 0) {
         pageManager.scrollTo(scrollPos, false)
       }
     }
-  }, [calculator, savedCharCount, pageManager, containerSize.width, verticalMode])
+  }, [calculator, savedCharCount, pageManager, containerSize.width])
 
   // Keyboard navigation
   useEffect(() => {

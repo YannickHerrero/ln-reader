@@ -31,6 +31,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
     chapters,
     currentChapterIndex,
     processedContent,
+    styleSheet,
     isLoading,
     error,
     nextChapter,
@@ -157,6 +158,7 @@ export function EpubReader({ bookId }: EpubReaderProps) {
       <main className="flex-1 overflow-hidden pt-12 pb-16">
         <BookReader
           content={processedContent}
+          styleSheet={styleSheet}
           settings={settings}
           savedCharCount={savedCharCountForChapter}
           onCharCountChange={handleCharCountChange}

@@ -4,6 +4,7 @@
  */
 
 export * from './types'
+export * from './binary-search'
 export * from './get-character-count'
 export * from './get-paragraph-nodes'
 export * from './character-stats-calculator'

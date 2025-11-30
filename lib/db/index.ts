@@ -1,9 +1,17 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { EpubMetadata, EpubFile, ReadingProgress, DictionaryEntry, DictionaryMeta } from './types'
+import type {
+  EpubMetadata,
+  EpubFile,
+  ProcessedBook,
+  ReadingProgress,
+  DictionaryEntry,
+  DictionaryMeta,
+} from './types'
 
 const db = new Dexie('LNReaderDB') as Dexie & {
   metadata: EntityTable<EpubMetadata, 'id'>
   files: EntityTable<EpubFile, 'id'>
+  processedBooks: EntityTable<ProcessedBook, 'id'>
   progress: EntityTable<ReadingProgress, 'id'>
   dictionary: EntityTable<DictionaryEntry, 'id'>
   dictionaryMeta: EntityTable<DictionaryMeta, 'id'>
@@ -48,5 +56,23 @@ db.version(4).stores({
   dictionaryMeta: '++id, &key',
 })
 
+// Version 5: Add processedBooks table for pre-processed EPUB data
+// The old 'files' table is kept for backwards compatibility but not used
+db.version(5).stores({
+  metadata: '++id, title, author, addedAt, lastReadAt',
+  files: '++id, metadataId',
+  processedBooks: '++id, metadataId',
+  progress: '++id, &metadataId',
+  dictionary: '++id, word, reading, reading2, reading3, frequency',
+  dictionaryMeta: '++id, &key',
+})
+
 export { db }
-export type { EpubMetadata, EpubFile, ReadingProgress, DictionaryEntry, DictionaryMeta }
+export type {
+  EpubMetadata,
+  EpubFile,
+  ProcessedBook,
+  ReadingProgress,
+  DictionaryEntry,
+  DictionaryMeta,
+}

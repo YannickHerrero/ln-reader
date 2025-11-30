@@ -2,6 +2,7 @@
 
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type EpubMetadata } from '@/lib/db'
+import { processEpub } from '@/lib/epub-processor'
 
 export type BookWithProgress = EpubMetadata & {
   readingProgress?: number // 0-1 ratio
@@ -25,38 +26,47 @@ export function useLibrary() {
     }))
   })
 
-  const addBook = async (
-    file: File,
-    metadata: Omit<EpubMetadata, 'id' | 'addedAt' | 'lastReadAt'>
-  ) => {
+  /**
+   * Import and process an EPUB file
+   * Heavy processing happens here at import time for fast reading later
+   */
+  const addBook = async (file: File) => {
+    // Process the EPUB (extract HTML, CSS, images, count characters)
+    const processed = await processEpub(file)
+
+    // Store metadata
     const metadataId = await db.metadata.add({
-      ...metadata,
+      title: processed.metadata.title,
+      author: processed.metadata.author,
+      language: processed.metadata.language,
+      coverUrl: processed.metadata.coverUrl,
+      chapterCharCounts: processed.chapterCharCounts,
+      totalCharCount: processed.totalCharCount,
       addedAt: new Date(),
       lastReadAt: null,
     })
 
-    await db.files.add({
+    // Store processed book data
+    await db.processedBooks.add({
       metadataId: metadataId as number,
-      blob: file,
+      chapters: processed.chapters,
+      styleSheet: processed.styleSheet,
+      blobs: processed.blobs,
     })
 
     return metadataId
   }
 
   const deleteBook = async (id: number) => {
-    await db.files.where('metadataId').equals(id).delete()
+    await db.processedBooks.where('metadataId').equals(id).delete()
+    await db.progress.where('metadataId').equals(id).delete()
     await db.metadata.delete(id)
-  }
-
-  const getBookFile = async (metadataId: number) => {
-    return db.files.where('metadataId').equals(metadataId).first()
   }
 
   return {
     books,
     addBook,
     deleteBook,
-    getBookFile,
     isLoading: books === undefined,
   }
 }

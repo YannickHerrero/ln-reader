@@ -2,6 +2,7 @@ export interface EpubMetadata {
   id?: number
   title: string
   author: string
+  language?: string
   coverUrl: string | null
   addedAt: Date
   lastReadAt: Date | null
@@ -11,10 +12,35 @@ export interface EpubMetadata {
   totalCharCount?: number
 }
 
+/** @deprecated Use ProcessedBook instead */
 export interface EpubFile {
   id?: number
   metadataId: number
   blob: Blob
+}
+
+/** Pre-processed chapter data stored in IndexedDB */
+export interface ProcessedChapter {
+  /** Chapter ID/href from EPUB */
+  id: string
+  /** Processed HTML content (with dummy image URLs) */
+  html: string
+  /** Character count for this chapter */
+  charCount: number
+  /** Chapter title if available */
+  title?: string
+}
+
+/** Pre-processed book data stored in IndexedDB */
+export interface ProcessedBook {
+  id?: number
+  metadataId: number
+  /** Pre-processed HTML per chapter (with dummy image URLs) */
+  chapters: ProcessedChapter[]
+  /** Scoped CSS stylesheet */
+  styleSheet: string
+  /** Image blobs keyed by path */
+  blobs: Record<string, Blob>
 }
 
 export interface ReadingProgress {

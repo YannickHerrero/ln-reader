@@ -1,27 +1,35 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { loadEpubBook, type Epub, type EpubChapter } from 'epubix'
-import { db, type ReadingProgress } from '@/lib/db'
-import { processChapterContent, revokeBlobUrls } from '@/lib/epub-renderer'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { db, type ReadingProgress, type ProcessedBook } from '@/lib/db'
+import { createBlobUrls, replaceDummyUrls, revokeBlobUrls } from '@/lib/epub-processor'
 
 interface UseEpubReaderResult {
-  epub: Epub | null
-  chapters: EpubChapter[]
-  currentChapter: EpubChapter | null
+  /** Pre-processed chapters from IndexedDB */
+  chapters: { id: string; title?: string; charCount: number }[]
+  /** Current chapter index */
   currentChapterIndex: number
+  /** Processed HTML content for current chapter (with real image URLs) */
   processedContent: string | null
+  /** Scoped CSS stylesheet from EPUB */
+  styleSheet: string
+  /** Loading state */
   isLoading: boolean
+  /** Error message if any */
   error: string | null
+  /** Navigate to specific chapter */
   goToChapter: (index: number) => void
+  /** Navigate to next chapter */
   nextChapter: () => void
+  /** Navigate to previous chapter */
   prevChapter: () => void
+  /** Saved reading progress */
   savedProgress: ReadingProgress | null
   /** Accumulated character counts per chapter (chars before each chapter) */
   accumulatedChapterChars: number[]
   /** Total character count for the entire book */
   totalBookCharCount: number
-  /** Save progress using character count (new system) */
+  /** Save progress using character count */
   saveProgress: (
     chapterIndex: number,
     exploredCharCount: number,
@@ -30,19 +38,18 @@ interface UseEpubReaderResult {
 }
 
 export function useEpubReader(bookId: number): UseEpubReaderResult {
-  const [epub, setEpub] = useState<Epub | null>(null)
-  const [chapters, setChapters] = useState<EpubChapter[]>([])
+  const [processedBook, setProcessedBook] = useState<ProcessedBook | null>(null)
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0)
-  const [processedContent, setProcessedContent] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [savedProgress, setSavedProgress] = useState<ReadingProgress | null>(null)
   const [accumulatedChapterChars, setAccumulatedChapterChars] = useState<number[]>([])
   const [totalBookCharCount, setTotalBookCharCount] = useState(0)
 
-  const blobUrlsRef = useRef<string[]>([])
+  // Store blob URLs for cleanup
+  const blobUrlsRef = useRef<Map<string, string>>(new Map())
 
-  // Load EPUB and progress
+  // Load processed book and progress
   useEffect(() => {
     let mounted = true
 
@@ -51,35 +58,35 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
       setError(null)
 
       try {
-        // Get the file and metadata from IndexedDB
-        const [file, metadata] = await Promise.all([
-          db.files.where('metadataId').equals(bookId).first(),
+        // Get the processed book data from IndexedDB
+        const [book, metadata] = await Promise.all([
+          db.processedBooks.where('metadataId').equals(bookId).first(),
           db.metadata.get(bookId),
         ])
-        if (!file) {
-          throw new Error('Book file not found')
+
+        if (!book) {
+          throw new Error('Book not found. Please re-import the book.')
         }
 
-        // Load the EPUB
-        const loadedEpub = await loadEpubBook(file.blob)
         if (!mounted) return
 
-        setEpub(loadedEpub)
-        const loadedChapters = loadedEpub.chapters || []
-        setChapters(loadedChapters)
+        // Create blob URLs for images
+        const urls = createBlobUrls(book.blobs)
+        blobUrlsRef.current = urls
 
-        // Build accumulated array from cached character counts
-        const chapterCharCounts = metadata?.chapterCharCounts || []
+        setProcessedBook(book)
+
+        // Build accumulated array from chapter character counts
         const accChars: number[] = []
         let accumulated = 0
-        for (const count of chapterCharCounts) {
+        for (const chapter of book.chapters) {
           accChars.push(accumulated)
-          accumulated += count
+          accumulated += chapter.charCount
         }
 
         if (mounted) {
           setAccumulatedChapterChars(accChars)
-          setTotalBookCharCount(metadata?.totalCharCount || 0)
+          setTotalBookCharCount(metadata?.totalCharCount || accumulated)
         }
 
         // Load saved progress
@@ -113,55 +120,32 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
     }
   }, [bookId])
 
-  // Process chapter content when chapter changes
-  useEffect(() => {
-    let mounted = true
-
-    async function processContent() {
-      if (!epub || chapters.length === 0) return
-
-      const chapter = chapters[currentChapterIndex]
-      if (!chapter) return
-
-      // Clean up previous blob URLs
-      revokeBlobUrls(blobUrlsRef.current)
-      blobUrlsRef.current = []
-
-      try {
-        const { html, blobUrls } = await processChapterContent(
-          chapter.content,
-          epub,
-          chapter.href
-        )
-
-        if (mounted) {
-          blobUrlsRef.current = blobUrls
-          setProcessedContent(html)
-        } else {
-          // Clean up if unmounted
-          revokeBlobUrls(blobUrls)
-        }
-      } catch (err) {
-        console.error('Failed to process chapter:', err)
-        if (mounted) {
-          setProcessedContent(chapter.content)
-        }
-      }
-    }
-
-    processContent()
-
-    return () => {
-      mounted = false
-    }
-  }, [epub, chapters, currentChapterIndex])
-
   // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
       revokeBlobUrls(blobUrlsRef.current)
     }
   }, [])
+
+  // Get processed content for current chapter with real image URLs
+  const processedContent = useMemo(() => {
+    if (!processedBook) return null
+    const chapter = processedBook.chapters[currentChapterIndex]
+    if (!chapter) return null
+
+    // Replace dummy URLs with actual blob URLs
+    return replaceDummyUrls(chapter.html, blobUrlsRef.current)
+  }, [processedBook, currentChapterIndex])
+
+  // Get chapters metadata for navigation
+  const chapters = useMemo(() => {
+    if (!processedBook) return []
+    return processedBook.chapters.map((ch) => ({
+      id: ch.id,
+      title: ch.title,
+      charCount: ch.charCount,
+    }))
+  }, [processedBook])
 
   const goToChapter = useCallback(
     (index: number) => {
@@ -221,14 +205,11 @@ export function useEpubReader(bookId: number): UseEpubReaderResult {
     [bookId, accumulatedChapterChars, totalBookCharCount]
   )
 
-  const currentChapter = chapters[currentChapterIndex] || null
-
   return {
-    epub,
     chapters,
-    currentChapter,
     currentChapterIndex,
     processedContent,
+    styleSheet: processedBook?.styleSheet || '',
     isLoading,
     error,
     goToChapter,
