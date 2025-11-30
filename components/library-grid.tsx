@@ -2,10 +2,10 @@
 
 import { BookCard } from '@/components/book-card'
 import { ImportCard } from '@/components/import-card'
-import type { EpubMetadata } from '@/lib/db'
+import type { BookWithProgress } from '@/hooks/use-library'
 
 interface LibraryGridProps {
-  books: EpubMetadata[]
+  books: BookWithProgress[]
   onFileSelect: (file: File) => void
   isUploading?: boolean
 }

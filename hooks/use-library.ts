@@ -3,10 +3,27 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type EpubMetadata } from '@/lib/db'
 
+export type BookWithProgress = EpubMetadata & {
+  readingProgress?: number // 0-1 ratio
+}
+
 export function useLibrary() {
-  const books = useLiveQuery(() =>
-    db.metadata.orderBy('addedAt').reverse().toArray()
-  )
+  const books = useLiveQuery(async () => {
+    const metadata = await db.metadata.orderBy('addedAt').reverse().toArray()
+    const allProgress = await db.progress.toArray()
+
+    // Create a map of metadataId -> progress
+    const progressMap = new Map<number, number>()
+    for (const p of allProgress) {
+      progressMap.set(p.metadataId, p.progress)
+    }
+
+    // Combine metadata with progress
+    return metadata.map((book): BookWithProgress => ({
+      ...book,
+      readingProgress: book.id ? progressMap.get(book.id) : undefined,
+    }))
+  })
 
   const addBook = async (
     file: File,

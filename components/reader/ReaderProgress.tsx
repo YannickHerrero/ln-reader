@@ -4,40 +4,28 @@ import { ChevronLeft, ChevronRight, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface ReaderProgressProps {
-  /** Number of characters read in current chapter */
-  exploredCharCount: number
-  /** Total characters in current chapter */
-  bookCharCount: number
-  /** Current chapter index (0-based) */
-  currentChapter: number
-  /** Total number of chapters */
-  totalChapters: number
+  /** Progress percentage (0-100) */
+  progress: number
   /** Navigate to previous chapter */
   onPrevChapter: () => void
   /** Navigate to next chapter */
   onNextChapter: () => void
   /** Open settings sheet */
   onOpenSettings: () => void
-}
-
-/**
- * Format a number with thousand separators
- */
-function formatNumber(n: number): string {
-  return n.toLocaleString()
+  /** Whether previous chapter button should be disabled */
+  canGoPrev: boolean
+  /** Whether next chapter button should be disabled */
+  canGoNext: boolean
 }
 
 export function ReaderProgress({
-  exploredCharCount,
-  bookCharCount,
-  currentChapter,
-  totalChapters,
+  progress,
   onPrevChapter,
   onNextChapter,
   onOpenSettings,
+  canGoPrev,
+  canGoNext,
 }: ReaderProgressProps) {
-  const progress = bookCharCount > 0 ? (exploredCharCount / bookCharCount) * 100 : 0
-
   return (
     <div className="bg-background/80 absolute bottom-0 left-0 right-0 backdrop-blur-sm">
       {/* Progress bar */}
@@ -54,21 +42,16 @@ export function ReaderProgress({
           variant="ghost"
           size="icon"
           onClick={onPrevChapter}
-          disabled={currentChapter <= 0}
+          disabled={!canGoPrev}
           aria-label="Previous chapter"
         >
           <ChevronLeft className="h-6 w-6" />
         </Button>
 
         <div className="flex items-center gap-2">
-          <div className="text-muted-foreground flex flex-col items-center text-xs">
-            <span>
-              {formatNumber(exploredCharCount)} / {formatNumber(bookCharCount)} chars
-            </span>
-            <span>
-              Chapter {currentChapter + 1}/{totalChapters}
-            </span>
-          </div>
+          <span className="text-muted-foreground text-sm">
+            {Math.round(progress)}%
+          </span>
           <Button
             variant="ghost"
             size="icon"
@@ -83,7 +66,7 @@ export function ReaderProgress({
           variant="ghost"
           size="icon"
           onClick={onNextChapter}
-          disabled={currentChapter >= totalChapters - 1}
+          disabled={!canGoNext}
           aria-label="Next chapter"
         >
           <ChevronRight className="h-6 w-6" />
