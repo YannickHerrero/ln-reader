@@ -1,8 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CoverArt } from '../components/CoverArt'
-import { SearchPanel } from '../components/SearchPanel'
 import type { LibrarySeriesRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
 import { encodeRouteKey } from '../app/route-key'
@@ -47,7 +46,6 @@ function LibraryCard({ series }: { series: LibrarySeriesRecord }) {
 
 export function LibraryPage() {
   const series = useLiveQuery(() => libraryRepository.listSeries(), [], [])
-  const [searchOpen, setSearchOpen] = useState(false)
 
   useEffect(() => {
     navigator.storage?.persist?.().catch(() => undefined)
@@ -57,7 +55,7 @@ export function LibraryPage() {
     <main className="shell">
       <header className="topbar">
         <a className="wordmark" href="/" aria-label="LN Reader, accueil"><span>LN</span> Reader</a>
-        <button className="primary-button" type="button" onClick={() => setSearchOpen(true)}>+ Ajouter</button>
+        <Link className="primary-button" to="/search">+ Ajouter</Link>
       </header>
 
       <section className="masthead">
@@ -71,7 +69,7 @@ export function LibraryPage() {
           <span className="empty-state__mark">文</span>
           <h2>Votre bibliothèque est vide</h2>
           <p>Recherchez un light novel, un web novel ou un roman pour commencer.</p>
-          <button type="button" onClick={() => setSearchOpen(true)}>Rechercher un titre</button>
+          <Link className="primary-button" to="/search">Rechercher un titre</Link>
         </section>
       ) : (
         <section className="library-section" aria-labelledby="library-heading">
@@ -84,8 +82,6 @@ export function LibraryPage() {
           </div>
         </section>
       )}
-
-      {searchOpen && <SearchPanel onClose={() => setSearchOpen(false)} onAdded={() => setSearchOpen(false)} />}
     </main>
   )
 }

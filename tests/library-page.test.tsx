@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../src/app/App'
@@ -22,6 +22,9 @@ describe('library page', () => {
   it('searches for and adds a text series to the local library', async () => {
     vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL) => {
       const url = input.toString()
+      if (url.includes('/api/source/discover')) {
+        return response({ popular: [], recentlyAdded: [], recentlyUpdated: [] })
+      }
       if (url.includes('/api/source/search')) {
         return response([{ key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text' }])
       }
@@ -41,15 +44,16 @@ describe('library page', () => {
     }))
 
     const { unmount } = render(<MemoryRouter><App /></MemoryRouter>)
-    await userEvent.click(screen.getByRole('button', { name: 'Rechercher un titre' }))
-    await userEvent.type(screen.getByRole('textbox', { name: 'Titre' }), 'toradora')
-    fireEvent.submit(screen.getByRole('textbox', { name: 'Titre' }).closest('form')!)
+    await userEvent.click(screen.getByRole('link', { name: 'Rechercher un titre' }))
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Rechercher un titre' }), 'toradora')
 
     expect(await screen.findByText('Toradora!')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Ajouter' }))
+    await userEvent.click(screen.getByRole('button', { name: '+ Ajouter' }))
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Toradora!' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/a été ajouté/)).toBeInTheDocument())
     expect(await db.series.get('/oeuvre/toradora/')).toMatchObject({ title: 'Toradora!' })
+    await userEvent.click(screen.getByRole('link', { name: '← Bibliothèque' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Toradora!' })).toBeInTheDocument())
     unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
