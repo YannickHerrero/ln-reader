@@ -1,14 +1,17 @@
 # LN Reader
 
 A small, personal PWA for reading French light novels, web novels and novels from
-[Mangas-Origines](https://mangas-origines.fr). The library, reading progress and
-downloaded chapters stay in the browser's local IndexedDB database.
+[Novel-FR](https://novel-fr.net) and [Mangas-Origines](https://mangas-origines.fr).
+The library, reading progress and downloaded chapters stay in the browser's local
+IndexedDB database.
 
 ## Features
 
-- Local library with title search and cached covers
-- Source filtering on Madara's `text` type, so manga results are excluded
-- Series details and chapter lists
+- Local library with merged title search and cached covers
+- Novel-FR as the primary catalog, with Mangas-Origines releases as fallback
+- Conservative chapter deduplication that retains every available source release
+- Source filtering that excludes manga results
+- Series details, source labels and sticky `1→N` / `N→1` chapter sorting
 - Continuous, page-free reading
 - Per-chapter progress and automatic completion near the end
 - Explicit chapter downloads for offline reading
@@ -17,19 +20,24 @@ downloaded chapters stay in the browser's local IndexedDB database.
 
 ## How it works
 
-The React application cannot request Mangas-Origines directly because the site is
-protected by Cloudflare and does not expose cross-origin browser APIs. A local
-Express server therefore owns a paced Playwright browser session, obtains
-Cloudflare clearance, and exposes a small same-origin API.
+A local Express server aggregates both catalogs behind a small same-origin API.
+Novel-FR is queried first. Matching series and chapter numbers are merged while
+retaining their release URLs, so a chapter can retry on Mangas-Origines when its
+preferred Novel-FR release fails.
 
-Chapter HTML is decrypted with the PBKDF2/AES-GCM algorithm shipped by the source,
-sanitized on the server, and then rendered without source scripts or advertisements.
-Only chapters explicitly downloaded by the user are persisted for offline use.
+Mangas-Origines is protected by Cloudflare and does not expose cross-origin browser
+APIs, so its adapter owns a paced Playwright browser session and obtains Cloudflare
+clearance. Its chapter HTML is decrypted with the source's PBKDF2/AES-GCM
+algorithm. Content from both sources is sanitized on the server and rendered
+without source scripts or advertisements. Only chapters explicitly downloaded by
+the user are persisted for offline use.
 
 ```text
-React PWA -> Express API -> Playwright browser -> mangas-origines.fr
+                         +-> novel-fr.net (primary)
+React PWA -> Express API |
+    |                    +-> Playwright -> mangas-origines.fr (fallback)
     |
-    +-> IndexedDB: library, progress, cached covers and downloads
+    +-> IndexedDB: library, canonical progress, cached covers and downloads
 ```
 
 This architecture requires a persistent Node process. Static-only or short-lived
@@ -119,14 +127,16 @@ pnpm build      # typecheck and production/PWA build
 
 ## Source maintenance
 
-The source adapter lives under `server/source/`. It validates all source paths,
-serializes requests, retries after expired Cloudflare clearance, filters search
-results by `type: "text"`, and sanitizes decrypted chapter markup. Live source
-markup can change independently of this project.
+The source adapters and merger live under `server/source/`. They validate source
+paths, deduplicate matching series and chapters, preserve alternate releases, and
+sanitize chapter markup. The Mangas-Origines adapter additionally serializes
+browser requests, retries expired Cloudflare clearance, filters search results by
+`type: "text"`, and decrypts protected chapters. Live source markup can change
+independently of this project.
 
 ## Disclaimer
 
-This project is intended for personal use. It is not affiliated with
+This project is intended for personal use. It is not affiliated with Novel-FR or
 Mangas-Origines. Content remains hosted by and belongs to its respective source
 and rights holders. Use it in accordance with the source's terms and applicable
 law.
