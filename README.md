@@ -78,9 +78,21 @@ PORT=4174 pnpm start
 ```
 
 The Express process serves both `dist/` and the API at <http://localhost:4174>.
-`localhost` is treated as a secure PWA context. Installing on another device
-requires an HTTPS reverse proxy and an always-running Node host capable of running
-Playwright.
+It binds to `127.0.0.1` by default; set `HOST` only when an intentional non-loopback
+listener is required. `localhost` is treated as a secure PWA context. Installing on
+another device requires an HTTPS reverse proxy and an always-running Node host
+capable of running Playwright.
+
+## Managed service
+
+[`citadel.service.json`](citadel.service.json) is the machine-service contract used
+by Citadel. It provides the same command, health-check, restart, and graceful-stop
+metadata as other locally managed projects. `pnpm service:start` starts only the
+already-built production process; building and changing Tailscale routes remain
+explicit deployment operations rather than service restarts.
+
+The existing `pnpm phone` command remains available for an isolated interactive
+session when Citadel is not managing the process.
 
 ## Access from a phone over Tailscale
 

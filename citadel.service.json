@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "ln-reader",
+  "displayName": "LN Reader",
+  "description": "Personal light-novel reader and source aggregator",
+  "workingDirectory": ".",
+  "command": ["pnpm", "run", "service:start"],
+  "environment": {
+    "HOST": "127.0.0.1",
+    "PORT": "4174"
+  },
+  "healthCheck": {
+    "url": "http://127.0.0.1:4174/api/health",
+    "timeoutMilliseconds": 3000
+  },
+  "restart": "on-failure",
+  "startAtLogin": true,
+  "stopTimeoutSeconds": 30
+}
