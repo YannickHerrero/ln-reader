@@ -37,6 +37,12 @@ function imageUrl(element: { attr(name: string): string | undefined }): string |
   return candidate ? new URL(candidate, BASE_URL).toString() : null
 }
 
+function cleanPublishedDate(value: string): string | null {
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  if (!normalized) return null
+  return normalized.match(/\b\d{1,2}\s+[\p{L}-]+\s+\d{4}\b/u)?.[0] ?? normalized
+}
+
 function itemValue(
   $: cheerio.CheerioAPI,
   headingPattern: RegExp,
@@ -83,7 +89,7 @@ export function parseChapters(html: string): SourceChapter[] {
 
     const numberMatch = title.match(/[0-9]+(?:[.,][0-9]+)?/)
     const number = numberMatch ? Number(numberMatch[0].replace(',', '.')) : null
-    const publishedAt = $(item).find('.chapter-release-date').first().text().replace(/\s+/g, ' ').trim() || null
+    const publishedAt = cleanPublishedDate($(item).find('.chapter-release-date').first().text())
     seen.add(key)
     chapters.push({ key, title, number: Number.isFinite(number) ? number : null, publishedAt })
   })

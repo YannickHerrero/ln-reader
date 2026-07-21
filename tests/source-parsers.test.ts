@@ -49,7 +49,7 @@ describe('Mangas-Origines parsers', () => {
         <div class="summary-content">En cours</div>
       </div>`
     const chapters = `
-      <li class="wp-manga-chapter"><a href="https://mangas-origines.fr/oeuvre/example/chapitre-10-5/">Chapitre 10.5</a><span class="chapter-release-date">12 mars 2024</span></li>
+      <li class="wp-manga-chapter"><a href="https://mangas-origines.fr/oeuvre/example/chapitre-10-5/">Chapitre 10.5</a><span class="chapter-release-date">12 mars 2024 42 vues</span></li>
       <li class="wp-manga-chapter"><a href="https://mangas-origines.fr/oeuvre/example/chapitre-9/">Chapitre 9</a></li>`
 
     expect(parseSeriesDetails(detail, '/oeuvre/example/', chapters)).toMatchObject({
