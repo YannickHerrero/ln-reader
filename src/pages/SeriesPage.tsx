@@ -6,6 +6,7 @@ import { decodeRouteKey, encodeRouteKey } from '../app/route-key'
 import { CoverArt } from '../components/CoverArt'
 import type { ChapterRecord, ReadingProgressRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
+import { sourceName, sourcesLabel } from '../source/labels'
 
 const EMPTY_KEYS = new Set<string>()
 
@@ -53,6 +54,7 @@ export function SeriesPage() {
     return () => { document.title = 'LN Reader' }
   }, [series])
 
+
   if (series === undefined) return <main className="center-state">Chargement…</main>
   if (!seriesKey || series === null) return <Navigate to="/" replace />
 
@@ -84,7 +86,9 @@ export function SeriesPage() {
       if (downloadedKeys.has(chapterKey)) {
         await libraryRepository.removeDownload(chapterKey)
       } else {
-        const content = await sourceApi.chapter(chapterKey)
+        const chapter = await libraryRepository.getChapter(chapterKey)
+        if (!chapter) throw new Error('Ce chapitre est introuvable.')
+        const content = await sourceApi.chapter(chapterKey, chapter.releases)
         await libraryRepository.downloadChapter(seriesKey, content)
       }
     } catch (caught) {
@@ -109,6 +113,9 @@ export function SeriesPage() {
           <p className="eyebrow">{series.status ?? 'Roman'}</p>
           <h1>{series.title}</h1>
           {series.author && <p className="series-author">par {series.author}</p>}
+          <div className="source-list" aria-label="Sources disponibles">
+            {series.sources.map((source) => <span key={`${source.source}:${source.key}`}>{sourceName(source.source)}</span>)}
+          </div>
           <div className="genre-list">{series.genres.map((genre) => <span key={genre}>{genre}</span>)}</div>
           {series.description && <p className="series-description">{series.description}</p>}
           {startChapter && (
@@ -136,7 +143,13 @@ export function SeriesPage() {
                 <article className={`chapter-row ${chapterProgress?.completed ? 'chapter-row--read' : ''}`} key={chapter.key}>
                   <Link to={readerPath(series.key, chapter.key)} className="chapter-row__link">
                     <span className="chapter-status" aria-hidden="true">{chapterProgress?.completed ? '✓' : '○'}</span>
-                    <span><strong>{chapter.title}</strong>{chapter.publishedAt && <small>{chapter.publishedAt}</small>}</span>
+                    <span>
+                      <strong>{chapter.title}</strong>
+                      <small className="chapter-meta">
+                        {chapter.publishedAt && <span>{chapter.publishedAt}</span>}
+                        <span title={chapter.releases.map((release) => sourceName(release.source)).join(', ')}>{sourcesLabel(chapter.releases)}</span>
+                      </small>
+                    </span>
                   </Link>
                   <button
                     className={`download-button ${downloaded ? 'download-button--active' : ''}`}

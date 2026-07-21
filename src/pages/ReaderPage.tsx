@@ -7,6 +7,7 @@ import { decodeRouteKey, encodeRouteKey } from '../app/route-key'
 import type { ChapterRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
 import { calculateScrollRatio, isChapterComplete } from '../reader/progress'
+import { sourceName } from '../source/labels'
 
 function readerPath(seriesKey: string, chapterKey: string) {
   return `/read/${encodeRouteKey(seriesKey)}/${encodeRouteKey(chapterKey)}`
@@ -52,10 +53,15 @@ export function ReaderPage() {
     latestRatio.current = 0
     setContent(null)
     setError(null)
-    if (download === undefined || !chapterKey) return
+    if (download === undefined || !chapterKey || !chapter) return
 
     if (download) {
-      setContent({ key: download.chapterKey, title: download.title, html: download.html })
+      setContent({
+        key: download.chapterKey,
+        title: download.title,
+        html: download.html,
+        source: download.source ?? (download.chapterKey.startsWith('novelFr:') ? 'novelFr' : 'mangasOrigines'),
+      })
       setOfflineCopy(true)
       setLoading(false)
       return
@@ -64,7 +70,7 @@ export function ReaderPage() {
     const controller = new AbortController()
     setOfflineCopy(false)
     setLoading(true)
-    sourceApi.chapter(chapterKey, controller.signal)
+    sourceApi.chapter(chapterKey, chapter.releases, controller.signal)
       .then(setContent)
       .catch((caught) => {
         if (caught instanceof DOMException && caught.name === 'AbortError') return
@@ -74,7 +80,7 @@ export function ReaderPage() {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
-  }, [chapterKey, download])
+  }, [chapterKey, chapter, download])
 
   useEffect(() => {
     if (!content || !chapterKey || !seriesKey || savedProgress === undefined || restored.current) return
@@ -152,8 +158,11 @@ export function ReaderPage() {
       {content && (
         <>
           <article className="reader-article">
-            <div className="reader-kicker"><span>{offlineCopy ? 'Disponible hors ligne' : 'Lecture en ligne'}</span><span>Lecture continue</span></div>
-            <h1>{content.title}</h1>
+            <div className="reader-kicker">
+              <span>{offlineCopy ? 'Disponible hors ligne' : 'Lecture en ligne'} · {sourceName(content.source)}</span>
+              <span>Lecture continue</span>
+            </div>
+            <h1>{chapter?.title ?? content.title}</h1>
             <div className="reader-copy" dangerouslySetInnerHTML={safeContent} />
           </article>
           <nav className="chapter-navigation" aria-label="Navigation entre chapitres">

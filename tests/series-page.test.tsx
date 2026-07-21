@@ -11,17 +11,28 @@ import { libraryRepository } from '../src/db/repository'
 const series: SourceSeries = {
   key: '/oeuvre/example/',
   title: 'Example Novel',
+  sources: [{ source: 'mangasOrigines', key: '/oeuvre/example/' }],
   coverImage: null,
   author: 'Jane Doe',
   description: 'A readable synopsis.',
   genres: ['Novel', 'Fantasy'],
   status: 'En cours',
-  chapters: [{
-    key: '/oeuvre/example/chapitre-1/',
-    title: 'Chapitre 1',
-    number: 1,
-    publishedAt: '12 mars 2024',
-  }],
+  chapters: [
+    {
+      key: '/oeuvre/example/chapitre-2/',
+      title: 'Chapitre 2',
+      number: 2,
+      publishedAt: '13 mars 2024',
+      releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }],
+    },
+    {
+      key: '/oeuvre/example/chapitre-1/',
+      title: 'Chapitre 1',
+      number: 1,
+      publishedAt: '12 mars 2024',
+      releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }],
+    },
+  ],
 }
 
 beforeEach(async () => {
@@ -36,9 +47,10 @@ afterEach(() => {
 describe('series page', () => {
   it('downloads and removes an individual chapter', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(JSON.stringify({
-      key: series.chapters[0]!.key,
+      key: series.chapters[1]!.key,
       title: 'Chapitre 1',
       html: '<p>Contenu hors ligne.</p>',
+      source: 'mangasOrigines',
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))))
 
     const route = `/series/${encodeRouteKey(series.key)}`
@@ -48,11 +60,11 @@ describe('series page', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Télécharger Chapitre 1' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Supprimer le téléchargement de Chapitre 1' })).toBeInTheDocument())
-    expect(await libraryRepository.getDownload(series.chapters[0]!.key)).toMatchObject({ html: '<p>Contenu hors ligne.</p>' })
+    expect(await libraryRepository.getDownload(series.chapters[1]!.key)).toMatchObject({ html: '<p>Contenu hors ligne.</p>' })
 
     await userEvent.click(screen.getByRole('button', { name: 'Supprimer le téléchargement de Chapitre 1' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Télécharger Chapitre 1' })).toBeInTheDocument())
-    expect(await libraryRepository.getDownload(series.chapters[0]!.key)).toBeUndefined()
+    expect(await libraryRepository.getDownload(series.chapters[1]!.key)).toBeUndefined()
 
     unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))

@@ -9,6 +9,11 @@ describe('route keys', () => {
     expect(decodeRouteKey(encoded)).toBe('/oeuvre/the-authors-pov/')
   })
 
+  it('supports Novel-FR source keys', () => {
+    const key = 'novelFr:/series/the-beginning-after-the-end/'
+    expect(decodeRouteKey(encodeRouteKey(key))).toBe(key)
+  })
+
   it('rejects unrelated decoded values', () => {
     expect(decodeRouteKey(encodeRouteKey('/not-a-series/'))).toBeNull()
   })

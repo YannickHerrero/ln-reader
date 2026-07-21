@@ -10,14 +10,15 @@ import { libraryRepository } from '../src/db/repository'
 const series: SourceSeries = {
   key: '/oeuvre/example/',
   title: 'Example Novel',
+  sources: [{ source: 'mangasOrigines', key: '/oeuvre/example/' }],
   coverImage: null,
   author: null,
   description: null,
   genres: ['Novel'],
   status: null,
   chapters: [
-    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, publishedAt: null },
-    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, publishedAt: null },
+    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }] },
+    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }] },
   ],
 }
 
@@ -28,6 +29,7 @@ beforeEach(async () => {
     key: series.chapters[1]!.key,
     title: 'Chapitre 1',
     html: '<p>Contenu téléchargé.</p>',
+    source: 'mangasOrigines',
   })
   vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
 })
@@ -45,7 +47,7 @@ describe('reader page', () => {
     const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
 
     expect(await screen.findByText('Contenu téléchargé.')).toBeInTheDocument()
-    expect(screen.getByText('Disponible hors ligne')).toBeInTheDocument()
+    expect(screen.getByText(/Disponible hors ligne/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Chapitre 2/ })).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
 

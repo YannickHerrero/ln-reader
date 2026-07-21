@@ -30,6 +30,7 @@ export class LibraryRepository {
       const record: LibrarySeriesRecord = {
         key: series.key,
         title: series.title,
+        sources: series.sources,
         coverImage: series.coverImage,
         author: series.author,
         description: series.description,
@@ -163,6 +164,7 @@ export class LibraryRepository {
       seriesKey,
       title: content.title,
       html: content.html,
+      source: content.source,
       downloadedAt: Date.now(),
     })
   }

@@ -73,7 +73,12 @@ export function parseSearchResponse(value: unknown): SourceSearchResult[] {
     const key = sourceKey(suggestion.url)
     if (!key || seen.has(key)) return []
     seen.add(key)
-    return [{ key, title: suggestion.title.trim(), sourceType: 'text' as const }]
+    return [{
+      key,
+      title: suggestion.title.trim(),
+      sourceType: 'text' as const,
+      sources: [{ source: 'mangasOrigines' as const, key }],
+    }]
   })
 }
 
@@ -94,6 +99,7 @@ export function parseBrowseResults(html: string): SourceBrowseResult[] {
       key,
       title,
       coverImage: cover.length ? imageUrl(cover) : null,
+      sources: [{ source: 'mangasOrigines', key }],
     })
   })
 
@@ -115,7 +121,13 @@ export function parseChapters(html: string): SourceChapter[] {
     const number = numberMatch ? Number(numberMatch[0].replace(',', '.')) : null
     const publishedAt = cleanPublishedDate($(item).find('.chapter-release-date').first().text())
     seen.add(key)
-    chapters.push({ key, title, number: Number.isFinite(number) ? number : null, publishedAt })
+    chapters.push({
+      key,
+      title,
+      number: Number.isFinite(number) ? number : null,
+      publishedAt,
+      releases: [{ source: 'mangasOrigines', key }],
+    })
   })
 
   return chapters
@@ -138,6 +150,7 @@ export function parseSeriesDetails(
   return {
     key,
     title,
+    sources: [{ source: 'mangasOrigines', key }],
     coverImage: coverElement.length ? imageUrl(coverElement) : null,
     author,
     description,
@@ -148,6 +161,14 @@ export function parseSeriesDetails(
 }
 
 const allowedTags = ['p', 'br', 'strong', 'em', 'b', 'i', 'blockquote', 'hr', 'ul', 'ol', 'li', 'h2', 'h3']
+
+export function sanitizeChapterHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags,
+    allowedAttributes: {},
+    disallowedTagsMode: 'discard',
+  }).trim()
+}
 
 export function parseChapterContent(html: string, key: string): SourceChapterContent {
   const $ = cheerio.load(html)
@@ -170,14 +191,10 @@ export function parseChapterContent(html: string, key: string): SourceChapterCon
     chapterHtml = $('.reading-content .text-left').first().html() ?? ''
   }
 
-  const sanitized = sanitizeHtml(chapterHtml, {
-    allowedTags,
-    allowedAttributes: {},
-    disallowedTagsMode: 'discard',
-  }).trim()
+  const sanitized = sanitizeChapterHtml(chapterHtml)
   if (!sanitized) throw new Error('The source returned an empty chapter.')
 
-  return { key, title, html: sanitized }
+  return { key, title, html: sanitized, source: 'mangasOrigines' }
 }
 
 export { BASE_URL }

@@ -1,13 +1,22 @@
+export type SourceID = 'novelFr' | 'mangasOrigines'
+
+export interface SourceReference {
+  source: SourceID
+  key: string
+}
+
 export interface SourceSearchResult {
   key: string
   title: string
   sourceType: 'text'
+  sources: SourceReference[]
 }
 
 export interface SourceBrowseResult {
   key: string
   title: string
   coverImage: string | null
+  sources: SourceReference[]
 }
 
 export interface SourceDiscovery {
@@ -21,11 +30,13 @@ export interface SourceChapter {
   title: string
   number: number | null
   publishedAt: string | null
+  releases: SourceReference[]
 }
 
 export interface SourceSeries {
   key: string
   title: string
+  sources: SourceReference[]
   coverImage: string | null
   author: string | null
   description: string | null
@@ -38,6 +49,7 @@ export interface SourceChapterContent {
   key: string
   title: string
   html: string
+  source: SourceID
 }
 
 export interface ApiErrorBody {

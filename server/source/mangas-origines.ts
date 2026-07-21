@@ -12,7 +12,7 @@ import {
   parseSearchResponse,
   parseSeriesDetails,
 } from './parsers'
-import type { SourceHttpClient, SourceService } from './types'
+import type { NovelSource, SourceHttpClient } from './types'
 
 const textDecoder = new TextDecoder()
 
@@ -26,7 +26,8 @@ function assertSourcePath(key: string, kind: 'series' | 'chapter'): string {
   return url.pathname
 }
 
-export class MangasOriginesSource implements SourceService {
+export class MangasOriginesSource implements NovelSource {
+  readonly id = 'mangasOrigines' as const
   private discoveryCache: { value: SourceDiscovery; expiresAt: number } | null = null
 
   constructor(private readonly client: SourceHttpClient) {}
@@ -123,9 +124,13 @@ export class MangasOriginesSource implements SourceService {
     return parseBrowseResults(textDecoder.decode(response.body))
   }
 
+  ownsAsset(url: URL): boolean {
+    return url.origin === BASE_URL && url.pathname.startsWith('/wp-content/uploads/')
+  }
+
   async asset(rawUrl: string): Promise<{ body: Buffer; contentType: string }> {
     const url = new URL(rawUrl)
-    if (url.origin !== BASE_URL || !url.pathname.startsWith('/wp-content/uploads/')) {
+    if (!this.ownsAsset(url)) {
       throw new Error('Invalid asset URL.')
     }
     const response = await this.client.request(`${url.pathname}${url.search}`, { pace: false })

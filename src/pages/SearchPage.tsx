@@ -8,6 +8,8 @@ import type {
 } from '../../shared/contracts'
 import { sourceApi } from '../api/source'
 import { libraryRepository } from '../db/repository'
+import { sourcesLabel } from '../source/labels'
+import { normalizeSeriesTitle } from '../source/normalize-title'
 
 interface AddableSeries {
   key: string
@@ -40,7 +42,7 @@ function DiscoveryCard({
         {rank && <strong className="discovery-rank" aria-label={`Numéro ${rank}`}>{String(rank).padStart(2, '0')}</strong>}
       </div>
       <div className="discovery-card__copy">
-        <p>Roman · Français</p>
+        <p>{sourcesLabel(item.sources)} · Français</p>
         <h3>{item.title}</h3>
         <button type="button" disabled={added || busy} onClick={onAdd}>
           {busy ? 'Ajout…' : added ? 'Ajouté' : '+ Ajouter'}
@@ -56,7 +58,7 @@ function DiscoverySection({
   description,
   items,
   ranked = false,
-  addedKeys,
+  addedTitles,
   busyKey,
   onAdd,
 }: {
@@ -65,7 +67,7 @@ function DiscoverySection({
   description: string
   items: SourceBrowseResult[]
   ranked?: boolean
-  addedKeys: Set<string>
+  addedTitles: Set<string>
   busyKey: string | null
   onAdd(item: AddableSeries): void
 }) {
@@ -81,7 +83,7 @@ function DiscoverySection({
             key={item.key}
             item={item}
             rank={ranked ? index + 1 : undefined}
-            added={addedKeys.has(item.key)}
+            added={addedTitles.has(normalizeSeriesTitle(item.title))}
             busy={busyKey === item.key}
             onAdd={() => onAdd(item)}
           />
@@ -93,7 +95,11 @@ function DiscoverySection({
 
 export function SearchPage() {
   const library = useLiveQuery(() => libraryRepository.listSeries(), [], [])
-  const addedKeys = useMemo(() => new Set(library.map((item) => item.key)), [library])
+  const existingByTitle = useMemo(
+    () => new Map(library.map((item) => [normalizeSeriesTitle(item.title), item])),
+    [library],
+  )
+  const addedTitles = useMemo(() => new Set(existingByTitle.keys()), [existingByTitle])
   const [query, setQuery] = useState('')
   const [discovery, setDiscovery] = useState<SourceDiscovery | null>(null)
   const [results, setResults] = useState<SourceSearchResult[]>([])
@@ -167,7 +173,8 @@ export function SearchPage() {
     setError(null)
     setNotice(null)
     try {
-      const series = await sourceApi.series(item.key)
+      const existing = existingByTitle.get(normalizeSeriesTitle(item.title))
+      const series = await sourceApi.series(existing?.key ?? item.key)
       let cover: Blob | undefined
       if (series.coverImage) {
         try { cover = await sourceApi.cover(series.coverImage) } catch { /* A cover is optional. */ }
@@ -191,7 +198,7 @@ export function SearchPage() {
       </header>
 
       <section className="search-page__intro">
-        <p className="eyebrow">Mangas-Origines</p>
+        <p className="eyebrow">Novel-FR · Mangas-Origines</p>
         <h1>Votre prochaine<br /><em>histoire.</em></h1>
         <div className="search-page__field">
           <span aria-hidden="true">⌕</span>
@@ -222,11 +229,11 @@ export function SearchPage() {
           )}
           <div className="search-page__results">
             {results.map((result) => {
-              const added = addedKeys.has(result.key)
+              const added = addedTitles.has(normalizeSeriesTitle(result.title))
               return (
                 <article className="search-page__result" key={result.key}>
                   <span aria-hidden="true">文</span>
-                  <div><p>Roman · Français</p><h3>{result.title}</h3></div>
+                  <div><p>{sourcesLabel(result.sources)} · Français</p><h3>{result.title}</h3></div>
                   <button type="button" disabled={added || busyKey === result.key} onClick={() => add(result)}>
                     {busyKey === result.key ? 'Ajout…' : added ? 'Ajouté' : '+ Ajouter'}
                   </button>
@@ -245,7 +252,7 @@ export function SearchPage() {
             description="Les romans les plus lus par la communauté."
             items={discovery.popular}
             ranked
-            addedKeys={addedKeys}
+            addedTitles={addedTitles}
             busyKey={busyKey}
             onAdd={add}
           />
@@ -254,7 +261,7 @@ export function SearchPage() {
             title="Ajoutés récemment"
             description="Les derniers romans arrivés au catalogue."
             items={discovery.recentlyAdded}
-            addedKeys={addedKeys}
+            addedTitles={addedTitles}
             busyKey={busyKey}
             onAdd={add}
           />
@@ -263,7 +270,7 @@ export function SearchPage() {
             title="Mis à jour récemment"
             description="Des histoires qui viennent de recevoir un chapitre."
             items={discovery.recentlyUpdated}
-            addedKeys={addedKeys}
+            addedTitles={addedTitles}
             busyKey={busyKey}
             onAdd={add}
           />

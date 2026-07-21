@@ -27,18 +27,19 @@ describe('library page', () => {
         return response({ popular: [], recentlyAdded: [], recentlyUpdated: [] })
       }
       if (url.includes('/api/source/search')) {
-        return response([{ key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text' }])
+        return response([{ key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text', sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }] }])
       }
       if (url.includes('/api/source/series')) {
         return response({
           key: '/oeuvre/toradora/',
           title: 'Toradora!',
+          sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }],
           coverImage: null,
           author: 'Yuyuko Takemiya',
           description: 'Synopsis',
           genres: ['Novel', 'Romance'],
           status: 'En cours',
-          chapters: [{ key: '/oeuvre/toradora/chapitre-1/', title: 'Chapitre 1', number: 1, publishedAt: null }],
+          chapters: [{ key: '/oeuvre/toradora/chapitre-1/', title: 'Chapitre 1', number: 1, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/chapitre-1/' }] }],
         })
       }
       throw new Error(`Unexpected request: ${url}`)
@@ -63,6 +64,7 @@ describe('library page', () => {
     await libraryRepository.addOrUpdateSeries({
       key: '/oeuvre/continue/',
       title: 'Continue Novel',
+      sources: [{ source: 'mangasOrigines', key: '/oeuvre/continue/' }],
       coverImage: null,
       author: null,
       description: null,
@@ -73,6 +75,7 @@ describe('library page', () => {
         title: 'Chapitre 1',
         number: 1,
         publishedAt: null,
+        releases: [{ source: 'mangasOrigines', key: '/oeuvre/continue/chapitre-1/' }],
       }],
     })
     await libraryRepository.saveProgress(

@@ -1,13 +1,31 @@
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import type { ApiErrorBody } from '../shared/contracts'
+import type { ApiErrorBody, SourceReference } from '../shared/contracts'
 import type { SourceService } from './source/types'
 
 function queryString(request: Request, name: string): string {
   const value = request.query[name]
   if (typeof value !== 'string') throw new Error(`Missing ${name}.`)
   return value
+}
+
+function sourceReferences(request: Request): SourceReference[] | undefined {
+  const value = request.query.releases
+  if (value === undefined) return undefined
+  if (typeof value !== 'string') throw new Error('Invalid releases.')
+  try {
+    const decoded = JSON.parse(value) as unknown
+    if (!Array.isArray(decoded)) throw new Error()
+    return decoded.map((item) => {
+      if (!item || typeof item !== 'object') throw new Error()
+      const { source, key } = item as Partial<SourceReference>
+      if ((source !== 'novelFr' && source !== 'mangasOrigines') || typeof key !== 'string') throw new Error()
+      return { source, key }
+    })
+  } catch {
+    throw new Error('Invalid releases.')
+  }
 }
 
 export function createApp(source: SourceService) {
@@ -38,7 +56,7 @@ export function createApp(source: SourceService) {
 
   app.get('/api/source/chapter', async (request, response) => {
     response.set('Cache-Control', 'no-store')
-    response.json(await source.chapter(queryString(request, 'key')))
+    response.json(await source.chapter(queryString(request, 'key'), sourceReferences(request)))
   })
 
   app.get('/api/source/asset', async (request, response) => {

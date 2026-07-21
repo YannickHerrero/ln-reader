@@ -34,7 +34,7 @@ describe('Mangas-Origines parsers', () => {
     })
 
     expect(results).toEqual([
-      { key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text' },
+      { key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text', sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }] },
     ])
   })
 
@@ -52,6 +52,7 @@ describe('Mangas-Origines parsers', () => {
       key: '/oeuvre/toradora/',
       title: 'Toradora!',
       coverImage: 'https://mangas-origines.fr/wp-content/uploads/toradora.webp',
+      sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }],
     }])
   })
 
@@ -99,6 +100,7 @@ describe('Mangas-Origines parsers', () => {
       key: '/oeuvre/example/chapitre-4/',
       title: 'Chapitre 4',
       html: '<p>Bonjour <strong>lecteur</strong>.</p>',
+      source: 'mangasOrigines',
     })
   })
 })

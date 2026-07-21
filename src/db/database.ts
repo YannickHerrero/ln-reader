@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { SourceChapter, SourceSeries } from '../../shared/contracts'
+import type { SourceChapter, SourceID, SourceSeries } from '../../shared/contracts'
 
 export interface LibrarySeriesRecord extends Omit<SourceSeries, 'chapters'> {
   addedAt: number
@@ -24,6 +24,7 @@ export interface DownloadRecord {
   seriesKey: string
   title: string
   html: string
+  source?: SourceID
   downloadedAt: number
 }
 
@@ -41,12 +42,24 @@ export class LibraryDatabase extends Dexie {
 
   constructor(name = 'ln-reader') {
     super(name)
-    this.version(1).stores({
+    const stores = {
       series: '&key, addedAt, updatedAt',
       chapters: '&key, seriesKey, [seriesKey+position]',
       progress: '&chapterKey, seriesKey, lastReadAt, completed',
       downloads: '&chapterKey, seriesKey, downloadedAt',
       covers: '&seriesKey',
+    }
+    this.version(1).stores(stores)
+    this.version(2).stores(stores).upgrade(async (transaction) => {
+      await transaction.table('series').toCollection().modify((record) => {
+        record.sources ??= [{ source: 'mangasOrigines', key: record.key }]
+      })
+      await transaction.table('chapters').toCollection().modify((record) => {
+        record.releases ??= [{ source: 'mangasOrigines', key: record.key }]
+      })
+      await transaction.table('downloads').toCollection().modify((record) => {
+        record.source ??= record.chapterKey.startsWith('novelFr:') ? 'novelFr' : 'mangasOrigines'
+      })
     })
   }
 }

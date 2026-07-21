@@ -23,9 +23,9 @@ describe('search page', () => {
       const url = input.toString()
       if (url.includes('/api/source/discover')) {
         return jsonResponse({
-          popular: [{ key: '/oeuvre/popular/', title: 'Popular Novel', coverImage: null }],
-          recentlyAdded: [{ key: '/oeuvre/new/', title: 'New Novel', coverImage: null }],
-          recentlyUpdated: [{ key: '/oeuvre/updated/', title: 'Updated Novel', coverImage: null }],
+          popular: [{ key: 'novelFr:/series/popular/', title: 'Popular Novel', coverImage: null, sources: [{ source: 'novelFr', key: 'novelFr:/series/popular/' }] }],
+          recentlyAdded: [{ key: 'novelFr:/series/new/', title: 'New Novel', coverImage: null, sources: [{ source: 'novelFr', key: 'novelFr:/series/new/' }] }],
+          recentlyUpdated: [{ key: 'novelFr:/series/updated/', title: 'Updated Novel', coverImage: null, sources: [{ source: 'novelFr', key: 'novelFr:/series/updated/' }] }],
         })
       }
       throw new Error(`Unexpected request: ${url}`)
