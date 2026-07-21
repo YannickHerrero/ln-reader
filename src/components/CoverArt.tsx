@@ -6,9 +6,10 @@ interface CoverArtProps {
   seriesKey: string
   title: string
   className?: string
+  decorative?: boolean
 }
 
-export function CoverArt({ seriesKey, title, className = '' }: CoverArtProps) {
+export function CoverArt({ seriesKey, title, className = '', decorative = false }: CoverArtProps) {
   const blob = useLiveQuery(() => libraryRepository.getCover(seriesKey), [seriesKey], null)
   const [url, setUrl] = useState<string | null>(null)
 
@@ -23,8 +24,8 @@ export function CoverArt({ seriesKey, title, className = '' }: CoverArtProps) {
   }, [blob])
 
   return (
-    <div className={`cover-art ${className}`}>
-      {url ? <img src={url} alt={`Couverture de ${title}`} /> : <span aria-hidden="true">{title.slice(0, 1)}</span>}
+    <div className={`cover-art ${className}`} aria-hidden={decorative || undefined}>
+      {url ? <img src={url} alt={decorative ? '' : `Couverture de ${title}`} /> : <span aria-hidden="true">{title.slice(0, 1)}</span>}
     </div>
   )
 }

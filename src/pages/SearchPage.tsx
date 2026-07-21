@@ -195,13 +195,14 @@ export function SearchPage() {
     <main className="search-page">
       <header className="search-page__nav">
         <Link to="/" className="back-link">← Bibliothèque</Link>
-        <a className="wordmark" href="/" aria-label="LN Reader, accueil"><span>LN</span> Reader</a>
+        <Link className="wordmark" to="/" aria-label="LN Reader, accueil"><span>LN</span><strong>LN Reader</strong></Link>
         <div className="search-page__actions"><ThemeToggle /></div>
       </header>
 
       <section className="search-page__intro">
         <p className="eyebrow">Novel-FR · Mangas-Origines</p>
-        <h1>Votre prochaine<br /><em>histoire.</em></h1>
+        <h1>Trouvez votre prochaine <em>obsession.</em></h1>
+        <p className="search-page__lede">Romans, light novels et web novels français, réunis dans un catalogue.</p>
         <div className="search-page__field">
           <span aria-hidden="true">⌕</span>
           <input
