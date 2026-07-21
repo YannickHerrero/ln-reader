@@ -15,7 +15,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client", "node"],
+    "types": ["vite/client", "vite-plugin-pwa/client", "node"],
     "noUncheckedIndexedAccess": true
   },
   "include": ["src", "server", "shared", "tests", "vite.config.ts", "eslint.config.js"]
