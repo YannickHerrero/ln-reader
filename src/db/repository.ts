@@ -102,6 +102,10 @@ export class LibraryRepository {
     return this.database.progress.get(chapterKey)
   }
 
+  getSeriesProgressEntries(seriesKey: string): Promise<ReadingProgressRecord[]> {
+    return this.database.progress.where('seriesKey').equals(seriesKey).toArray()
+  }
+
   async getSeriesProgress(seriesKey: string): Promise<SeriesProgressSummary> {
     const [progress, chapterCount] = await Promise.all([
       this.database.progress.where('seriesKey').equals(seriesKey).toArray(),
