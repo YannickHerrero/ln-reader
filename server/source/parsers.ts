@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio'
 import sanitizeHtml from 'sanitize-html'
 import type {
+  SourceBrowseResult,
   SourceChapter,
   SourceChapterContent,
   SourceSearchResult,
@@ -74,6 +75,29 @@ export function parseSearchResponse(value: unknown): SourceSearchResult[] {
     seen.add(key)
     return [{ key, title: suggestion.title.trim(), sourceType: 'text' as const }]
   })
+}
+
+export function parseBrowseResults(html: string): SourceBrowseResult[] {
+  const $ = cheerio.load(html)
+  const results: SourceBrowseResult[] = []
+  const seen = new Set<string>()
+
+  $('div.page-item-detail.text, .manga__item.text, div.c-tabs-item__content.text').each((_index, item) => {
+    const link = $(item).find('.post-title a').first()
+    const key = sourceKey(link.attr('href') ?? '')
+    const title = link.text().replace(/\s+/g, ' ').trim()
+    if (!key || !title || seen.has(key)) return
+
+    const cover = $(item).find('img').first()
+    seen.add(key)
+    results.push({
+      key,
+      title,
+      coverImage: cover.length ? imageUrl(cover) : null,
+    })
+  })
+
+  return results
 }
 
 export function parseChapters(html: string): SourceChapter[] {

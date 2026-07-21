@@ -1,6 +1,7 @@
 import { createCipheriv, pbkdf2Sync } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
+  parseBrowseResults,
   parseChapterContent,
   parseChapters,
   parseSearchResponse,
@@ -35,6 +36,23 @@ describe('Mangas-Origines parsers', () => {
     expect(results).toEqual([
       { key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text' },
     ])
+  })
+
+  it('parses text-only browse cards and their covers', () => {
+    const html = `
+      <div class="page-item-detail text">
+        <div class="post-title"><a href="https://mangas-origines.fr/oeuvre/toradora/">Toradora!</a></div>
+        <img data-src=" /wp-content/uploads/toradora.webp ">
+      </div>
+      <div class="page-item-detail manga">
+        <div class="post-title"><a href="https://mangas-origines.fr/oeuvre/manga/">A Manga</a></div>
+      </div>`
+
+    expect(parseBrowseResults(html)).toEqual([{
+      key: '/oeuvre/toradora/',
+      title: 'Toradora!',
+      coverImage: 'https://mangas-origines.fr/wp-content/uploads/toradora.webp',
+    }])
   })
 
   it('parses series metadata and decimal chapter numbers', () => {

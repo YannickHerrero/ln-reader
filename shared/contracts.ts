@@ -4,6 +4,18 @@ export interface SourceSearchResult {
   sourceType: 'text'
 }
 
+export interface SourceBrowseResult {
+  key: string
+  title: string
+  coverImage: string | null
+}
+
+export interface SourceDiscovery {
+  popular: SourceBrowseResult[]
+  recentlyAdded: SourceBrowseResult[]
+  recentlyUpdated: SourceBrowseResult[]
+}
+
 export interface SourceChapter {
   key: string
   title: string

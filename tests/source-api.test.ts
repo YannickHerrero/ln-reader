@@ -6,6 +6,11 @@ import type { SourceService } from '../server/source/types'
 function sourceMock(): SourceService {
   return {
     search: vi.fn().mockResolvedValue([{ key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text' }]),
+    discover: vi.fn().mockResolvedValue({
+      popular: [{ key: '/oeuvre/toradora/', title: 'Toradora!', coverImage: null }],
+      recentlyAdded: [],
+      recentlyUpdated: [],
+    }),
     series: vi.fn().mockResolvedValue({
       key: '/oeuvre/toradora/',
       title: 'Toradora!',
@@ -29,6 +34,15 @@ describe('source API', () => {
     expect(response.status).toBe(200)
     expect(response.body[0].title).toBe('Toradora!')
     expect(source.search).toHaveBeenCalledWith('toradora')
+  })
+
+  it('returns discovery sections', async () => {
+    const source = sourceMock()
+    const response = await request(createApp(source)).get('/api/source/discover')
+
+    expect(response.status).toBe(200)
+    expect(response.body.popular[0].title).toBe('Toradora!')
+    expect(source.discover).toHaveBeenCalledOnce()
   })
 
   it('validates short searches', async () => {

@@ -26,6 +26,11 @@ export function createApp(source: SourceService) {
     response.json(await source.search(query))
   })
 
+  app.get('/api/source/discover', async (_request, response) => {
+    response.set('Cache-Control', 'private, max-age=300')
+    response.json(await source.discover())
+  })
+
   app.get('/api/source/series', async (request, response) => {
     response.set('Cache-Control', 'private, max-age=300')
     response.json(await source.series(queryString(request, 'key')))

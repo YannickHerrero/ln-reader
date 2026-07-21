@@ -1,11 +1,13 @@
 import type {
   SourceChapterContent,
+  SourceDiscovery,
   SourceSearchResult,
   SourceSeries,
 } from '../../shared/contracts'
 
 export interface SourceService {
   search(query: string): Promise<SourceSearchResult[]>
+  discover(): Promise<SourceDiscovery>
   series(key: string): Promise<SourceSeries>
   chapter(key: string): Promise<SourceChapterContent>
   asset(url: string): Promise<{ body: Buffer; contentType: string }>

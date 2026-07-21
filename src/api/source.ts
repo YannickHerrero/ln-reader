@@ -1,6 +1,7 @@
 import type {
   ApiErrorBody,
   SourceChapterContent,
+  SourceDiscovery,
   SourceSearchResult,
   SourceSeries,
 } from '../../shared/contracts'
@@ -17,6 +18,10 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
 export const sourceApi = {
   search(query: string, signal?: AbortSignal) {
     return request<SourceSearchResult[]>(`/api/source/search?q=${encodeURIComponent(query)}`, signal)
+  },
+
+  discover(signal?: AbortSignal) {
+    return request<SourceDiscovery>('/api/source/discover', signal)
   },
 
   series(key: string, signal?: AbortSignal) {
