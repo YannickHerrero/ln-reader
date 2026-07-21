@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ThemeToggle } from '../components/ThemeToggle'
 import type {
   SourceBrowseResult,
   SourceDiscovery,
@@ -195,6 +196,7 @@ export function SearchPage() {
       <header className="search-page__nav">
         <Link to="/" className="back-link">← Bibliothèque</Link>
         <a className="wordmark" href="/" aria-label="LN Reader, accueil"><span>LN</span> Reader</a>
+        <div className="search-page__actions"><ThemeToggle /></div>
       </header>
 
       <section className="search-page__intro">

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CoverArt } from '../components/CoverArt'
+import { ThemeToggle } from '../components/ThemeToggle'
 import type { LibrarySeriesRecord } from '../db/database'
 import { libraryRepository, type ContinueReadingEntry } from '../db/repository'
 import { encodeRouteKey } from '../app/route-key'
@@ -72,7 +73,10 @@ export function LibraryPage() {
     <main className="shell">
       <header className="topbar">
         <a className="wordmark" href="/" aria-label="LN Reader, accueil"><span>LN</span> Reader</a>
-        <Link className="primary-button" to="/search">+ Ajouter</Link>
+        <div className="topbar__actions">
+          <ThemeToggle />
+          <Link className="primary-button" to="/search">+ Ajouter</Link>
+        </div>
       </header>
 
       <section className="masthead">

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import type { SourceChapterContent } from '../../shared/contracts'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { sourceApi } from '../api/source'
 import { decodeRouteKey, encodeRouteKey } from '../app/route-key'
 import type { ChapterRecord } from '../db/database'
@@ -143,6 +144,7 @@ export function ReaderPage() {
       <header className="reader-bar">
         <Link to={`/series/${encodeRouteKey(seriesKey)}`} className="reader-back" aria-label="Retour à la série">←</Link>
         <div className="reader-bar__title"><strong>{series.title}</strong><span>{chapter?.title ?? content?.title ?? 'Chapitre'}</span></div>
+        <ThemeToggle className="theme-toggle--reader" />
         <button
           type="button"
           className={`reader-download ${download ? 'reader-download--active' : ''}`}

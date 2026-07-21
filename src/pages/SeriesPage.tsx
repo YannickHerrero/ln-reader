@@ -4,6 +4,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { sourceApi } from '../api/source'
 import { decodeRouteKey, encodeRouteKey } from '../app/route-key'
 import { CoverArt } from '../components/CoverArt'
+import { ThemeToggle } from '../components/ThemeToggle'
 import type { ChapterRecord, ReadingProgressRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
 import { sourceName, sourcesLabel } from '../source/labels'
@@ -114,6 +115,7 @@ export function SeriesPage() {
         <Link to="/" className="back-link">← Bibliothèque</Link>
         <strong className="detail-nav__title">{series.title}</strong>
         <div className="detail-nav__actions">
+          <ThemeToggle />
           <div className="sort-control" aria-label="Ordre des chapitres">
             <button
               type="button"
