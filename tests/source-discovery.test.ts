@@ -34,4 +34,17 @@ describe('Mangas-Origines discovery', () => {
       expect(call[1]?.body).toContain('vars%5Bmeta_query%5D%5B0%5D%5Bvalue%5D=text')
     }
   })
+
+  it('loads cover assets without the metadata request delay', async () => {
+    const request = vi.fn<SourceHttpClient['request']>().mockResolvedValue({
+      status: 200,
+      contentType: 'image/webp',
+      body: Buffer.from('cover'),
+    })
+    const source = new MangasOriginesSource({ request, close: vi.fn() })
+
+    await source.asset('https://mangas-origines.fr/wp-content/uploads/cover.webp')
+
+    expect(request).toHaveBeenCalledWith('/wp-content/uploads/cover.webp', { pace: false })
+  })
 })

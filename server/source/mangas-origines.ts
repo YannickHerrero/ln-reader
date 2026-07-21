@@ -128,7 +128,7 @@ export class MangasOriginesSource implements SourceService {
     if (url.origin !== BASE_URL || !url.pathname.startsWith('/wp-content/uploads/')) {
       throw new Error('Invalid asset URL.')
     }
-    const response = await this.client.request(`${url.pathname}${url.search}`)
+    const response = await this.client.request(`${url.pathname}${url.search}`, { pace: false })
     if (response.status !== 200 || !response.contentType.startsWith('image/')) {
       throw new Error(`Asset returned HTTP ${response.status}.`)
     }

@@ -21,7 +21,7 @@ export class SourceBrowserSession implements SourceHttpClient {
 
   request(
     path: string,
-    options: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string } = {},
+    options: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string; pace?: boolean } = {},
   ): Promise<BrowserResponse> {
     const operation = this.queue.then(() => this.performRequest(path, options))
     this.queue = operation.catch(() => undefined)
@@ -38,15 +38,15 @@ export class SourceBrowserSession implements SourceHttpClient {
 
   private async performRequest(
     path: string,
-    options: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string },
+    options: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string; pace?: boolean },
   ): Promise<BrowserResponse> {
     await this.ensureStarted()
-    await this.pace()
+    if (options.pace !== false) await this.pace()
     let result = await this.fetchInPage(path, options)
     if (result.status === 403 || result.status === 503) {
       await this.restart()
       await this.ensureStarted()
-      await this.pace()
+      if (options.pace !== false) await this.pace()
       result = await this.fetchInPage(path, options)
     }
     return {
@@ -58,7 +58,7 @@ export class SourceBrowserSession implements SourceHttpClient {
 
   private async fetchInPage(
     path: string,
-    options: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string },
+    options: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string; pace?: boolean },
   ): Promise<FetchResult> {
     if (!this.page) throw new Error('Source browser is not ready.')
     const url = new URL(path, BASE_URL)

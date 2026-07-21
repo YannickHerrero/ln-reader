@@ -22,7 +22,7 @@ export interface BrowserResponse {
 export interface SourceHttpClient {
   request(
     path: string,
-    options?: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string },
+    options?: { method?: 'GET' | 'POST'; headers?: Record<string, string>; body?: string; pace?: boolean },
   ): Promise<BrowserResponse>
   close(): Promise<void>
 }
