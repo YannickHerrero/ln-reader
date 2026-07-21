@@ -130,13 +130,15 @@ export function SeriesPage() {
               onClick={() => setChapterOrder('descending')}
             >N→1</button>
           </div>
-          <button className="text-button" type="button" onClick={refresh} disabled={refreshing}>
-            {refreshing ? '…' : 'Actualiser'}
+          <button className="text-button refresh-button" type="button" onClick={refresh} disabled={refreshing} aria-label="Actualiser la série">
+            <span aria-hidden="true">{refreshing ? '…' : '↻'}</span><span>{refreshing ? 'Actualisation…' : 'Actualiser'}</span>
           </button>
         </div>
       </nav>
 
       <section className="series-hero">
+        <CoverArt seriesKey={series.key} title={series.title} className="series-hero__backdrop" decorative />
+        <div className="series-hero__shade" />
         <CoverArt seriesKey={series.key} title={series.title} className="series-cover" />
         <div className="series-hero__copy">
           <p className="eyebrow">{series.status ?? 'Roman'}</p>
@@ -149,7 +151,9 @@ export function SeriesPage() {
           {series.description && <p className="series-description">{series.description}</p>}
           {startChapter && (
             <Link className="read-button" to={readerPath(series.key, startChapter.key)}>
-              {current ? `Continuer · ${startChapter.title}` : `Commencer · ${startChapter.title}`}
+              <span aria-hidden="true">▶</span>
+              <span>{current ? 'Continuer' : 'Commencer'}</span>
+              <span className="read-button__chapter">· {startChapter.title}</span>
             </Link>
           )}
         </div>
