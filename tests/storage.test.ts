@@ -57,6 +57,12 @@ describe('local library repository', () => {
       completedCount: 1,
       chapterCount: 2,
     })
+    expect(await repository.listContinueReading()).toEqual([
+      expect.objectContaining({
+        series: expect.objectContaining({ key: series.key }),
+        chapter: expect.objectContaining({ key: series.chapters[0]!.key }),
+      }),
+    ])
   })
 
   it('stores downloads and removes all series data', async () => {

@@ -3,8 +3,24 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CoverArt } from '../components/CoverArt'
 import type { LibrarySeriesRecord } from '../db/database'
-import { libraryRepository } from '../db/repository'
+import { libraryRepository, type ContinueReadingEntry } from '../db/repository'
 import { encodeRouteKey } from '../app/route-key'
+
+function ContinueCard({ entry }: { entry: ContinueReadingEntry }) {
+  return (
+    <Link
+      to={`/read/${encodeRouteKey(entry.series.key)}/${encodeRouteKey(entry.chapter.key)}`}
+      className="continue-card"
+    >
+      <CoverArt seriesKey={entry.series.key} title={entry.series.title} />
+      <div>
+        <p>Reprendre la lecture</p>
+        <h3>{entry.series.title}</h3>
+        <span>{entry.chapter.title} →</span>
+      </div>
+    </Link>
+  )
+}
 
 function LibraryCard({ series }: { series: LibrarySeriesRecord }) {
   const progress = useLiveQuery(() => libraryRepository.getSeriesProgress(series.key), [series.key])
@@ -46,6 +62,7 @@ function LibraryCard({ series }: { series: LibrarySeriesRecord }) {
 
 export function LibraryPage() {
   const series = useLiveQuery(() => libraryRepository.listSeries(), [], [])
+  const continueReading = useLiveQuery(() => libraryRepository.listContinueReading(), [], [])
 
   useEffect(() => {
     navigator.storage?.persist?.().catch(() => undefined)
@@ -63,6 +80,20 @@ export function LibraryPage() {
         <h1>Histoires à<br /><em>emporter.</em></h1>
         <p className="lede">Votre progression reste sur cet appareil. Vos chapitres téléchargés aussi.</p>
       </section>
+
+      {continueReading.length > 0 && (
+        <section className="continue-section" aria-labelledby="continue-heading">
+          <div className="section-heading">
+            <h2 id="continue-heading">Continuer</h2>
+            <span>Vos dernières lectures</span>
+          </div>
+          <div className="continue-row">
+            {continueReading.map((entry) => (
+              <ContinueCard key={entry.series.key} entry={entry} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {series.length === 0 ? (
         <section className="empty-state">

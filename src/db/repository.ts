@@ -1,6 +1,7 @@
 import type { SourceChapterContent, SourceSeries } from '../../shared/contracts'
 import {
   db,
+  type ChapterRecord,
   type DownloadRecord,
   type LibraryDatabase,
   type LibrarySeriesRecord,
@@ -11,6 +12,12 @@ export interface SeriesProgressSummary {
   current: ReadingProgressRecord | null
   completedCount: number
   chapterCount: number
+}
+
+export interface ContinueReadingEntry {
+  series: LibrarySeriesRecord
+  chapter: ChapterRecord
+  lastReadAt: number
 }
 
 export class LibraryRepository {
@@ -64,6 +71,37 @@ export class LibraryRepository {
 
   listSeries(): Promise<LibrarySeriesRecord[]> {
     return this.database.series.orderBy('addedAt').reverse().toArray()
+  }
+
+  async listContinueReading(limit = 4): Promise<ContinueReadingEntry[]> {
+    const recentProgress = await this.database.progress.orderBy('lastReadAt').reverse().toArray()
+    const seenSeries = new Set<string>()
+    const entries: ContinueReadingEntry[] = []
+
+    for (const progress of recentProgress) {
+      if (seenSeries.has(progress.seriesKey)) continue
+      seenSeries.add(progress.seriesKey)
+
+      const [series, currentChapter] = await Promise.all([
+        this.database.series.get(progress.seriesKey),
+        this.database.chapters.get(progress.chapterKey),
+      ])
+      if (!series || !currentChapter) continue
+
+      let chapter = currentChapter
+      if (progress.completed) {
+        if (currentChapter.position === 0) continue
+        chapter = await this.database.chapters
+          .where('[seriesKey+position]')
+          .equals([progress.seriesKey, currentChapter.position - 1])
+          .first() ?? currentChapter
+      }
+
+      entries.push({ series, chapter, lastReadAt: progress.lastReadAt })
+      if (entries.length >= limit) break
+    }
+
+    return entries
   }
 
   getSeries(seriesKey: string): Promise<LibrarySeriesRecord | undefined> {

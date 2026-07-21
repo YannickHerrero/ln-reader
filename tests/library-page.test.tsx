@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from '../src/app/App'
 import { db } from '../src/db/database'
+import { libraryRepository } from '../src/db/repository'
 
 const response = (value: unknown) => Promise.resolve(new Response(JSON.stringify(value), {
   status: 200,
@@ -54,6 +55,37 @@ describe('library page', () => {
     expect(await db.series.get('/oeuvre/toradora/')).toMatchObject({ title: 'Toradora!' })
     await userEvent.click(screen.getByRole('link', { name: '← Bibliothèque' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Toradora!' })).toBeInTheDocument())
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
+  it('shows a continue-reading section for recent progress', async () => {
+    await libraryRepository.addOrUpdateSeries({
+      key: '/oeuvre/continue/',
+      title: 'Continue Novel',
+      coverImage: null,
+      author: null,
+      description: null,
+      genres: ['Novel'],
+      status: null,
+      chapters: [{
+        key: '/oeuvre/continue/chapitre-1/',
+        title: 'Chapitre 1',
+        number: 1,
+        publishedAt: null,
+      }],
+    })
+    await libraryRepository.saveProgress(
+      '/oeuvre/continue/',
+      '/oeuvre/continue/chapitre-1/',
+      0.4,
+    )
+
+    const { unmount } = render(<MemoryRouter><App /></MemoryRouter>)
+
+    expect(await screen.findByRole('heading', { name: 'Continuer' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Reprendre la lecture Continue Novel Chapitre 1/ })).toBeInTheDocument()
+
     unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))
   })

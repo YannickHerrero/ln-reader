@@ -75,6 +75,16 @@ h1 em { color: var(--accent); font-weight: 400; }
 .empty-state p { max-width: 540px; margin: 8px 0; color: var(--muted); line-height: 1.6; }
 .empty-state .primary-button { margin-top: 20px; }
 
+.continue-section { min-width: 0; margin-bottom: 72px; }
+.continue-row { display: grid; grid-auto-columns: minmax(290px, 360px); grid-auto-flow: column; gap: 16px; overflow-x: auto; padding: 2px 2px 18px; scroll-snap-type: x proximity; }
+.continue-card { display: grid; grid-template-columns: 78px minmax(0, 1fr); align-items: center; min-height: 118px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); scroll-snap-align: start; text-decoration: none; }
+.continue-card .cover-art { width: 78px; height: 118px; min-height: 0; border-radius: 0; }
+.continue-card .cover-art::after { inset: 7px; }
+.continue-card > div:last-child { min-width: 0; padding: 15px 18px; }
+.continue-card p { margin: 0 0 7px; color: var(--accent); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.09em; text-transform: uppercase; }
+.continue-card h3 { display: -webkit-box; margin: 0 0 13px; overflow: hidden; font-family: Georgia, serif; font-size: 1.18rem; font-weight: 500; line-height: 1.1; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.continue-card span { color: var(--muted); font-size: 0.73rem; }
+.continue-card:hover h3, .continue-card:hover span { color: var(--accent); }
 .library-section { padding-top: 6px; }
 .section-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .section-heading h2 { margin: 0; font-size: 2rem; font-weight: 500; }
@@ -108,6 +118,8 @@ h1 em { color: var(--accent); font-weight: 400; }
   .primary-button { padding: 10px 14px; font-size: 0.82rem; }
   .masthead { padding: 62px 0 58px; }
   h1 { font-size: clamp(3.7rem, 18vw, 5.4rem); }
+  .continue-section { margin-bottom: 54px; }
+  .continue-row { grid-auto-columns: minmax(270px, 88vw); margin-right: -14px; }
   .library-grid { grid-template-columns: 1fr; gap: 15px; }
   .library-card__link { grid-template-columns: 100px minmax(0, 1fr); min-height: 150px; }
   .library-card__body { padding: 20px 18px 17px; }
