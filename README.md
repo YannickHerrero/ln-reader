@@ -12,6 +12,7 @@ IndexedDB database.
 - Conservative chapter deduplication that retains every available source release
 - Source filtering that excludes manga results
 - Series details, source labels and sticky `1→N` / `N→1` chapter sorting
+- Cinematic, responsive interface with a persistent light/dark appearance toggle
 - Continuous, page-free reading
 - Per-chapter progress and automatic completion near the end
 - Explicit chapter downloads for offline reading
