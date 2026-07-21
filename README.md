@@ -73,10 +73,34 @@ The Express process serves both `dist/` and the API at <http://localhost:4174>.
 requires an HTTPS reverse proxy and an always-running Node host capable of running
 Playwright.
 
+## Access from a phone over Tailscale
+
+With the phone and computer connected to the same tailnet, run:
+
+```bash
+pnpm phone
+```
+
+The command builds and starts the production PWA, creates a dedicated Tailscale
+Serve HTTPS endpoint on port `8443`, and prints the URL to open on the phone. Keep
+the terminal open while reading. Press Ctrl-C to stop LN Reader and remove only
+that endpoint; any existing Tailscale Serve routes on other ports are left intact.
+
+Override either port when needed:
+
+```bash
+APP_PORT=4180 TAILSCALE_HTTPS_PORT=10000 pnpm phone
+```
+
+The script refuses to replace an occupied local or Tailscale port. Tailscale Serve
+provides the secure context required for PWA installation and offline support;
+opening the Node server directly through a `100.x.y.z` HTTP address does not.
+
 ## Commands
 
 ```bash
 pnpm dev        # frontend and API with watch mode
+pnpm phone      # production PWA over tailnet-only HTTPS
 pnpm lint       # ESLint
 pnpm test       # unit, API, storage and UI tests
 pnpm typecheck  # strict TypeScript checking

@@ -9,6 +9,7 @@
     "dev:server": "tsx watch server/index.ts",
     "build": "pnpm typecheck && vite build",
     "start": "tsx server/index.ts",
+    "phone": "bash scripts/start-tailscale.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
