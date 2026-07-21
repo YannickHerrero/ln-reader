@@ -1,13 +1,14 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import type { SourceChapterContent } from '../../shared/contracts'
-import { ThemeToggle } from '../components/ThemeToggle'
+import { ReaderSettingsDialog } from '../components/ReaderSettingsDialog'
 import { sourceApi } from '../api/source'
 import { decodeRouteKey, encodeRouteKey } from '../app/route-key'
 import type { ChapterRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
 import { calculateScrollRatio, isChapterComplete } from '../reader/progress'
+import { loadReaderPreferences, saveReaderPreferences, type ReaderPreferences } from '../reader/preferences'
 import { sourceName } from '../source/labels'
 
 function readerPath(seriesKey: string, chapterKey: string) {
@@ -39,6 +40,7 @@ export function ReaderPage() {
   const [offlineCopy, setOfflineCopy] = useState(false)
   const [loading, setLoading] = useState(true)
   const [downloadBusy, setDownloadBusy] = useState(false)
+  const [readerPreferences, setReaderPreferences] = useState(loadReaderPreferences)
   const [error, setError] = useState<string | null>(null)
   const restored = useRef(false)
   const latestRatio = useRef(0)
@@ -121,9 +123,25 @@ export function ReaderPage() {
   }, [series, chapter])
 
   const safeContent = useMemo(() => ({ __html: content?.html ?? '' }), [content?.html])
+  const readerStyle = {
+    '--reading-font-size': `${readerPreferences.fontSize}px`,
+    '--reading-line-height': readerPreferences.lineHeight,
+  } as CSSProperties
 
   if (series === undefined) return <main className="reader-state">Chargement…</main>
   if (!seriesKey || !chapterKey || series === null) return <Navigate to="/" replace />
+
+  function changeReaderPreferences(preferences: ReaderPreferences) {
+    const availableBefore = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+    const ratio = availableBefore > 0 ? window.scrollY / availableBefore : latestRatio.current
+    const saved = saveReaderPreferences(preferences)
+    latestRatio.current = Math.max(0, Math.min(1, ratio))
+    setReaderPreferences(saved)
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const availableAfter = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+      window.scrollTo({ top: availableAfter * latestRatio.current, behavior: 'instant' })
+    }))
+  }
 
   async function toggleDownload() {
     if (!content || !seriesKey || !chapterKey) return
@@ -140,11 +158,16 @@ export function ReaderPage() {
   }
 
   return (
-    <main className="reader-shell">
+    <main
+      className="reader-shell"
+      data-reader-font={readerPreferences.fontFamily}
+      data-reader-paper={readerPreferences.paper}
+      style={readerStyle}
+    >
       <header className="reader-bar">
         <Link to={`/series/${encodeRouteKey(seriesKey)}`} className="reader-back" aria-label="Retour à la série">←</Link>
         <div className="reader-bar__title"><strong>{series.title}</strong><span>{chapter?.title ?? content?.title ?? 'Chapitre'}</span></div>
-        <ThemeToggle className="theme-toggle--reader" />
+        <ReaderSettingsDialog preferences={readerPreferences} onChange={changeReaderPreferences} />
         <button
           type="button"
           className={`reader-download ${download ? 'reader-download--active' : ''}`}
