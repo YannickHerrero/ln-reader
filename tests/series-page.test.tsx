@@ -54,9 +54,14 @@ describe('series page', () => {
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))))
 
     const route = `/series/${encodeRouteKey(series.key)}`
-    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+    const { container, unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
 
     expect(await screen.findByRole('heading', { name: 'Example Novel' })).toBeInTheDocument()
+    const chapterTitles = () => [...container.querySelectorAll('.chapter-row strong')].map((element) => element.textContent)
+    expect(chapterTitles()).toEqual(['Chapitre 2', 'Chapitre 1'])
+    await userEvent.click(screen.getByRole('button', { name: 'Trier les chapitres du premier au dernier' }))
+    await waitFor(() => expect(chapterTitles()).toEqual(['Chapitre 1', 'Chapitre 2']))
+    expect(localStorage.getItem('chapter-order')).toBe('ascending')
     await userEvent.click(screen.getByRole('button', { name: 'Télécharger Chapitre 1' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Supprimer le téléchargement de Chapitre 1' })).toBeInTheDocument())

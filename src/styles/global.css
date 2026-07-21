@@ -187,7 +187,12 @@ h1 em { color: var(--accent); font-weight: 400; }
 
 .center-state { display: grid; min-height: 100vh; place-items: center; color: var(--muted); }
 .detail-shell { width: min(1060px, calc(100% - 40px)); margin: 0 auto; padding-bottom: 90px; }
-.detail-nav { display: flex; align-items: center; justify-content: space-between; min-height: 82px; border-bottom: 1px solid var(--line); }
+.detail-nav { position: sticky; z-index: 20; top: 0; display: grid; grid-template-columns: 1fr minmax(0, 1.2fr) 1fr; align-items: center; min-height: 82px; border-bottom: 1px solid var(--line); background: rgba(243, 238, 228, 0.94); backdrop-filter: blur(14px); }
+.detail-nav__title { overflow: hidden; font-family: Georgia, serif; font-size: 0.9rem; font-weight: 500; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.detail-nav__actions { display: flex; align-items: center; justify-content: flex-end; gap: 13px; }
+.sort-control { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
+.sort-control button { min-width: 42px; padding: 6px 8px; border: 0; border-radius: 999px; color: var(--muted); background: transparent; font-size: 0.67rem; font-weight: 800; }
+.sort-control button[aria-pressed="true"] { color: white; background: var(--accent); }
 .back-link { color: var(--muted); font-size: 0.86rem; font-weight: 700; text-decoration: none; }
 .back-link:hover { color: var(--accent); }
 .text-button { padding: 8px 0; border: 0; color: var(--muted); background: transparent; font-size: 0.8rem; font-weight: 700; }
@@ -226,7 +231,11 @@ h1 em { color: var(--accent); font-weight: 400; }
 
 @media (max-width: 720px) {
   .detail-shell { width: min(100% - 28px, 1060px); padding-bottom: 50px; }
-  .detail-nav { min-height: 70px; }
+  .detail-nav { grid-template-columns: auto 1fr; gap: 10px; min-height: 70px; }
+  .detail-nav__title { display: none; }
+  .detail-nav__actions { gap: 8px; }
+  .detail-nav__actions .text-button { font-size: 0.7rem; }
+  .sort-control button { min-width: 38px; padding-inline: 6px; }
   .series-hero { grid-template-columns: 112px minmax(0, 1fr); gap: 24px; padding: 40px 0 54px; }
   .series-cover { box-shadow: -6px 7px 0 var(--accent-soft), 0 15px 35px rgba(54, 45, 32, 0.15); }
   .series-hero__copy { padding-top: 4px; }

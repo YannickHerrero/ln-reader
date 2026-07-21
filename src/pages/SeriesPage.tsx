@@ -37,6 +37,9 @@ export function SeriesPage() {
     EMPTY_KEYS,
   )
   const [busyChapter, setBusyChapter] = useState<string | null>(null)
+  const [chapterOrder, setChapterOrder] = useState<'descending' | 'ascending'>(() =>
+    localStorage.getItem('chapter-order') === 'ascending' ? 'ascending' : 'descending',
+  )
   const [refreshing, setRefreshing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -45,6 +48,10 @@ export function SeriesPage() {
     [progressEntries],
   )
   const current = [...progressEntries].sort((left, right) => right.lastReadAt - left.lastReadAt)[0]
+  const displayedChapters = useMemo(
+    () => chapterOrder === 'ascending' ? [...chapters].reverse() : chapters,
+    [chapterOrder, chapters],
+  )
   const startChapter = current
     ? chapters.find((chapter) => chapter.key === current.chapterKey)
     : chapters.at(-1)
@@ -54,6 +61,9 @@ export function SeriesPage() {
     return () => { document.title = 'LN Reader' }
   }, [series])
 
+  useEffect(() => {
+    localStorage.setItem('chapter-order', chapterOrder)
+  }, [chapterOrder])
 
   if (series === undefined) return <main className="center-state">Chargement…</main>
   if (!seriesKey || series === null) return <Navigate to="/" replace />
@@ -102,9 +112,26 @@ export function SeriesPage() {
     <main className="detail-shell">
       <nav className="detail-nav">
         <Link to="/" className="back-link">← Bibliothèque</Link>
-        <button className="text-button" type="button" onClick={refresh} disabled={refreshing}>
-          {refreshing ? 'Actualisation…' : 'Actualiser'}
-        </button>
+        <strong className="detail-nav__title">{series.title}</strong>
+        <div className="detail-nav__actions">
+          <div className="sort-control" aria-label="Ordre des chapitres">
+            <button
+              type="button"
+              aria-label="Trier les chapitres du premier au dernier"
+              aria-pressed={chapterOrder === 'ascending'}
+              onClick={() => setChapterOrder('ascending')}
+            >1→N</button>
+            <button
+              type="button"
+              aria-label="Trier les chapitres du dernier au premier"
+              aria-pressed={chapterOrder === 'descending'}
+              onClick={() => setChapterOrder('descending')}
+            >N→1</button>
+          </div>
+          <button className="text-button" type="button" onClick={refresh} disabled={refreshing}>
+            {refreshing ? '…' : 'Actualiser'}
+          </button>
+        </div>
       </nav>
 
       <section className="series-hero">
@@ -136,7 +163,7 @@ export function SeriesPage() {
           <p className="chapter-empty">Aucun chapitre disponible pour le moment.</p>
         ) : (
           <div className="chapter-list">
-            {chapters.map((chapter) => {
+            {displayedChapters.map((chapter) => {
               const chapterProgress = progress.get(chapter.key)
               const downloaded = downloadedKeys.has(chapter.key)
               return (
