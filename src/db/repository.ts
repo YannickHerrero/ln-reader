@@ -74,6 +74,10 @@ export class LibraryRepository {
     return this.database.chapters.where('seriesKey').equals(seriesKey).sortBy('position')
   }
 
+  getChapter(chapterKey: string) {
+    return this.database.chapters.get(chapterKey)
+  }
+
   async getCover(seriesKey: string): Promise<Blob | null> {
     return (await this.database.covers.get(seriesKey))?.blob ?? null
   }
