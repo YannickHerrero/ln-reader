@@ -5,6 +5,17 @@
   "description": "Personal light-novel reader and source aggregator",
   "workingDirectory": ".",
   "command": ["pnpm", "run", "service:start"],
+  "maintenanceActions": [
+    {
+      "id": "rebuild",
+      "displayName": "Rebuild",
+      "description": "Build the current checkout and restart LN Reader after success",
+      "confirmation": "Build the current LN Reader checkout and restart the running service if the build succeeds?",
+      "command": ["pnpm", "run", "service:rebuild"],
+      "restartOnSuccess": true,
+      "timeoutSeconds": 600
+    }
+  ],
   "environment": {
     "HOST": "127.0.0.1",
     "PORT": "4174"

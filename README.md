@@ -89,8 +89,11 @@ capable of running Playwright.
 [`citadel.service.json`](citadel.service.json) is the machine-service contract used
 by Citadel. It provides the same command, health-check, restart, and graceful-stop
 metadata as other locally managed projects. `pnpm service:start` starts only the
-already-built production process; building and changing Tailscale routes remain
-explicit deployment operations rather than service restarts.
+already-built production process. The manifest also exposes a fixed **Rebuild**
+maintenance action backed by `pnpm service:rebuild`: Citadel builds the current
+checkout while the existing process remains available, restarts it only after a
+successful build, and retains the previous process when the build fails. Tailscale
+route changes remain separate deployment operations.
 
 The existing `pnpm phone` command remains available for an isolated interactive
 session when Citadel is not managing the process.

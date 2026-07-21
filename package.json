@@ -10,6 +10,7 @@
     "build": "pnpm typecheck && vite build",
     "start": "tsx server/index.ts",
     "service:start": "tsx server/index.ts",
+    "service:rebuild": "pnpm run build",
     "phone": "bash scripts/start-tailscale.sh",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
