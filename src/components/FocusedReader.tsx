@@ -8,7 +8,7 @@ interface FocusedReaderProps {
   units: string[]
   index: number
   onIndexChange(index: number): void
-  nextChapter?: { path: string; title: string }
+  nextChapter?: { key: string; path: string; title: string }
 }
 
 export function FocusedReader({
@@ -94,7 +94,11 @@ export function FocusedReader({
           <div aria-hidden="true"><i style={{ width: `${((current + 1) / Math.max(1, units.length)) * 100}%` }} /></div>
         </div>
         {atEnd && nextChapter ? (
-          <Link to={nextChapter.path} aria-label={`Lire ${nextChapter.title}`}>→</Link>
+          <Link
+            to={nextChapter.path}
+            state={{ startChapterAtBeginning: nextChapter.key }}
+            aria-label={`Lire ${nextChapter.title}`}
+          >→</Link>
         ) : (
           <button
             type="button"

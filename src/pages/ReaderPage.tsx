@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { SourceChapterContent } from '../../shared/contracts'
 import { FocusedReader } from '../components/FocusedReader'
 import { ReaderSettingsDialog } from '../components/ReaderSettingsDialog'
@@ -20,8 +20,12 @@ function readerPath(seriesKey: string, chapterKey: string) {
 
 export function ReaderPage() {
   const { seriesId = '', chapterId = '' } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
   const seriesKey = decodeRouteKey(seriesId)
   const chapterKey = decodeRouteKey(chapterId)
+  const startChapterAtBeginning = (location.state as { startChapterAtBeginning?: unknown } | null)
+    ?.startChapterAtBeginning === chapterKey
   const series = useLiveQuery(
     async () => seriesKey ? (await libraryRepository.getSeries(seriesKey)) ?? null : null,
     [seriesKey],
@@ -106,9 +110,11 @@ export function ReaderPage() {
   }, [chapterKey, chapter, download])
 
   useEffect(() => {
-    if (!content || !chapterKey || !seriesKey || savedProgress === undefined || restored.current) return
+    if (!content || content.key !== chapterKey || !chapterKey || !seriesKey
+      || savedProgress === undefined || (savedProgress && savedProgress.chapterKey !== chapterKey)
+      || restored.current) return
     restored.current = true
-    const ratio = savedProgress?.scrollRatio ?? 0
+    const ratio = startChapterAtBeginning ? 0 : savedProgress?.scrollRatio ?? 0
     latestRatio.current = ratio
     if (readerPreferences.mode === 'continuous') {
       requestAnimationFrame(() => {
@@ -116,10 +122,21 @@ export function ReaderPage() {
         window.scrollTo({ top: Math.max(0, available * ratio), behavior: 'instant' })
       })
     } else {
-      setFocusedIndex(unitIndexFromRatio(focusedUnits.length, ratio))
+      setFocusedIndex(startChapterAtBeginning ? 0 : unitIndexFromRatio(focusedUnits.length, ratio))
     }
     void libraryRepository.saveProgress(seriesKey, chapterKey, ratio, savedProgress?.completed)
-  }, [content, chapterKey, seriesKey, savedProgress, readerPreferences.mode, focusedUnits.length])
+    if (startChapterAtBeginning) navigate(location.pathname, { replace: true, state: null })
+  }, [
+    content,
+    chapterKey,
+    seriesKey,
+    savedProgress,
+    readerPreferences.mode,
+    focusedUnits.length,
+    startChapterAtBeginning,
+    navigate,
+    location.pathname,
+  ])
 
   useEffect(() => {
     if (!content || !chapterKey || !seriesKey || readerPreferences.mode !== 'continuous') return
@@ -266,6 +283,7 @@ export function ReaderPage() {
           index={focusedIndex}
           onIndexChange={changeFocusedIndex}
           nextChapter={nextChapter ? {
+            key: nextChapter.key,
             path: readerPath(seriesKey, nextChapter.key),
             title: nextChapter.title,
           } : undefined}

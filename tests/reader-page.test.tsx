@@ -129,6 +129,12 @@ describe('reader page', () => {
       html: '<p>Première phrase. Deuxième phrase.</p><p>Dernière phrase.</p>',
       source: 'novelFr',
     })
+    await libraryRepository.downloadChapter(series.key, {
+      key: series.chapters[0]!.key,
+      title: 'Chapitre 2',
+      html: '<p>Début du chapitre suivant. Suite du chapitre suivant.</p>',
+      source: 'novelFr',
+    })
     localStorage.setItem('ln-reader-reading-preferences', JSON.stringify({ mode: 'sentence' }))
     vi.stubGlobal('fetch', vi.fn())
     const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
@@ -141,6 +147,10 @@ describe('reader page', () => {
     fireEvent.keyDown(window, { key: 'End' })
     expect(screen.getByText('Dernière phrase.')).toBeInTheDocument()
     expect(screen.getByText('Phrase 3 sur 3')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('link', { name: 'Lire Chapitre 2' }))
+    expect(await screen.findByText('Début du chapitre suivant.')).toBeInTheDocument()
+    expect(screen.getByText('Phrase 1 sur 2')).toBeInTheDocument()
 
     unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))
