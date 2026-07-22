@@ -12,6 +12,7 @@ import { calculateScrollRatio, isChapterComplete } from '../reader/progress'
 import { loadReaderPreferences, saveReaderPreferences, type ReaderPreferences } from '../reader/preferences'
 import { extractReaderParagraphs, ratioForUnit, splitReaderSentences, unitIndexFromRatio } from '../reader/segmentation'
 import { sourceName } from '../source/labels'
+import { sameVolume } from '../series/volumes'
 
 function readerPath(seriesKey: string, chapterKey: string) {
   return `/read/${encodeRouteKey(seriesKey)}/${encodeRouteKey(chapterKey)}`
@@ -48,10 +49,13 @@ export function ReaderPage() {
   const restored = useRef(false)
   const latestRatio = useRef(0)
 
-  const chapterIndex = chapters.findIndex((chapter) => chapter.key === chapterKey)
-  const previousChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined
-  const nextChapter = chapterIndex > 0 ? chapters[chapterIndex - 1] : undefined
-  const chapter = chapterIndex >= 0 ? chapters[chapterIndex] : undefined
+  const chapter = chapters.find((candidate) => candidate.key === chapterKey)
+  const volumeChapters = chapter
+    ? chapters.filter((candidate) => sameVolume(candidate.volume, chapter.volume))
+    : chapters
+  const chapterIndex = volumeChapters.findIndex((candidate) => candidate.key === chapterKey)
+  const previousChapter = chapterIndex >= 0 ? volumeChapters[chapterIndex + 1] : undefined
+  const nextChapter = chapterIndex > 0 ? volumeChapters[chapterIndex - 1] : undefined
   const readerParagraphs = useMemo(
     () => content ? extractReaderParagraphs(content.html) : [],
     [content],

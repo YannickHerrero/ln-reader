@@ -8,6 +8,7 @@ import { ThemeToggle } from '../components/ThemeToggle'
 import type { ChapterRecord, ReadingProgressRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
 import { sourceName, sourcesLabel } from '../source/labels'
+import { groupChaptersByVolume, volumeKey } from '../series/volumes'
 
 const EMPTY_KEYS = new Set<string>()
 
@@ -41,6 +42,8 @@ export function SeriesPage() {
   const [chapterOrder, setChapterOrder] = useState<'descending' | 'ascending'>(() =>
     localStorage.getItem('chapter-order') === 'ascending' ? 'ascending' : 'descending',
   )
+  const [hideRead, setHideRead] = useState(() => localStorage.getItem('hide-read-chapters') === 'true')
+  const [selectedVolumeKey, setSelectedVolumeKey] = useState<string | null>(null)
   const [refreshing, setRefreshing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -53,6 +56,20 @@ export function SeriesPage() {
     () => chapterOrder === 'ascending' ? [...chapters].reverse() : chapters,
     [chapterOrder, chapters],
   )
+  const hasVolumes = chapters.some((chapter) => chapter.volume !== null)
+  const volumeGroups = useMemo(
+    () => groupChaptersByVolume(displayedChapters).map((group) => ({
+      ...group,
+      completedCount: group.chapters.filter((chapter) => progress.get(chapter.key)?.completed).length,
+      chapters: hideRead
+        ? group.chapters.filter((chapter) => !progress.get(chapter.key)?.completed)
+        : group.chapters,
+      totalCount: group.chapters.length,
+    })).filter((group) => group.chapters.length > 0),
+    [displayedChapters, hideRead, progress],
+  )
+  const selectedVolume = volumeGroups.find((group) => group.key === selectedVolumeKey) ?? volumeGroups[0]
+  const visibleChapters = selectedVolume?.chapters ?? []
   const startChapter = current
     ? chapters.find((chapter) => chapter.key === current.chapterKey)
     : chapters.at(-1)
@@ -65,6 +82,17 @@ export function SeriesPage() {
   useEffect(() => {
     localStorage.setItem('chapter-order', chapterOrder)
   }, [chapterOrder])
+
+  useEffect(() => {
+    localStorage.setItem('hide-read-chapters', String(hideRead))
+  }, [hideRead])
+
+  useEffect(() => {
+    if (volumeGroups.some((group) => group.key === selectedVolumeKey)) return
+    const currentChapter = current ? chapters.find((chapter) => chapter.key === current.chapterKey) : undefined
+    const currentKey = currentChapter ? volumeKey(currentChapter.volume) : null
+    setSelectedVolumeKey(volumeGroups.find((group) => group.key === currentKey)?.key ?? volumeGroups[0]?.key ?? null)
+  }, [chapters, current, selectedVolumeKey, volumeGroups])
 
   if (series === undefined) return <main className="center-state">Chargement…</main>
   if (!seriesKey || series === null) return <Navigate to="/" replace />
@@ -161,43 +189,75 @@ export function SeriesPage() {
 
       <section className="chapters-section" aria-labelledby="chapters-title">
         <div className="section-heading">
-          <h2 id="chapters-title">Chapitres</h2>
+          <h2 id="chapters-title">{hasVolumes ? 'Volumes et chapitres' : 'Chapitres'}</h2>
           <span>{chapters.length} disponibles</span>
         </div>
         {message && <p className="message" role="status">{message}</p>}
+        <div className="chapter-tools">
+          <button type="button" aria-pressed={hideRead} onClick={() => setHideRead((value) => !value)}>
+            {hideRead ? 'Afficher les chapitres lus' : 'Masquer les chapitres lus'}
+          </button>
+        </div>
+        {hasVolumes && volumeGroups.length > 0 && (
+          <div className="volume-row" role="group" aria-label="Volumes">
+            {volumeGroups.map((group) => (
+              <button
+                type="button"
+                key={group.key}
+                aria-pressed={group.key === selectedVolume?.key}
+                onClick={() => setSelectedVolumeKey(group.key)}
+              >
+                <strong>{group.label}</strong>
+                <span>{group.chapters.length} chapitre{group.chapters.length > 1 ? 's' : ''}</span>
+                <small>{group.completedCount}/{group.totalCount} lus</small>
+                <i aria-hidden="true"><b style={{ width: `${group.totalCount ? (group.completedCount / group.totalCount) * 100 : 0}%` }} /></i>
+              </button>
+            ))}
+          </div>
+        )}
         {chapters.length === 0 ? (
           <p className="chapter-empty">Aucun chapitre disponible pour le moment.</p>
+        ) : volumeGroups.length === 0 ? (
+          <p className="chapter-empty">Tous les chapitres sont lus. Affichez-les pour les relire.</p>
         ) : (
-          <div className="chapter-list">
-            {displayedChapters.map((chapter) => {
-              const chapterProgress = progress.get(chapter.key)
-              const downloaded = downloadedKeys.has(chapter.key)
-              return (
-                <article className={`chapter-row ${chapterProgress?.completed ? 'chapter-row--read' : ''}`} key={chapter.key}>
-                  <Link to={readerPath(series.key, chapter.key)} className="chapter-row__link">
-                    <span className="chapter-status" aria-hidden="true">{chapterProgress?.completed ? '✓' : '○'}</span>
-                    <span>
-                      <strong>{chapter.title}</strong>
-                      <small className="chapter-meta">
-                        {chapter.publishedAt && <span>{chapter.publishedAt}</span>}
-                        <span title={chapter.releases.map((release) => sourceName(release.source)).join(', ')}>{sourcesLabel(chapter.releases)}</span>
-                      </small>
-                    </span>
-                  </Link>
-                  <button
-                    className={`download-button ${downloaded ? 'download-button--active' : ''}`}
-                    type="button"
-                    disabled={busyChapter === chapter.key}
-                    onClick={() => toggleDownload(chapter.key)}
-                    aria-label={downloaded ? `Supprimer le téléchargement de ${chapter.title}` : `Télécharger ${chapter.title}`}
-                    title={downloaded ? 'Supprimer le téléchargement' : 'Télécharger pour lire hors ligne'}
-                  >
-                    {busyChapter === chapter.key ? '…' : downloaded ? '✓' : '↓'}
-                  </button>
-                </article>
-              )
-            })}
-          </div>
+          <>
+            {hasVolumes && (
+              <div className="selected-volume-heading">
+                <h3>{selectedVolume?.label}</h3>
+                <span>{visibleChapters.length} affiché{visibleChapters.length > 1 ? 's' : ''}</span>
+              </div>
+            )}
+            <div className="chapter-list">
+              {visibleChapters.map((chapter) => {
+                const chapterProgress = progress.get(chapter.key)
+                const downloaded = downloadedKeys.has(chapter.key)
+                return (
+                  <article className={`chapter-row ${chapterProgress?.completed ? 'chapter-row--read' : ''}`} key={chapter.key}>
+                    <Link to={readerPath(series.key, chapter.key)} className="chapter-row__link">
+                      <span className="chapter-status" aria-hidden="true">{chapterProgress?.completed ? '✓' : '○'}</span>
+                      <span>
+                        <strong>{chapter.title}</strong>
+                        <small className="chapter-meta">
+                          {chapter.publishedAt && <span>{chapter.publishedAt}</span>}
+                          <span title={chapter.releases.map((release) => sourceName(release.source)).join(', ')}>{sourcesLabel(chapter.releases)}</span>
+                        </small>
+                      </span>
+                    </Link>
+                    <button
+                      className={`download-button ${downloaded ? 'download-button--active' : ''}`}
+                      type="button"
+                      disabled={busyChapter === chapter.key}
+                      onClick={() => toggleDownload(chapter.key)}
+                      aria-label={downloaded ? `Supprimer le téléchargement de ${chapter.title}` : `Télécharger ${chapter.title}`}
+                      title={downloaded ? 'Supprimer le téléchargement' : 'Télécharger pour lire hors ligne'}
+                    >
+                      {busyChapter === chapter.key ? '…' : downloaded ? '✓' : '↓'}
+                    </button>
+                  </article>
+                )
+              })}
+            </div>
+          </>
         )}
       </section>
     </main>

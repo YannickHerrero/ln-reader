@@ -782,3 +782,24 @@ html.reader-focus-locked body { position: fixed; inset: 0; }
   .reader-focus__controls > button,
   .reader-focus__controls > a { width: 50px; height: 50px; }
 }
+
+/* Volume browsing */
+.chapter-tools { display: flex; justify-content: flex-end; margin: -5px 0 16px; }
+.chapter-tools button { padding: 8px 11px; border: 1px solid var(--line); border-radius: 7px; color: var(--muted); background: var(--surface); font-size: 0.67rem; font-weight: 750; }
+.chapter-tools button[aria-pressed="true"] { color: var(--on-accent); border-color: var(--accent); background: var(--accent); }
+.volume-row { display: grid; grid-auto-columns: minmax(170px, 210px); grid-auto-flow: column; gap: 9px; overflow-x: auto; margin: 0 -4vw 24px 0; padding: 2px 4vw 12px 2px; scroll-snap-type: x proximity; scrollbar-width: none; }
+.volume-row::-webkit-scrollbar { display: none; }
+.volume-row > button { display: grid; min-height: 116px; align-content: start; gap: 5px; padding: 16px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--surface); text-align: left; scroll-snap-align: start; transition: border-color 150ms ease, background 150ms ease, transform 150ms ease; }
+.volume-row > button:hover { transform: translateY(-2px); border-color: var(--accent); }
+.volume-row > button[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 35%, var(--surface)); box-shadow: inset 0 0 0 1px var(--accent); }
+.volume-row strong { font-size: 0.85rem; }
+.volume-row span, .volume-row small { color: var(--muted); font-size: 0.63rem; }
+.volume-row i { height: 3px; margin-top: 9px; overflow: hidden; border-radius: 3px; background: var(--line); }
+.volume-row i b { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.selected-volume-heading { display: flex; align-items: baseline; justify-content: space-between; margin: 0 2px 12px; }
+.selected-volume-heading h3 { margin: 0; font-family: Inter, ui-sans-serif, sans-serif; font-size: 1rem; font-weight: 800; }
+.selected-volume-heading span { color: var(--muted); font-size: 0.68rem; }
+@media (max-width: 640px) {
+  .chapter-tools { margin-top: -1px; }
+  .volume-row { grid-auto-columns: minmax(155px, 44vw); margin-right: -14px; padding-right: 14px; }
+}
