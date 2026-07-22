@@ -56,6 +56,37 @@ describe('reader page', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
 
+  it('keeps chapter navigation inside the current volume', async () => {
+    const volumeSeries: SourceSeries = {
+      ...series,
+      key: 'novelFr:/series/volume-reader/',
+      sources: [{ source: 'novelFr', key: 'novelFr:/series/volume-reader/' }],
+      chapters: [
+        { key: 'novelFr:/v2-c1/', title: 'Volume 2 · Chapitre 1', number: 1, volume: 2, publishedAt: null, releases: [{ source: 'novelFr', key: 'novelFr:/v2-c1/' }] },
+        { key: 'novelFr:/v1-c2/', title: 'Volume 1 · Chapitre 2', number: 2, volume: 1, publishedAt: null, releases: [{ source: 'novelFr', key: 'novelFr:/v1-c2/' }] },
+        { key: 'novelFr:/v1-c1/', title: 'Volume 1 · Chapitre 1', number: 1, volume: 1, publishedAt: null, releases: [{ source: 'novelFr', key: 'novelFr:/v1-c1/' }] },
+      ],
+    }
+    await libraryRepository.addOrUpdateSeries(volumeSeries)
+    await libraryRepository.downloadChapter(volumeSeries.key, {
+      key: 'novelFr:/v1-c1/',
+      title: 'Volume 1 · Chapitre 1',
+      html: '<p>Premier chapitre du volume.</p>',
+      source: 'novelFr',
+    })
+    vi.stubGlobal('fetch', vi.fn())
+
+    const route = `/read/${encodeRouteKey(volumeSeries.key)}/${encodeRouteKey('novelFr:/v1-c1/')}`
+    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+
+    expect(await screen.findByText('Premier chapitre du volume.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Volume 1 · Chapitre 2/ })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /Volume 2 · Chapitre 1/ })).not.toBeInTheDocument()
+
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
   it('reads one paragraph at a time and saves focused progress', async () => {
     await libraryRepository.downloadChapter(series.key, {
       key: series.chapters[1]!.key,
