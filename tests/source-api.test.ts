@@ -5,16 +5,16 @@ import type { SourceService } from '../server/source/types'
 
 function sourceMock(): SourceService {
   return {
-    search: vi.fn().mockResolvedValue([{ key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text', sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }] }]),
+    search: vi.fn().mockResolvedValue([{ key: '/oeuvre/toradora/', title: 'Toradora!', sourceType: 'text', sources: [{ source: 'novelFr', key: '/oeuvre/toradora/' }] }]),
     discover: vi.fn().mockResolvedValue({
-      popular: [{ key: '/oeuvre/toradora/', title: 'Toradora!', coverImage: null, sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }] }],
+      popular: [{ key: '/oeuvre/toradora/', title: 'Toradora!', coverImage: null, sources: [{ source: 'novelFr', key: '/oeuvre/toradora/' }] }],
       recentlyAdded: [],
       recentlyUpdated: [],
     }),
     series: vi.fn().mockResolvedValue({
       key: '/oeuvre/toradora/',
       title: 'Toradora!',
-      sources: [{ source: 'mangasOrigines', key: '/oeuvre/toradora/' }],
+      sources: [{ source: 'novelFr', key: '/oeuvre/toradora/' }],
       coverImage: null,
       author: null,
       description: null,
@@ -22,7 +22,7 @@ function sourceMock(): SourceService {
       status: null,
       chapters: [],
     }),
-    chapter: vi.fn().mockResolvedValue({ key: '/oeuvre/toradora/chapitre-1/', title: 'Chapitre 1', html: '<p>Texte</p>', source: 'mangasOrigines' }),
+    chapter: vi.fn().mockResolvedValue({ key: '/oeuvre/toradora/chapitre-1/', title: 'Chapitre 1', html: '<p>Texte</p>', source: 'novelFr' }),
     asset: vi.fn().mockResolvedValue({ body: Buffer.from('image'), contentType: 'image/webp' }),
   }
 }
@@ -46,19 +46,14 @@ describe('source API', () => {
     expect(source.discover).toHaveBeenCalledOnce()
   })
 
-  it('passes chapter releases for source fallback', async () => {
+  it('loads a Novel-FR chapter by key', async () => {
     const source = sourceMock()
-    const releases = [
-      { source: 'novelFr', key: 'novelFr:/chapter-1/' },
-      { source: 'mangasOrigines', key: '/oeuvre/example/chapter-1/' },
-    ]
     const response = await request(createApp(source)).get('/api/source/chapter').query({
       key: 'novelFr:/chapter-1/',
-      releases: JSON.stringify(releases),
     })
 
     expect(response.status).toBe(200)
-    expect(source.chapter).toHaveBeenCalledWith('novelFr:/chapter-1/', releases)
+    expect(source.chapter).toHaveBeenCalledWith('novelFr:/chapter-1/')
   })
 
   it('validates short searches', async () => {

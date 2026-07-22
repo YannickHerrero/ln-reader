@@ -11,7 +11,7 @@ import { libraryRepository } from '../src/db/repository'
 const series: SourceSeries = {
   key: '/oeuvre/example/',
   title: 'Example Novel',
-  sources: [{ source: 'mangasOrigines', key: '/oeuvre/example/' }],
+  sources: [{ source: 'novelFr', key: '/oeuvre/example/' }],
   coverImage: null,
   author: 'Jane Doe',
   description: 'A readable synopsis.',
@@ -24,7 +24,7 @@ const series: SourceSeries = {
       number: 2,
       volume: null,
       publishedAt: '13 mars 2024',
-      releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }],
+      releases: [{ source: 'novelFr', key: '/oeuvre/example/chapitre-2/' }],
     },
     {
       key: '/oeuvre/example/chapitre-1/',
@@ -32,7 +32,7 @@ const series: SourceSeries = {
       number: 1,
       volume: null,
       publishedAt: '12 mars 2024',
-      releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }],
+      releases: [{ source: 'novelFr', key: '/oeuvre/example/chapitre-1/' }],
     },
   ],
 }
@@ -52,7 +52,7 @@ describe('series page', () => {
       key: series.chapters[1]!.key,
       title: 'Chapitre 1',
       html: '<p>Contenu hors ligne.</p>',
-      source: 'mangasOrigines',
+      source: 'novelFr',
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))))
 
     const route = `/series/${encodeRouteKey(series.key)}`

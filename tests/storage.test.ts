@@ -8,15 +8,15 @@ import { LibraryRepository } from '../src/db/repository'
 const series: SourceSeries = {
   key: '/oeuvre/example/',
   title: 'Example Novel',
-  sources: [{ source: 'mangasOrigines', key: '/oeuvre/example/' }],
+  sources: [{ source: 'novelFr', key: '/oeuvre/example/' }],
   coverImage: null,
   author: 'Jane Doe',
   description: 'Synopsis',
   genres: ['Novel'],
   status: 'En cours',
   chapters: [
-    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, volume: null, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }] },
-    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, volume: null, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }] },
+    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, volume: null, publishedAt: null, releases: [{ source: 'novelFr', key: '/oeuvre/example/chapitre-2/' }] },
+    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, volume: null, publishedAt: null, releases: [{ source: 'novelFr', key: '/oeuvre/example/chapitre-1/' }] },
   ],
 }
 
@@ -67,28 +67,91 @@ describe('local library repository', () => {
     ])
   })
 
-  it('migrates existing Mangas-Origines records to source-aware data', async () => {
+  it('maps legacy merged records to Novel-FR and removes Mangas-Origines-only data', async () => {
     const name = `legacy-${crypto.randomUUID()}`
-    const legacy = new Dexie(name)
-    legacy.version(1).stores({
+    const stores = {
       series: '&key, addedAt, updatedAt',
       chapters: '&key, seriesKey, [seriesKey+position]',
       progress: '&chapterKey, seriesKey, lastReadAt, completed',
       downloads: '&chapterKey, seriesKey, downloadedAt',
       covers: '&seriesKey',
+    }
+    const legacy = new Dexie(name)
+    legacy.version(2).stores(stores)
+    await legacy.table('series').bulkPut([
+      {
+        key: '/oeuvre/legacy/',
+        title: 'Legacy',
+        sources: [
+          { source: 'mangasOrigines', key: '/oeuvre/legacy/' },
+          { source: 'novelFr', key: 'novelFr:/series/legacy/' },
+        ],
+      },
+      {
+        key: '/oeuvre/unmapped/',
+        title: 'Unmapped',
+        sources: [{ source: 'mangasOrigines', key: '/oeuvre/unmapped/' }],
+      },
+    ])
+    await legacy.table('chapters').put({
+      key: '/oeuvre/legacy/chapitre-1/',
+      seriesKey: '/oeuvre/legacy/',
+      position: 0,
+      number: 1,
+      releases: [
+        { source: 'mangasOrigines', key: '/oeuvre/legacy/chapitre-1/' },
+        { source: 'novelFr', key: 'novelFr:/legacy-chapitre-1/' },
+      ],
     })
-    await legacy.table('series').put({ key: '/oeuvre/legacy/', title: 'Legacy' })
-    await legacy.table('chapters').put({ key: '/oeuvre/legacy/chapitre-1/', seriesKey: '/oeuvre/legacy/', position: 0 })
+    await legacy.table('progress').put({
+      chapterKey: '/oeuvre/legacy/chapitre-1/',
+      seriesKey: '/oeuvre/legacy/',
+      scrollRatio: 0.6,
+      completed: false,
+      lastReadAt: 10,
+    })
+    await legacy.table('downloads').put({
+      chapterKey: '/oeuvre/legacy/chapitre-1/',
+      seriesKey: '/oeuvre/legacy/',
+      title: 'Legacy chapter',
+      html: '<p>Fallback copy</p>',
+      source: 'mangasOrigines',
+      downloadedAt: 10,
+    })
     legacy.close()
 
     const upgraded = new LibraryDatabase(name)
-    expect(await upgraded.series.get('/oeuvre/legacy/')).toMatchObject({
-      sources: [{ source: 'mangasOrigines', key: '/oeuvre/legacy/' }],
+    expect(await upgraded.series.get('novelFr:/series/legacy/')).toMatchObject({
+      sources: [{ source: 'novelFr', key: 'novelFr:/series/legacy/' }],
     })
-    expect(await upgraded.chapters.get('/oeuvre/legacy/chapitre-1/')).toMatchObject({
-      releases: [{ source: 'mangasOrigines', key: '/oeuvre/legacy/chapitre-1/' }],
+    expect(await upgraded.chapters.get('novelFr:/legacy-chapitre-1/')).toMatchObject({
+      seriesKey: 'novelFr:/series/legacy/',
+      volume: null,
+      releases: [{ source: 'novelFr', key: 'novelFr:/legacy-chapitre-1/' }],
     })
+    expect(await upgraded.progress.get('novelFr:/legacy-chapitre-1/')).toMatchObject({ scrollRatio: 0.6 })
+    expect(await upgraded.downloads.get('novelFr:/legacy-chapitre-1/')).toBeUndefined()
+    expect(await upgraded.series.get('/oeuvre/legacy/')).toBeUndefined()
+    expect(await upgraded.series.get('/oeuvre/unmapped/')).toBeUndefined()
     await upgraded.delete()
+  })
+
+  it('removes stale chapters and their local data when refreshing', async () => {
+    await repository.addOrUpdateSeries(series)
+    const staleChapter = series.chapters[1]!
+    await repository.saveProgress(series.key, staleChapter.key, 0.5)
+    await repository.downloadChapter(series.key, {
+      key: staleChapter.key,
+      title: staleChapter.title,
+      html: '<p>Offline</p>',
+      source: 'novelFr',
+    })
+
+    await repository.addOrUpdateSeries({ ...series, chapters: [series.chapters[0]!] })
+
+    expect(await repository.getChapter(staleChapter.key)).toBeUndefined()
+    expect(await repository.getChapterProgress(staleChapter.key)).toBeUndefined()
+    expect(await repository.getDownload(staleChapter.key)).toBeUndefined()
   })
 
   it('stores downloads and removes all series data', async () => {
@@ -97,7 +160,7 @@ describe('local library repository', () => {
       key: series.chapters[0]!.key,
       title: 'Chapitre 2',
       html: '<p>Offline</p>',
-      source: 'mangasOrigines',
+      source: 'novelFr',
     })
 
     expect(await repository.getDownload(series.chapters[0]!.key)).toMatchObject({ html: '<p>Offline</p>' })

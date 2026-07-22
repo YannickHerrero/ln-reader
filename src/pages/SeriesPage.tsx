@@ -127,7 +127,7 @@ export function SeriesPage() {
       } else {
         const chapter = await libraryRepository.getChapter(chapterKey)
         if (!chapter) throw new Error('Ce chapitre est introuvable.')
-        const content = await sourceApi.chapter(chapterKey, chapter.releases)
+        const content = await sourceApi.chapter(chapterKey)
         await libraryRepository.downloadChapter(seriesKey, content)
       }
     } catch (caught) {

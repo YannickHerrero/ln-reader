@@ -83,7 +83,7 @@ export function ReaderPage() {
         key: download.chapterKey,
         title: download.title,
         html: download.html,
-        source: download.source ?? (download.chapterKey.startsWith('novelFr:') ? 'novelFr' : 'mangasOrigines'),
+        source: 'novelFr',
       })
       setOfflineCopy(true)
       setLoading(false)
@@ -93,7 +93,7 @@ export function ReaderPage() {
     const controller = new AbortController()
     setOfflineCopy(false)
     setLoading(true)
-    sourceApi.chapter(chapterKey, chapter.releases, controller.signal)
+    sourceApi.chapter(chapterKey, controller.signal)
       .then(setContent)
       .catch((caught) => {
         if (caught instanceof DOMException && caught.name === 'AbortError') return

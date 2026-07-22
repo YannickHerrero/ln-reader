@@ -200,7 +200,7 @@ export function SearchPage() {
       </header>
 
       <section className="search-page__intro">
-        <p className="eyebrow">Novel-FR · Mangas-Origines</p>
+        <p className="eyebrow">Novel-FR</p>
         <h1>Trouvez votre prochaine <em>obsession.</em></h1>
         <p className="search-page__lede">Romans, light novels et web novels français, réunis dans un catalogue.</p>
         <div className="search-page__field">

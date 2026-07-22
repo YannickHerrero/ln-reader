@@ -25,7 +25,14 @@ export class LibraryRepository {
 
   async addOrUpdateSeries(series: SourceSeries, cover?: Blob): Promise<void> {
     const now = Date.now()
-    await this.database.transaction('rw', this.database.series, this.database.chapters, this.database.covers, async () => {
+    await this.database.transaction(
+      'rw',
+      this.database.series,
+      this.database.chapters,
+      this.database.progress,
+      this.database.downloads,
+      this.database.covers,
+      async () => {
       const existing = await this.database.series.get(series.key)
       const record: LibrarySeriesRecord = {
         key: series.key,
@@ -40,11 +47,21 @@ export class LibraryRepository {
         updatedAt: now,
       }
       await this.database.series.put(record)
+      const currentKeys = await this.database.chapters.where('seriesKey').equals(series.key).primaryKeys()
+      const refreshedKeys = new Set(series.chapters.map((chapter) => chapter.key))
+      const staleKeys = currentKeys.filter((key) => !refreshedKeys.has(String(key)))
       await this.database.chapters.bulkPut(series.chapters.map((chapter, position) => ({
         ...chapter,
         seriesKey: series.key,
         position,
       })))
+      if (staleKeys.length) {
+        await Promise.all([
+          this.database.chapters.bulkDelete(staleKeys),
+          this.database.progress.bulkDelete(staleKeys),
+          this.database.downloads.bulkDelete(staleKeys),
+        ])
+      }
       if (cover) await this.database.covers.put({ seriesKey: series.key, blob: cover })
     })
   }

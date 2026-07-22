@@ -1,7 +1,8 @@
 import type { SourceID, SourceReference } from '../../shared/contracts'
 
 export function sourceName(source: SourceID): string {
-  return source === 'novelFr' ? 'Novel-FR' : 'Mangas-Origines'
+  void source
+  return 'Novel-FR'
 }
 
 export function sourcesLabel(sources: SourceReference[]): string {

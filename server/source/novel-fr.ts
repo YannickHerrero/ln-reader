@@ -7,7 +7,7 @@ import type {
   SourceSearchResult,
   SourceSeries,
 } from '../../shared/contracts'
-import { sanitizeChapterHtml } from './parsers'
+import { sanitizeChapterHtml } from './sanitize-chapter'
 import type { NovelSource } from './types'
 
 const BASE_URL = 'https://novel-fr.net'

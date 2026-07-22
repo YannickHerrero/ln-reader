@@ -1,4 +1,4 @@
-export type SourceID = 'novelFr' | 'mangasOrigines'
+export type SourceID = 'novelFr'
 
 export interface SourceReference {
   source: SourceID

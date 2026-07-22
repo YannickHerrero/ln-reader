@@ -2,7 +2,6 @@ import type {
   ApiErrorBody,
   SourceChapterContent,
   SourceDiscovery,
-  SourceReference,
   SourceSearchResult,
   SourceSeries,
 } from '../../shared/contracts'
@@ -29,10 +28,8 @@ export const sourceApi = {
     return request<SourceSeries>(`/api/source/series?key=${encodeURIComponent(key)}`, signal)
   },
 
-  chapter(key: string, releases: SourceReference[] = [], signal?: AbortSignal) {
-    const params = new URLSearchParams({ key })
-    if (releases.length) params.set('releases', JSON.stringify(releases))
-    return request<SourceChapterContent>(`/api/source/chapter?${params}`, signal)
+  chapter(key: string, signal?: AbortSignal) {
+    return request<SourceChapterContent>(`/api/source/chapter?key=${encodeURIComponent(key)}`, signal)
   },
 
   async cover(url: string): Promise<Blob> {

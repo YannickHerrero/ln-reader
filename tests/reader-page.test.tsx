@@ -11,15 +11,15 @@ import { libraryRepository } from '../src/db/repository'
 const series: SourceSeries = {
   key: '/oeuvre/example/',
   title: 'Example Novel',
-  sources: [{ source: 'mangasOrigines', key: '/oeuvre/example/' }],
+  sources: [{ source: 'novelFr', key: '/oeuvre/example/' }],
   coverImage: null,
   author: null,
   description: null,
   genres: ['Novel'],
   status: null,
   chapters: [
-    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, volume: null, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }] },
-    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, volume: null, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }] },
+    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, volume: null, publishedAt: null, releases: [{ source: 'novelFr', key: '/oeuvre/example/chapitre-2/' }] },
+    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, volume: null, publishedAt: null, releases: [{ source: 'novelFr', key: '/oeuvre/example/chapitre-1/' }] },
   ],
 }
 
@@ -30,7 +30,7 @@ beforeEach(async () => {
     key: series.chapters[1]!.key,
     title: 'Chapitre 1',
     html: '<p>Contenu téléchargé.</p>',
-    source: 'mangasOrigines',
+    source: 'novelFr',
   })
   vi.spyOn(window, 'scrollTo').mockImplementation(() => undefined)
 })
@@ -61,7 +61,7 @@ describe('reader page', () => {
       key: series.chapters[1]!.key,
       title: 'Chapitre 1',
       html: '<p>Premier paragraphe. Avec deux phrases.</p><p>Deuxième paragraphe.</p>',
-      source: 'mangasOrigines',
+      source: 'novelFr',
     })
     vi.stubGlobal('fetch', vi.fn())
     const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
@@ -96,7 +96,7 @@ describe('reader page', () => {
       key: series.chapters[1]!.key,
       title: 'Chapitre 1',
       html: '<p>Première phrase. Deuxième phrase.</p><p>Dernière phrase.</p>',
-      source: 'mangasOrigines',
+      source: 'novelFr',
     })
     localStorage.setItem('ln-reader-reading-preferences', JSON.stringify({ mode: 'sentence' }))
     vi.stubGlobal('fetch', vi.fn())
