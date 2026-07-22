@@ -1,11 +1,13 @@
 export type ReaderFontFamily = 'serif' | 'sans'
 export type ReaderPaper = 'auto' | 'ivory' | 'white' | 'black' | 'softDark'
+export type ReaderMode = 'continuous' | 'paragraph' | 'sentence'
 
 export interface ReaderPreferences {
   fontSize: number
   lineHeight: number
   fontFamily: ReaderFontFamily
   paper: ReaderPaper
+  mode: ReaderMode
 }
 
 export interface ReaderPaperPreset {
@@ -25,6 +27,7 @@ export const DEFAULT_READER_PREFERENCES: ReaderPreferences = {
   lineHeight: 1.8,
   fontFamily: 'serif',
   paper: 'auto',
+  mode: 'continuous',
 }
 
 export const READER_PAPER_PRESETS: ReaderPaperPreset[] = [
@@ -37,6 +40,7 @@ export const READER_PAPER_PRESETS: ReaderPaperPreset[] = [
 
 const FONT_FAMILIES = new Set<ReaderFontFamily>(['serif', 'sans'])
 const PAPERS = new Set<ReaderPaper>(READER_PAPER_PRESETS.map((preset) => preset.id))
+const MODES = new Set<ReaderMode>(['continuous', 'paragraph', 'sentence'])
 
 function clamp(value: unknown, min: number, max: number, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value)
@@ -67,6 +71,9 @@ export function normalizeReaderPreferences(value: unknown): ReaderPreferences {
     paper: PAPERS.has(candidate.paper as ReaderPaper)
       ? candidate.paper as ReaderPaper
       : DEFAULT_READER_PREFERENCES.paper,
+    mode: MODES.has(candidate.mode as ReaderMode)
+      ? candidate.mode as ReaderMode
+      : DEFAULT_READER_PREFERENCES.mode,
   }
 }
 

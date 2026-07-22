@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SourceSeries } from '../shared/contracts'
@@ -51,6 +51,60 @@ describe('reader page', () => {
     expect(screen.getByText(/Disponible hors ligne/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Chapitre 2/ })).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
+
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
+  it('reads one paragraph at a time and saves focused progress', async () => {
+    await libraryRepository.downloadChapter(series.key, {
+      key: series.chapters[1]!.key,
+      title: 'Chapitre 1',
+      html: '<p>Premier paragraphe. Avec deux phrases.</p><p>Deuxième paragraphe.</p>',
+      source: 'mangasOrigines',
+    })
+    vi.stubGlobal('fetch', vi.fn())
+    const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
+    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+
+    expect(await screen.findByText('Premier paragraphe. Avec deux phrases.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Options de lecture' }))
+    await userEvent.click(screen.getByRole('radio', { name: /Paragraphe/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Terminé' }))
+
+    expect(screen.getByRole('region', { name: 'Lecture par paragraphe' })).toBeInTheDocument()
+    expect(screen.getByText('Paragraphe 1 sur 2')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Paragraphe suivant' }))
+    expect(screen.getByText('Deuxième paragraphe.')).toBeInTheDocument()
+    expect(screen.getByText('Paragraphe 2 sur 2')).toBeInTheDocument()
+    await waitFor(async () => expect(await libraryRepository.getChapterProgress(series.chapters[1]!.key)).toMatchObject({
+      scrollRatio: 1,
+      completed: true,
+    }))
+
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
+  it('navigates sentence mode with the keyboard', async () => {
+    await libraryRepository.downloadChapter(series.key, {
+      key: series.chapters[1]!.key,
+      title: 'Chapitre 1',
+      html: '<p>Première phrase. Deuxième phrase.</p><p>Dernière phrase.</p>',
+      source: 'mangasOrigines',
+    })
+    localStorage.setItem('ln-reader-reading-preferences', JSON.stringify({ mode: 'sentence' }))
+    vi.stubGlobal('fetch', vi.fn())
+    const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
+    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+
+    expect(await screen.findByText('Première phrase.')).toBeInTheDocument()
+    expect(screen.getByText('Phrase 1 sur 3')).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: ' ' })
+    expect(screen.getByText('Deuxième phrase.')).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'End' })
+    expect(screen.getByText('Dernière phrase.')).toBeInTheDocument()
+    expect(screen.getByText('Phrase 3 sur 3')).toBeInTheDocument()
 
     unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))

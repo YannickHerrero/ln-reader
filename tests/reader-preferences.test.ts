@@ -18,11 +18,13 @@ describe('reader preferences', () => {
       lineHeight: 1.03,
       fontFamily: 'comic',
       paper: 'green',
+      mode: 'speed',
     })).toEqual({
       fontSize: 28,
       lineHeight: 1.4,
       fontFamily: 'serif',
       paper: 'auto',
+      mode: 'continuous',
     })
   })
 
@@ -32,6 +34,7 @@ describe('reader preferences', () => {
       lineHeight: 2,
       fontFamily: 'sans',
       paper: 'softDark',
+      mode: 'sentence',
     })
 
     expect(JSON.parse(localStorage.getItem(READER_PREFERENCES_KEY) ?? '')).toEqual(preferences)

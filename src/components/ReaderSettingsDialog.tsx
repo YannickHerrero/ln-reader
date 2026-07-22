@@ -87,6 +87,42 @@ export function ReaderSettingsDialog({ preferences, onChange }: ReaderSettingsDi
               <p>Une histoire devrait toujours être agréable à lire.</p>
             </div>
 
+            <fieldset className="reader-mode-options">
+              <legend>Mode de lecture</legend>
+              <div>
+                <label>
+                  <input
+                    type="radio"
+                    name="reader-mode"
+                    value="continuous"
+                    checked={preferences.mode === 'continuous'}
+                    onChange={() => update({ mode: 'continuous' })}
+                  />
+                  <span><i aria-hidden="true">☰</i><strong>Défilement</strong><small>Chapitre complet</small></span>
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="reader-mode"
+                    value="paragraph"
+                    checked={preferences.mode === 'paragraph'}
+                    onChange={() => update({ mode: 'paragraph' })}
+                  />
+                  <span><i aria-hidden="true">¶</i><strong>Paragraphe</strong><small>Un bloc à la fois</small></span>
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="reader-mode"
+                    value="sentence"
+                    checked={preferences.mode === 'sentence'}
+                    onChange={() => update({ mode: 'sentence' })}
+                  />
+                  <span><i aria-hidden="true">―</i><strong>Phrase</strong><small>Une phrase à la fois</small></span>
+                </label>
+              </div>
+            </fieldset>
+
             <section className="reader-settings-group" aria-labelledby="text-settings-title">
               <div className="reader-settings-group__title">
                 <h3 id="text-settings-title">Texte</h3>

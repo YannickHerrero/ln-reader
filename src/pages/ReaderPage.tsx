@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import type { SourceChapterContent } from '../../shared/contracts'
+import { FocusedReader } from '../components/FocusedReader'
 import { ReaderSettingsDialog } from '../components/ReaderSettingsDialog'
 import { sourceApi } from '../api/source'
 import { decodeRouteKey, encodeRouteKey } from '../app/route-key'
@@ -9,6 +10,7 @@ import type { ChapterRecord } from '../db/database'
 import { libraryRepository } from '../db/repository'
 import { calculateScrollRatio, isChapterComplete } from '../reader/progress'
 import { loadReaderPreferences, saveReaderPreferences, type ReaderPreferences } from '../reader/preferences'
+import { extractReaderParagraphs, ratioForUnit, splitReaderSentences, unitIndexFromRatio } from '../reader/segmentation'
 import { sourceName } from '../source/labels'
 
 function readerPath(seriesKey: string, chapterKey: string) {
@@ -41,6 +43,7 @@ export function ReaderPage() {
   const [loading, setLoading] = useState(true)
   const [downloadBusy, setDownloadBusy] = useState(false)
   const [readerPreferences, setReaderPreferences] = useState(loadReaderPreferences)
+  const [focusedIndex, setFocusedIndex] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const restored = useRef(false)
   const latestRatio = useRef(0)
@@ -49,11 +52,24 @@ export function ReaderPage() {
   const previousChapter = chapterIndex >= 0 ? chapters[chapterIndex + 1] : undefined
   const nextChapter = chapterIndex > 0 ? chapters[chapterIndex - 1] : undefined
   const chapter = chapterIndex >= 0 ? chapters[chapterIndex] : undefined
-  const progressPercent = Math.round((savedProgress?.scrollRatio ?? 0) * 100)
+  const readerParagraphs = useMemo(
+    () => content ? extractReaderParagraphs(content.html) : [],
+    [content],
+  )
+  const readerSentences = useMemo(
+    () => splitReaderSentences(readerParagraphs),
+    [readerParagraphs],
+  )
+  const focusedUnits = readerPreferences.mode === 'sentence' ? readerSentences : readerParagraphs
+  const focusedRatio = ratioForUnit(focusedIndex, focusedUnits.length)
+  const progressPercent = Math.round((readerPreferences.mode === 'continuous'
+    ? savedProgress?.scrollRatio ?? 0
+    : focusedRatio) * 100)
 
   useEffect(() => {
     restored.current = false
     latestRatio.current = 0
+    setFocusedIndex(0)
     setContent(null)
     setError(null)
     if (download === undefined || !chapterKey || !chapter) return
@@ -90,15 +106,19 @@ export function ReaderPage() {
     restored.current = true
     const ratio = savedProgress?.scrollRatio ?? 0
     latestRatio.current = ratio
-    requestAnimationFrame(() => {
-      const available = document.documentElement.scrollHeight - window.innerHeight
-      window.scrollTo({ top: Math.max(0, available * ratio), behavior: 'instant' })
-    })
+    if (readerPreferences.mode === 'continuous') {
+      requestAnimationFrame(() => {
+        const available = document.documentElement.scrollHeight - window.innerHeight
+        window.scrollTo({ top: Math.max(0, available * ratio), behavior: 'instant' })
+      })
+    } else {
+      setFocusedIndex(unitIndexFromRatio(focusedUnits.length, ratio))
+    }
     void libraryRepository.saveProgress(seriesKey, chapterKey, ratio, savedProgress?.completed)
-  }, [content, chapterKey, seriesKey, savedProgress])
+  }, [content, chapterKey, seriesKey, savedProgress, readerPreferences.mode, focusedUnits.length])
 
   useEffect(() => {
-    if (!content || !chapterKey || !seriesKey) return
+    if (!content || !chapterKey || !seriesKey || readerPreferences.mode !== 'continuous') return
     let timeout: ReturnType<typeof setTimeout> | undefined
     const save = () => {
       const ratio = calculateScrollRatio(window.scrollY, document.documentElement.scrollHeight, window.innerHeight)
@@ -115,7 +135,7 @@ export function ReaderPage() {
       if (timeout) clearTimeout(timeout)
       void libraryRepository.saveProgress(seriesKey, chapterKey, latestRatio.current, isChapterComplete(latestRatio.current))
     }
-  }, [content, chapterKey, seriesKey])
+  }, [content, chapterKey, seriesKey, readerPreferences.mode])
 
   useEffect(() => {
     if (series && chapter) document.title = `${chapter.title} · ${series.title}`
@@ -131,16 +151,42 @@ export function ReaderPage() {
   if (series === undefined) return <main className="reader-state">Chargement…</main>
   if (!seriesKey || !chapterKey || series === null) return <Navigate to="/" replace />
 
+  function currentReaderRatio(): number {
+    if (readerPreferences.mode !== 'continuous') return focusedRatio
+    const available = document.documentElement.scrollHeight - window.innerHeight
+    return available > 0
+      ? calculateScrollRatio(window.scrollY, document.documentElement.scrollHeight, window.innerHeight)
+      : latestRatio.current
+  }
+
   function changeReaderPreferences(preferences: ReaderPreferences) {
-    const availableBefore = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
-    const ratio = availableBefore > 0 ? window.scrollY / availableBefore : latestRatio.current
+    const ratio = currentReaderRatio()
     const saved = saveReaderPreferences(preferences)
-    latestRatio.current = Math.max(0, Math.min(1, ratio))
+    latestRatio.current = ratio
     setReaderPreferences(saved)
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      const availableAfter = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
-      window.scrollTo({ top: availableAfter * latestRatio.current, behavior: 'instant' })
-    }))
+
+    if (saved.mode === 'continuous') {
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        const availableAfter = Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
+        window.scrollTo({ top: availableAfter * ratio, behavior: 'instant' })
+      }))
+    } else {
+      const nextUnits = saved.mode === 'sentence' ? readerSentences : readerParagraphs
+      setFocusedIndex(unitIndexFromRatio(nextUnits.length, ratio))
+    }
+
+    if (seriesKey && chapterKey) {
+      void libraryRepository.saveProgress(seriesKey, chapterKey, ratio, isChapterComplete(ratio))
+    }
+  }
+
+  function changeFocusedIndex(index: number) {
+    if (!seriesKey || !chapterKey) return
+    const nextIndex = Math.max(0, Math.min(focusedUnits.length - 1, index))
+    const ratio = ratioForUnit(nextIndex, focusedUnits.length)
+    setFocusedIndex(nextIndex)
+    latestRatio.current = ratio
+    void libraryRepository.saveProgress(seriesKey, chapterKey, ratio, isChapterComplete(ratio))
   }
 
   async function toggleDownload() {
@@ -162,6 +208,7 @@ export function ReaderPage() {
       className="reader-shell"
       data-reader-font={readerPreferences.fontFamily}
       data-reader-paper={readerPreferences.paper}
+      data-reader-mode={readerPreferences.mode}
       style={readerStyle}
     >
       <header className="reader-bar">
@@ -180,7 +227,7 @@ export function ReaderPage() {
 
       {loading && <section className="reader-state"><span className="reader-pulse" />Chargement du chapitre…</section>}
       {error && <section className="reader-state reader-state--error"><h1>Lecture impossible</h1><p>{error}</p></section>}
-      {content && (
+      {content && readerPreferences.mode === 'continuous' && (
         <>
           <article className="reader-article">
             <div className="reader-kicker">
@@ -195,6 +242,18 @@ export function ReaderPage() {
             {nextChapter ? <Link to={readerPath(seriesKey, nextChapter.key)}><span>{nextChapter.title}</span> →</Link> : <Link to={`/series/${encodeRouteKey(seriesKey)}`}>Fin · Retour à la série</Link>}
           </nav>
         </>
+      )}
+      {content && readerPreferences.mode !== 'continuous' && (
+        <FocusedReader
+          mode={readerPreferences.mode}
+          units={focusedUnits}
+          index={focusedIndex}
+          onIndexChange={changeFocusedIndex}
+          nextChapter={nextChapter ? {
+            path: readerPath(seriesKey, nextChapter.key),
+            title: nextChapter.title,
+          } : undefined}
+        />
       )}
     </main>
   )
