@@ -14,7 +14,7 @@ IndexedDB database.
 - Series details, source labels and sticky `1→N` / `N→1` chapter sorting
 - Cinematic, responsive interface with a persistent light/dark appearance toggle
 - Reader-only typography, line spacing, font family and paper appearance controls
-- Focused paragraph and sentence modes with centered text and unit-by-unit navigation
+- Focused paragraph and sentence modes with centered text, tap zones and unit-by-unit navigation
 - Continuous, page-free reading
 - Per-chapter progress and automatic completion near the end
 - Explicit chapter downloads for offline reading
