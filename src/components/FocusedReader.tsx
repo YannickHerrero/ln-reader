@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { focusedTapDelta, isFocusedTap } from '../reader/focused-navigation'
 import type { ReaderMode } from '../reader/preferences'
 
 interface FocusedReaderProps {
@@ -23,6 +24,7 @@ export function FocusedReader({
   const text = units[current] ?? 'Aucun texte disponible.'
   const atStart = current === 0
   const atEnd = current === maximum
+  const pointerStart = useRef<{ id: number; x: number; y: number; startedAt: number } | null>(null)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -48,9 +50,36 @@ export function FocusedReader({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [atEnd, atStart, current, maximum, onIndexChange])
 
+  function beginTap(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) return
+    pointerStart.current = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      startedAt: performance.now(),
+    }
+  }
+
+  function finishTap(event: ReactPointerEvent<HTMLDivElement>) {
+    const start = pointerStart.current
+    pointerStart.current = null
+    if (!start || start.id !== event.pointerId) return
+    if (!isFocusedTap(start, { x: event.clientX, y: event.clientY }, performance.now() - start.startedAt)
+      || window.getSelection()?.toString()) return
+
+    const delta = focusedTapDelta(event.clientX, window.innerWidth)
+    if (delta < 0 && !atStart) onIndexChange(current - 1)
+    if (delta > 0 && !atEnd) onIndexChange(current + 1)
+  }
+
   return (
     <section className="reader-focus" aria-label={`Lecture par ${label.toLowerCase()}`}>
-      <div className="reader-focus__stage">
+      <div
+        className="reader-focus__stage"
+        onPointerDown={beginTap}
+        onPointerUp={finishTap}
+        onPointerCancel={() => { pointerStart.current = null }}
+      >
         <p key={`${mode}-${current}`} className="reader-focus__text" aria-live="polite">{text}</p>
       </div>
       <footer className="reader-focus__controls">

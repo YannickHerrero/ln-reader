@@ -76,6 +76,7 @@ describe('reader page', () => {
     expect(document.documentElement).toHaveClass('reader-focus-locked')
     expect(document.body).toHaveClass('reader-focus-locked')
     expect(screen.getByText('Paragraphe 1 sur 2')).toBeInTheDocument()
+
     await userEvent.click(screen.getByRole('button', { name: 'Paragraphe suivant' }))
     expect(screen.getByText('Deuxième paragraphe.')).toBeInTheDocument()
     expect(screen.getByText('Paragraphe 2 sur 2')).toBeInTheDocument()
