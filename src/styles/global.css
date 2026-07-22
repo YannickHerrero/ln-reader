@@ -750,9 +750,14 @@ body:has(.reader-shell[data-reader-paper="softDark"]) { background: #111318; }
 }
 
 /* Paragraph and sentence reading modes */
+html.reader-focus-locked,
+html.reader-focus-locked body { width: 100%; height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none; }
+html.reader-focus-locked body { position: fixed; inset: 0; }
 .reader-shell[data-reader-mode="paragraph"],
-.reader-shell[data-reader-mode="sentence"] { height: 100dvh; min-height: 0; overflow: hidden; }
-.reader-focus { display: grid; height: calc(100dvh - 64px); grid-template-rows: minmax(0, 1fr) auto; color: var(--reading-ink); background: var(--reading-paper); }
+.reader-shell[data-reader-mode="sentence"] { position: fixed; z-index: 0; inset: 0; display: grid; width: 100%; height: auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; overscroll-behavior: none; }
+.reader-shell[data-reader-mode="paragraph"] .reader-bar,
+.reader-shell[data-reader-mode="sentence"] .reader-bar { position: relative; top: auto; min-height: calc(64px + env(safe-area-inset-top)); padding-top: calc(8px + env(safe-area-inset-top)); }
+.reader-focus { display: grid; height: auto; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; color: var(--reading-ink); background: var(--reading-paper); }
 .reader-focus__stage { display: grid; min-height: 0; place-items: center; padding: clamp(30px, 7vh, 72px) max(24px, 6vw); overflow: hidden; }
 .reader-focus__text { width: min(820px, 100%); max-height: 100%; margin: 0; padding: 4px 10px; overflow-y: auto; color: var(--reading-ink); font-size: var(--reading-font-size); line-height: var(--reading-line-height); overscroll-behavior: contain; scrollbar-color: var(--reading-line) transparent; text-wrap: pretty; animation: reader-unit-in 160ms ease-out; }
 .reader-shell[data-reader-font="serif"] .reader-focus__text { font-family: Georgia, "Times New Roman", serif; }
@@ -770,7 +775,6 @@ body:has(.reader-shell[data-reader-paper="softDark"]) { background: #111318; }
 .reader-focus__counter i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width 180ms ease; }
 
 @media (max-width: 640px) {
-  .reader-focus { height: calc(100dvh - 64px); }
   .reader-focus__stage { padding: 28px 18px; }
   .reader-focus__text { padding-inline: 3px; font-size: var(--reading-font-size); }
   .reader-shell[data-reader-mode="sentence"] .reader-focus__text { font-size: calc(var(--reading-font-size) * 1.04); }

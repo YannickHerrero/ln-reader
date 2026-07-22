@@ -73,6 +73,8 @@ describe('reader page', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Terminé' }))
 
     expect(screen.getByRole('region', { name: 'Lecture par paragraphe' })).toBeInTheDocument()
+    expect(document.documentElement).toHaveClass('reader-focus-locked')
+    expect(document.body).toHaveClass('reader-focus-locked')
     expect(screen.getByText('Paragraphe 1 sur 2')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Paragraphe suivant' }))
     expect(screen.getByText('Deuxième paragraphe.')).toBeInTheDocument()
@@ -83,6 +85,8 @@ describe('reader page', () => {
     }))
 
     unmount()
+    expect(document.documentElement).not.toHaveClass('reader-focus-locked')
+    expect(document.body).not.toHaveClass('reader-focus-locked')
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
 

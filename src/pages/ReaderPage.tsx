@@ -142,6 +142,18 @@ export function ReaderPage() {
     return () => { document.title = 'LN Reader' }
   }, [series, chapter])
 
+  useEffect(() => {
+    if (readerPreferences.mode === 'continuous') return
+    document.documentElement.classList.add('reader-focus-locked')
+    document.body.classList.add('reader-focus-locked')
+    window.scrollTo({ top: 0, behavior: 'instant' })
+    return () => {
+      document.documentElement.classList.remove('reader-focus-locked')
+      document.body.classList.remove('reader-focus-locked')
+      window.scrollTo({ top: 0, behavior: 'instant' })
+    }
+  }, [readerPreferences.mode])
+
   const safeContent = useMemo(() => ({ __html: content?.html ?? '' }), [content?.html])
   const readerStyle = {
     '--reading-font-size': `${readerPreferences.fontSize}px`,
