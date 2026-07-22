@@ -125,6 +125,7 @@ export function parseChapters(html: string): SourceChapter[] {
       key,
       title,
       number: Number.isFinite(number) ? number : null,
+      volume: null,
       publishedAt,
       releases: [{ source: 'mangasOrigines', key }],
     })

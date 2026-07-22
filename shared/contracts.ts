@@ -29,6 +29,7 @@ export interface SourceChapter {
   key: string
   title: string
   number: number | null
+  volume: number | null
   publishedAt: string | null
   releases: SourceReference[]
 }

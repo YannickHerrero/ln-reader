@@ -74,6 +74,7 @@ describe('library page', () => {
         key: '/oeuvre/continue/chapitre-1/',
         title: 'Chapitre 1',
         number: 1,
+        volume: null,
         publishedAt: null,
         releases: [{ source: 'mangasOrigines', key: '/oeuvre/continue/chapitre-1/' }],
       }],

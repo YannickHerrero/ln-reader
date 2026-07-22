@@ -18,8 +18,8 @@ const series: SourceSeries = {
   genres: ['Novel'],
   status: null,
   chapters: [
-    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }] },
-    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }] },
+    { key: '/oeuvre/example/chapitre-2/', title: 'Chapitre 2', number: 2, volume: null, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-2/' }] },
+    { key: '/oeuvre/example/chapitre-1/', title: 'Chapitre 1', number: 1, volume: null, publishedAt: null, releases: [{ source: 'mangasOrigines', key: '/oeuvre/example/chapitre-1/' }] },
   ],
 }
 

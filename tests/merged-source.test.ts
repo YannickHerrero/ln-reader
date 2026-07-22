@@ -8,6 +8,7 @@ function chapter(source: SourceID, key: string, number: number) {
     key,
     title: `Chapitre ${number}`,
     number,
+    volume: null,
     publishedAt: null,
     releases: [{ source, key }],
   }

@@ -76,7 +76,7 @@ function mergeListings<T extends SourceSearchResult | SourceBrowseResult>(
 }
 
 function chapterIdentity(chapter: SourceChapter): string {
-  if (chapter.number !== null) return `number:${chapter.number}`
+  if (chapter.number !== null) return `volume:${chapter.volume ?? 'none'}:number:${chapter.number}`
   return `title:${normalizeTitle(chapter.title)}`
 }
 
@@ -190,6 +190,10 @@ export class MergedSourceService implements SourceService {
     }
 
     const mergedChapters = [...chapters.values()].sort((left, right) => {
+      if (left.volume === null && right.volume !== null) return 1
+      if (left.volume !== null && right.volume === null) return -1
+      const volumeOrder = (right.volume ?? 0) - (left.volume ?? 0)
+      if (volumeOrder !== 0) return volumeOrder
       if (left.number === null && right.number === null) return left.title.localeCompare(right.title, 'fr')
       if (left.number === null) return 1
       if (right.number === null) return -1

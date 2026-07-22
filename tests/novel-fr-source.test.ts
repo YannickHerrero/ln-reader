@@ -9,8 +9,9 @@ const seriesHtml = `
   <div class="sersys entry-content">Synopsis</div>
   <div class="sertogenre"><a>Fantasy</a></div>
   <div class="eplister"><ul>
-    <li><a href="https://novel-fr.net/the-beginning-after-the-end-chapitre-3/"><div class="epl-num">Vol. 1 Ch. 3</div><div class="epl-title">Third</div><div class="epl-date">août 20, 2022</div></a></li>
-    <li><a href="https://novel-fr.net/the-beginning-after-the-end-chapitre-1/"><div class="epl-num">Vol. 1 Ch. 1</div><div class="epl-title">First</div></a></li>
+    <li><a href="https://novel-fr.net/demo-volume-2-chapitre-1/"><div class="epl-num">Vol. 2 Ch. 1</div><div class="epl-title">Second volume</div><div class="epl-date">août 20, 2022</div></a></li>
+    <li><a href="https://novel-fr.net/demo-volume-1-chapitre-1/"><div class="epl-num">Vol. 1 Ch. 1</div><div class="epl-title">First volume</div></a></li>
+    <li><a href="https://novel-fr.net/demo-volume-1-prologue/"><div class="epl-num">Vol. 1 Ch. 0</div><div class="epl-title">Prologue</div></a></li>
   </ul></div>`
 
 afterEach(() => {
@@ -18,7 +19,7 @@ afterEach(() => {
 })
 
 describe('Novel-FR source', () => {
-  it('parses metadata and fills TBATE chapter gaps', async () => {
+  it('parses metadata and preserves repeated chapter numbers across volumes', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(seriesHtml, {
       status: 200,
       headers: { 'Content-Type': 'text/html' },
@@ -32,9 +33,14 @@ describe('Novel-FR source', () => {
       status: 'Completed',
       sources: [{ source: 'novelFr', key: 'novelFr:/series/the-beginning-after-the-end/' }],
     })
-    expect(series.chapters.map((chapter) => chapter.number)).toEqual([3, 2, 1])
+    expect(series.chapters.map((chapter) => [chapter.volume, chapter.number])).toEqual([
+      [2, 1],
+      [1, 1],
+      [1, 0],
+    ])
     expect(series.chapters[1]).toMatchObject({
-      key: 'novelFr:/the-beginning-after-the-end-chapitre-2/',
+      key: 'novelFr:/demo-volume-1-chapitre-1/',
+      volume: 1,
       releases: [{ source: 'novelFr' }],
     })
   })

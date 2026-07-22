@@ -48,12 +48,30 @@ function coverUrl(raw: string | undefined): string | null {
   }
 }
 
+function decimalAfterMarker(label: string, markers: string[], immediate: boolean): number | null {
+  const lower = label.toLowerCase().replace(',', '.')
+  for (const marker of markers) {
+    const markerIndex = lower.indexOf(marker)
+    if (markerIndex < 0) continue
+    const suffix = lower.slice(markerIndex + marker.length).trimStart()
+    const match = immediate ? suffix.match(/^\d+(?:\.\d+)?/) : suffix.match(/\d+(?:\.\d+)?/)
+    if (!match) continue
+    const value = Number(match[0])
+    if (Number.isFinite(value)) return value
+  }
+  return null
+}
+
 function chapterNumber(label: string): number | null {
-  const match = label.match(/\bCh(?:apitre)?\.?\s*(\d+(?:[.,]\d+)?)/i)
-    ?? label.match(/chapitre[- ](\d+(?:[.,]\d+)?)/i)
-  if (!match?.[1]) return null
-  const value = Number(match[1].replace(',', '.'))
-  return Number.isFinite(value) ? value : null
+  return decimalAfterMarker(label, ['chapitre', 'chap.', 'chap', 'ch.', 'ch', 'chapter'], false)
+}
+
+function volumeNumber(label: string): number | null {
+  return decimalAfterMarker(label, ['volume', 'vol.', 'vol'], true)
+}
+
+function numberKey(number: number): number {
+  return Math.round(number * 1_000)
 }
 
 function parseBrowse(html: string): SourceBrowseResult[] {
@@ -124,42 +142,39 @@ export class NovelFrSource implements NovelSource {
     if (!title) throw new Error('Novel-FR returned a series without a title.')
 
     const chapters: SourceChapter[] = []
-    const byNumber = new Map<number, SourceChapter>()
+    const seenNumbers = new Set<string>()
     $('.eplister li a').each((_index, item) => {
       const link = $(item)
       const chapterKey = sourceKey(link.attr('href') ?? '')
       const label = link.find('.epl-num').text().replace(/\s+/g, ' ').trim()
-      const number = chapterNumber(label)
-      if (!chapterKey || number === null || byNumber.has(number)) return
       const chapterTitle = link.find('.epl-title').text().replace(/\s+/g, ' ').trim()
-      const chapter: SourceChapter = {
+      const number = chapterNumber(label) ?? chapterNumber(chapterTitle) ?? chapterNumber(chapterKey ?? '')
+      const volume = volumeNumber(label) ?? volumeNumber(chapterTitle)
+      if (!chapterKey) return
+      if (number !== null) {
+        const identity = `${volume === null ? 'none' : numberKey(volume)}:${numberKey(number)}`
+        if (seenNumbers.has(identity)) return
+        seenNumbers.add(identity)
+      }
+      chapters.push({
         key: chapterKey,
-        title: chapterTitle ? `Chapitre ${number} · ${chapterTitle}` : `Chapitre ${number}`,
+        title: number === null
+          ? chapterTitle || label
+          : chapterTitle ? `Chapitre ${number} · ${chapterTitle}` : `Chapitre ${number}`,
         number,
+        volume,
         publishedAt: link.find('.epl-date').text().replace(/\s+/g, ' ').trim() || null,
         releases: [{ source: 'novelFr', key: chapterKey }],
-      }
-      byNumber.set(number, chapter)
-      chapters.push(chapter)
+      })
     })
 
-    // Novel-FR's TBATE index omits old links even though the numbered pages exist.
-    // Fill that known continuous run from the source's advertised first/last chapters.
-    if (path === '/series/the-beginning-after-the-end/' && byNumber.size > 0) {
-      const max = Math.max(...byNumber.keys())
-      for (let number = 1; number <= max; number += 1) {
-        if (byNumber.has(number)) continue
-        const chapterKey = `${PREFIX}/the-beginning-after-the-end-chapitre-${number}/`
-        chapters.push({
-          key: chapterKey,
-          title: `Chapitre ${number}`,
-          number,
-          publishedAt: null,
-          releases: [{ source: 'novelFr', key: chapterKey }],
-        })
-      }
-    }
-    chapters.sort((left, right) => (right.number ?? -1) - (left.number ?? -1))
+    chapters.sort((left, right) => {
+      if (left.volume === null && right.volume !== null) return 1
+      if (left.volume !== null && right.volume === null) return -1
+      const volumeOrder = (right.volume ?? 0) - (left.volume ?? 0)
+      if (volumeOrder !== 0) return volumeOrder
+      return (right.number ?? -1) - (left.number ?? -1)
+    })
 
     const author = $('.serl').filter((_index, item) => $(item).find('.sername').text().trim() === 'Auteur')
       .find('.serval').first().text().replace(/\s+/g, ' ').trim() || null
