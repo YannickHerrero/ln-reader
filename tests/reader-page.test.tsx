@@ -122,6 +122,37 @@ describe('reader page', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
 
+  it('seeks directly through focused pages with the progress control', async () => {
+    await libraryRepository.downloadChapter(series.key, {
+      key: series.chapters[1]!.key,
+      title: 'Chapitre 1',
+      html: '<p>Première phrase. Deuxième phrase. Troisième phrase. Quatrième phrase.</p>',
+      source: 'novelFr',
+    })
+    localStorage.setItem('ln-reader-reading-preferences', JSON.stringify({ mode: 'sentence' }))
+    vi.stubGlobal('fetch', vi.fn())
+    const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
+    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+
+    expect(await screen.findByText('Première phrase.')).toBeInTheDocument()
+    const progressControl = screen.getByRole('slider', { name: 'Aller à une phrase' })
+    expect(progressControl).toHaveValue('0')
+    expect(progressControl).toHaveAttribute('max', '3')
+
+    fireEvent.change(progressControl, { target: { value: '2' } })
+    expect(screen.getByText('Troisième phrase.')).toBeInTheDocument()
+    expect(screen.getByText('Phrase 3 sur 4')).toBeInTheDocument()
+    await waitFor(async () => expect((await libraryRepository.getChapterProgress(series.chapters[1]!.key))?.scrollRatio).toBeCloseTo(2 / 3))
+
+    fireEvent.change(progressControl, { target: { value: '0' } })
+    expect(screen.getByText('Première phrase.')).toBeInTheDocument()
+    expect(screen.getByText('Phrase 1 sur 4')).toBeInTheDocument()
+    await waitFor(async () => expect(await libraryRepository.getChapterProgress(series.chapters[1]!.key)).toMatchObject({ scrollRatio: 0 }))
+
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
   it('navigates sentence mode with the keyboard', async () => {
     await libraryRepository.downloadChapter(series.key, {
       key: series.chapters[1]!.key,

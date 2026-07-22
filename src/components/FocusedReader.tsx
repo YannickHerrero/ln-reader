@@ -1,4 +1,4 @@
-import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { focusedTapDelta, isFocusedTap } from '../reader/focused-navigation'
 import type { ReaderMode } from '../reader/preferences'
@@ -91,7 +91,19 @@ export function FocusedReader({
         >←</button>
         <div className="reader-focus__counter">
           <span>{label} {current + 1} sur {Math.max(1, units.length)}</span>
-          <div aria-hidden="true"><i style={{ width: `${((current + 1) / Math.max(1, units.length)) * 100}%` }} /></div>
+          <input
+            className="reader-focus__seek"
+            type="range"
+            min={0}
+            max={maximum}
+            step={1}
+            value={current}
+            disabled={maximum === 0}
+            onChange={(event) => onIndexChange(Number(event.currentTarget.value))}
+            aria-label={`Aller à ${label === 'Phrase' ? 'une phrase' : 'un paragraphe'}`}
+            aria-valuetext={`${label} ${current + 1} sur ${Math.max(1, units.length)}`}
+            style={{ '--focus-progress': `${((current + 1) / Math.max(1, units.length)) * 100}%` } as CSSProperties}
+          />
         </div>
         {atEnd && nextChapter ? (
           <Link
