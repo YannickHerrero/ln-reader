@@ -754,9 +754,14 @@ html.reader-focus-locked,
 html.reader-focus-locked body { width: 100%; height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none; }
 html.reader-focus-locked body { position: fixed; inset: 0; }
 .reader-shell[data-reader-mode="paragraph"],
-.reader-shell[data-reader-mode="sentence"] { position: fixed; z-index: 0; inset: 0; display: grid; width: 100%; height: auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; overscroll-behavior: none; }
+.reader-shell[data-reader-mode="sentence"] { position: fixed; z-index: 0; inset: 0; display: grid; width: 100%; height: auto; min-height: 0; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; overscroll-behavior: none; background: var(--reading-paper); }
 .reader-shell[data-reader-mode="paragraph"] .reader-bar,
 .reader-shell[data-reader-mode="sentence"] .reader-bar { position: relative; top: auto; min-height: calc(64px + env(safe-area-inset-top)); padding-top: calc(8px + env(safe-area-inset-top)); }
+.reader-shell[data-reader-mode="paragraph"] .reader-bar,
+.reader-shell[data-reader-mode="sentence"] .reader-bar,
+.reader-focus__controls { transition: opacity 180ms ease; }
+.reader-shell[data-reader-controls="hidden"] .reader-bar,
+.reader-shell[data-reader-controls="hidden"] .reader-focus__controls { opacity: 0; pointer-events: none; }
 .reader-focus { display: grid; height: auto; min-height: 0; grid-template-rows: minmax(0, 1fr) auto; color: var(--reading-ink); background: var(--reading-paper); }
 .reader-focus__stage { display: grid; min-height: 0; place-items: center; padding: clamp(30px, 7vh, 72px) max(24px, 6vw); overflow: hidden; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .reader-focus__text { width: min(820px, 100%); max-height: 100%; margin: 0; padding: 4px 10px; overflow-y: auto; touch-action: pan-y; color: var(--reading-ink); font-size: var(--reading-font-size); line-height: var(--reading-line-height); overscroll-behavior: contain; scrollbar-color: var(--reading-line) transparent; text-wrap: pretty; animation: reader-unit-in 160ms ease-out; }

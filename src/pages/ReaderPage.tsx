@@ -49,6 +49,7 @@ export function ReaderPage() {
   const [downloadBusy, setDownloadBusy] = useState(false)
   const [readerPreferences, setReaderPreferences] = useState(loadReaderPreferences)
   const [focusedIndex, setFocusedIndex] = useState(0)
+  const [focusedControlsVisible, setFocusedControlsVisible] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const restored = useRef(false)
   const latestRatio = useRef(0)
@@ -159,6 +160,10 @@ export function ReaderPage() {
   }, [content, chapterKey, seriesKey, readerPreferences.mode])
 
   useEffect(() => {
+    setFocusedControlsVisible(true)
+  }, [chapterKey, readerPreferences.mode])
+
+  useEffect(() => {
     if (series && chapter) document.title = `${chapter.title} · ${series.title}`
     return () => { document.title = 'LN Reader' }
   }, [series, chapter])
@@ -242,9 +247,16 @@ export function ReaderPage() {
       data-reader-font={readerPreferences.fontFamily}
       data-reader-paper={readerPreferences.paper}
       data-reader-mode={readerPreferences.mode}
+      data-reader-controls={readerPreferences.mode === 'continuous'
+        ? undefined
+        : focusedControlsVisible ? 'visible' : 'hidden'}
       style={readerStyle}
     >
-      <header className="reader-bar">
+      <header
+        className="reader-bar"
+        aria-hidden={readerPreferences.mode !== 'continuous' && !focusedControlsVisible}
+        inert={readerPreferences.mode !== 'continuous' && !focusedControlsVisible}
+      >
         <Link to={`/series/${encodeRouteKey(seriesKey)}`} className="reader-back" aria-label="Retour à la série">←</Link>
         <div className="reader-bar__title"><strong>{series.title}</strong><span>{chapter?.title ?? content?.title ?? 'Chapitre'}</span></div>
         <ReaderSettingsDialog preferences={readerPreferences} onChange={changeReaderPreferences} />
@@ -281,7 +293,9 @@ export function ReaderPage() {
           mode={readerPreferences.mode}
           units={focusedUnits}
           index={focusedIndex}
+          controlsVisible={focusedControlsVisible}
           onIndexChange={changeFocusedIndex}
+          onControlsVisibleChange={setFocusedControlsVisible}
           nextChapter={nextChapter ? {
             key: nextChapter.key,
             path: readerPath(seriesKey, nextChapter.key),

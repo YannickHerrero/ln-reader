@@ -7,7 +7,9 @@ interface FocusedReaderProps {
   mode: Exclude<ReaderMode, 'continuous'>
   units: string[]
   index: number
+  controlsVisible: boolean
   onIndexChange(index: number): void
+  onControlsVisibleChange(visible: boolean): void
   nextChapter?: { key: string; path: string; title: string }
 }
 
@@ -15,7 +17,9 @@ export function FocusedReader({
   mode,
   units,
   index,
+  controlsVisible,
   onIndexChange,
+  onControlsVisibleChange,
   nextChapter,
 }: FocusedReaderProps) {
   const maximum = Math.max(0, units.length - 1)
@@ -69,6 +73,7 @@ export function FocusedReader({
 
     const delta = focusedTapDelta(event.clientX, window.innerWidth)
     if (delta < 0 && !atStart) onIndexChange(current - 1)
+    if (delta === 0) onControlsVisibleChange(!controlsVisible)
     if (delta > 0 && !atEnd) onIndexChange(current + 1)
   }
 
@@ -82,7 +87,11 @@ export function FocusedReader({
       >
         <p key={`${mode}-${current}`} className="reader-focus__text" aria-live="polite">{text}</p>
       </div>
-      <footer className="reader-focus__controls">
+      <footer
+        className="reader-focus__controls"
+        aria-hidden={!controlsVisible}
+        inert={!controlsVisible}
+      >
         <button
           type="button"
           onClick={() => onIndexChange(current - 1)}

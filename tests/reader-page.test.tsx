@@ -96,7 +96,7 @@ describe('reader page', () => {
     })
     vi.stubGlobal('fetch', vi.fn())
     const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
-    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+    const { container, unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
 
     expect(await screen.findByText('Premier paragraphe. Avec deux phrases.')).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Options de lecture' }))
@@ -115,6 +115,42 @@ describe('reader page', () => {
       scrollRatio: 1,
       completed: true,
     }))
+
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390)
+    const shell = container.querySelector<HTMLElement>('.reader-shell')!
+    const stage = container.querySelector<HTMLElement>('.reader-focus__stage')!
+    const header = container.querySelector<HTMLElement>('.reader-bar')!
+    const controls = container.querySelector<HTMLElement>('.reader-focus__controls')!
+    const controlCount = controls.querySelectorAll('button, a, input').length
+    const dispatchPointer = (type: 'pointerdown' | 'pointerup') => {
+      const event = new Event(type, { bubbles: true })
+      Object.defineProperties(event, {
+        pointerId: { value: 1 },
+        isPrimary: { value: true },
+        pointerType: { value: 'touch' },
+        button: { value: 0 },
+        clientX: { value: 195 },
+        clientY: { value: 300 },
+      })
+      fireEvent(stage, event)
+    }
+    const tapCenter = () => {
+      dispatchPointer('pointerdown')
+      dispatchPointer('pointerup')
+    }
+
+    tapCenter()
+    expect(shell).toHaveAttribute('data-reader-controls', 'hidden')
+    expect(header).toHaveAttribute('aria-hidden', 'true')
+    expect(header).toHaveAttribute('inert')
+    expect(controls).toHaveAttribute('aria-hidden', 'true')
+    expect(controls).toHaveAttribute('inert')
+    expect(controls.querySelectorAll('button, a, input')).toHaveLength(controlCount)
+
+    tapCenter()
+    expect(shell).toHaveAttribute('data-reader-controls', 'visible')
+    expect(header).toHaveAttribute('aria-hidden', 'false')
+    expect(controls).toHaveAttribute('aria-hidden', 'false')
 
     unmount()
     expect(document.documentElement).not.toHaveClass('reader-focus-locked')
