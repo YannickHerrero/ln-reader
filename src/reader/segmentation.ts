@@ -2,7 +2,7 @@ const BLOCK_SELECTOR = 'p, h1, h2, h3, h4, h5, h6, li, pre, blockquote'
 const SENTENCE_TERMINALS = new Set(['.', '!', '?', '…', '。', '！', '？'])
 const CLOSING_PUNCTUATION = new Set(['"', "'", '”', '’', '»', '」', '』', ')', '）', ']', '}'])
 const ABBREVIATIONS = new Set([
-  'm', 'mr', 'mrs', 'ms', 'mme', 'mlle', 'dr', 'prof', 'st', 'ste', 'etc', 'cf',
+  'm', 'mr', 'mrs', 'ms', 'mme', 'mlle', 'dr', 'prof', 'st', 'ste',
 ])
 
 export function normalizeReaderText(text: string): string {
@@ -43,12 +43,21 @@ function splitParagraphSentences(paragraph: string): string[] {
     const character = characters[index]!
     current += character
 
-    const closingEnd = closingPunctuationEnd(characters, index)
-    if (SENTENCE_TERMINALS.has(character) && shouldSplitSentence(current, characters, index, closingEnd)) {
-      while (index < closingEnd) {
-        current += characters[index + 1]
-        index += 1
+    if (isSentenceTerminal(character) && shouldSplitSentence(current, characters, index)) {
+      while (index + 1 < characters.length) {
+        const next = characters[index + 1]!
+        if (
+          isClosingPunctuation(next)
+          || (current.endsWith('»') && isSentenceTerminal(next))
+          || (isWhitespace(next) && nextNonWhitespaceIsClosingPunctuation(characters, index + 1))
+        ) {
+          current += next
+          index += 1
+        } else {
+          break
+        }
       }
+
       const sentence = normalizeReaderText(current)
       if (sentence) sentences.push(sentence)
       current = ''
@@ -61,25 +70,60 @@ function splitParagraphSentences(paragraph: string): string[] {
   return sentences
 }
 
-function shouldSplitSentence(
-  current: string,
-  characters: string[],
-  index: number,
-  closingEnd: number,
-): boolean {
-  if (characters[index] === '.') {
-    if (isDecimalPoint(characters, index) || endsWithAbbreviation(current)) return false
+function shouldSplitSentence(current: string, characters: string[], index: number): boolean {
+  const character = characters[index]!
+  if (character === '.' && (isDecimalPoint(characters, index) || endsWithAbbreviation(current))) {
+    return false
   }
-  const next = characters[closingEnd + 1]
-  return next === undefined || /\s/u.test(next)
+  if (isSentenceTerminal(characters[index + 1])) return false
+
+  if (hasUnclosedFrenchQuote(current)) {
+    let cursor = index + 1
+    while (isSentenceTerminal(characters[cursor])) cursor += 1
+    while (isWhitespace(characters[cursor])) cursor += 1
+    if (!isClosingPunctuation(characters[cursor])) return false
+    while (isClosingPunctuation(characters[cursor])) cursor += 1
+    while (isSentenceTerminal(characters[cursor])) cursor += 1
+    while (isWhitespace(characters[cursor])) cursor += 1
+    if (characters[cursor] !== undefined && characters[cursor] !== '«') return false
+  }
+
+  let cursor = index + 1
+  while (isSentenceTerminal(characters[cursor])) cursor += 1
+
+  let sawSpacing = false
+  while (isWhitespace(characters[cursor])) {
+    sawSpacing = true
+    cursor += 1
+  }
+  while (isClosingPunctuation(characters[cursor])) cursor += 1
+  while (isWhitespace(characters[cursor])) {
+    sawSpacing = true
+    cursor += 1
+  }
+
+  const next = characters[cursor]
+  if (next === undefined) return true
+  if (/^\p{Ll}$/u.test(next)) return false
+  return sawSpacing
 }
 
-function closingPunctuationEnd(characters: string[], terminalIndex: number): number {
-  let cursor = terminalIndex + 1
-  while (/\s/u.test(characters[cursor] ?? '')) cursor += 1
-  if (!CLOSING_PUNCTUATION.has(characters[cursor] ?? '')) return terminalIndex
-  while (CLOSING_PUNCTUATION.has(characters[cursor + 1] ?? '')) cursor += 1
-  return cursor
+function isSentenceTerminal(character: string | undefined): boolean {
+  return character !== undefined && SENTENCE_TERMINALS.has(character)
+}
+
+function isClosingPunctuation(character: string | undefined): boolean {
+  return character !== undefined && CLOSING_PUNCTUATION.has(character)
+}
+
+function isWhitespace(character: string | undefined): boolean {
+  return character !== undefined && /\s/u.test(character)
+}
+
+function nextNonWhitespaceIsClosingPunctuation(characters: string[], start: number): boolean {
+  let cursor = start
+  while (isWhitespace(characters[cursor])) cursor += 1
+  return isClosingPunctuation(characters[cursor])
 }
 
 function isDecimalPoint(characters: string[], index: number): boolean {
@@ -92,12 +136,22 @@ function isDecimalPoint(characters: string[], index: number): boolean {
 function endsWithAbbreviation(current: string): boolean {
   const token = current
     .trimEnd()
-    .replace(/\.$/u, '')
+    .replace(/\.+$/u, '')
     .split(/\s+/u)
     .at(-1)
     ?.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '')
-    .toLocaleLowerCase('fr') ?? ''
-  return token.length === 1 || ABBREVIATIONS.has(token)
+    .toLowerCase() ?? ''
+  return ABBREVIATIONS.has(token)
+}
+
+function hasUnclosedFrenchQuote(current: string): boolean {
+  let openings = 0
+  let closings = 0
+  for (const character of current) {
+    if (character === '«') openings += 1
+    if (character === '»') closings += 1
+  }
+  return openings > closings
 }
 
 export function ratioForUnit(index: number, length: number): number {
