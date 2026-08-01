@@ -40,6 +40,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    maxWorkers: 1,
     setupFiles: ['./tests/setup.ts'],
   },
 })
