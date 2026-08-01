@@ -128,6 +128,31 @@ or retain photos or video.
 The native wrapper has its own WebKit storage and does not share the installed
 PWA's IndexedDB data. Use the gear button to change the configured server.
 
+### Physical-device prototype checklist
+
+Camera Control and its capture-session lifecycle require a supported physical
+iPhone. Before relying on the prototype:
+
+1. Open a downloaded chapter in paragraph or sentence focus mode with multiple
+   pages. Grant camera access and confirm the green camera privacy indicator
+   appears only after focus mode becomes active.
+2. Light-press Camera Control to reveal **Page**, then slide both directions.
+   Confirm each selection changes the focused page, respects the first and last
+   pages, and stays synchronized with on-screen navigation.
+3. Leave focus mode, open the server configuration, background and foreground
+   Lyra, and lock and unlock the phone. Confirm the privacy indicator disappears
+   promptly whenever focused reading is inactive or Lyra is not foregrounded,
+   and returns only when focused reading resumes.
+4. Trigger an interruption such as Control Center or an incoming call and verify
+   reading remains usable after returning. Confirm no photo or video appears in
+   Photos.
+5. Repeat the reader checks on an iPhone without Camera Control, if available;
+   the web reader must remain usable without a native **Page** control.
+6. Measure power and heat on the target phone: compare one hour of ordinary
+   reading with one hour of focused Camera Control reading using the same
+   brightness, network, and content. Record start/end battery percentage,
+   noticeable heat, and any thermal warning or dimming.
+
 ## Commands
 
 ```bash
