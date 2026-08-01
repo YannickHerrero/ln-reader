@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { focusedTapDelta, isFocusedTap } from '../reader/focused-navigation'
+import { postNativeReaderState, subscribeToNativePageSelection } from '../reader/native-bridge'
 import type { ReaderMode } from '../reader/preferences'
 
 interface FocusedReaderProps {
@@ -29,6 +30,21 @@ export function FocusedReader({
   const atStart = current === 0
   const atEnd = current === maximum
   const pointerStart = useRef<{ id: number; x: number; y: number; startedAt: number } | null>(null)
+  const nativeNavigation = useRef({ maximum, onIndexChange })
+  nativeNavigation.current = { maximum, onIndexChange }
+
+  useEffect(() => {
+    postNativeReaderState({ active: units.length > 0, index: current, count: units.length })
+  }, [current, units.length])
+
+  useEffect(() => () => {
+    postNativeReaderState({ active: false, index: 0, count: 0 })
+  }, [])
+
+  useEffect(() => subscribeToNativePageSelection((selectedIndex) => {
+    const navigation = nativeNavigation.current
+    navigation.onIndexChange(Math.min(navigation.maximum, selectedIndex))
+  }), [])
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
