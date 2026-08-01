@@ -1,6 +1,6 @@
-# LN Reader
+# Lyra
 
-A small, personal PWA for reading French light novels, web novels and novels from
+A small, personal PWA and native iPhone wrapper for reading French light novels, web novels and novels from
 [Novel-FR](https://novel-fr.net). The library, reading progress and downloaded
 chapters stay in the browser's local IndexedDB database.
 
@@ -89,7 +89,7 @@ pnpm phone
 
 The command builds and starts the production PWA, creates a dedicated Tailscale
 Serve HTTPS endpoint on port `8443`, and prints the URL to open on the phone. Keep
-the terminal open while reading. Press Ctrl-C to stop LN Reader and remove only
+the terminal open while reading. Press Ctrl-C to stop Lyra and remove only
 that endpoint; any existing Tailscale Serve routes on other ports are left intact.
 
 Override either port when needed:
@@ -101,6 +101,32 @@ APP_PORT=4180 TAILSCALE_HTTPS_PORT=10000 pnpm phone
 The script refuses to replace an occupied local or Tailscale port. Tailscale Serve
 provides the secure context required for PWA installation and offline support;
 opening the Node server directly through a `100.x.y.z` HTTP address does not.
+
+## Native iPhone wrapper
+
+The [`ios/`](ios/) project provides a personal iPhone wrapper named **Lyra** for
+iOS 18 or later. It loads the same HTTPS application through `WKWebView` and
+adds a native Camera Control bridge for paragraph and sentence reading modes.
+On first launch, enter the HTTPS URL printed by `pnpm phone` or the persistent
+Tailscale Serve URL for the managed service.
+
+```bash
+cd ios
+xcodegen generate
+open Lyra.xcodeproj
+```
+
+Select a personal development team in Xcode, connect the iPhone, and run the
+`Lyra` scheme. Camera Control requires a supported physical iPhone and cannot be
+verified in Simulator. While a focused reader with multiple pages is visible,
+Lyra starts a low-frame-rate camera session and exposes a **Page** control; use a
+light press to reveal the control and slide in either direction to change pages.
+The session stops when focused reading ends or the app backgrounds. The camera
+privacy indicator remains visible while it is active, but Lyra does not capture
+or retain photos or video.
+
+The native wrapper has its own WebKit storage and does not share the installed
+PWA's IndexedDB data. Use the gear button to change the configured server.
 
 ## Commands
 

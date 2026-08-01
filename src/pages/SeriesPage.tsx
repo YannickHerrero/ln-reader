@@ -75,8 +75,8 @@ export function SeriesPage() {
     : chapters.at(-1)
 
   useEffect(() => {
-    if (series) document.title = `${series.title} · LN Reader`
-    return () => { document.title = 'LN Reader' }
+    if (series) document.title = `${series.title} · Lyra`
+    return () => { document.title = 'Lyra' }
   }, [series])
 
   useEffect(() => {

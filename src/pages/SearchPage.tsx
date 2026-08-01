@@ -113,7 +113,7 @@ export function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    document.title = 'Découvrir · LN Reader'
+    document.title = 'Découvrir · Lyra'
     inputRef.current?.focus()
     const controller = new AbortController()
     sourceApi.discover(controller.signal)
@@ -125,7 +125,7 @@ export function SearchPage() {
       .finally(() => setDiscoveryLoading(false))
     return () => {
       controller.abort()
-      document.title = 'LN Reader'
+      document.title = 'Lyra'
     }
   }, [])
 
@@ -195,7 +195,7 @@ export function SearchPage() {
     <main className="search-page">
       <header className="search-page__nav">
         <Link to="/" className="back-link">← Bibliothèque</Link>
-        <Link className="wordmark" to="/" aria-label="LN Reader, accueil"><span>LN</span><strong>LN Reader</strong></Link>
+        <Link className="wordmark" to="/" aria-label="Lyra, accueil"><span>Ly</span><strong>Lyra</strong></Link>
         <div className="search-page__actions"><ThemeToggle /></div>
       </header>
 

@@ -16,6 +16,7 @@
 		DBB33FD1B54E58EE80E9CA00 /* ReaderPageStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E116EFEAF4CE7A252D528E /* ReaderPageStateTests.swift */; };
 		DC76BBAC6873C3C5D828704D /* ServerURLStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */; };
 		EC59F192AD3C41797AE8B627 /* ReaderCameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDE38D9A2900F52FCC6B711 /* ReaderCameraController.swift */; };
+		FF657CA70BCE119A83F082C7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -30,6 +31,7 @@
 
 /* Begin PBXFileReference section */
 		2BFC37901B41B00319A98FF9 /* LyraTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		81A78CC19FCAA7EC3F0FC2DD /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
 		8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStoreTests.swift; sourceTree = "<group>"; };
 		8EDEC2F0228FD3D31FF0B49D /* ReaderPageState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderPageState.swift; sourceTree = "<group>"; };
@@ -75,6 +77,7 @@
 			isa = PBXGroup;
 			children = (
 				AC47E3631299BA40D48DA328 /* AppDelegate.swift */,
+				54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */,
 				9F083BD95299712C7D005A87 /* Info.plist */,
 				DCDE38D9A2900F52FCC6B711 /* ReaderCameraController.swift */,
 				8EDEC2F0228FD3D31FF0B49D /* ReaderPageState.swift */,
@@ -112,6 +115,7 @@
 			buildConfigurationList = 1B9EA6F7D0C1CE5E90796DD7 /* Build configuration list for PBXNativeTarget "Lyra" */;
 			buildPhases = (
 				10F6E341F0C5625728617CB2 /* Sources */,
+				DE4272F0E77047D3192E37F1 /* Resources */,
 			);
 			buildRules = (
 			);
@@ -157,6 +161,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DE4272F0E77047D3192E37F1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FF657CA70BCE119A83F082C7 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		10F6E341F0C5625728617CB2 /* Sources */ = {

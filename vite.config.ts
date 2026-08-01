@@ -7,10 +7,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
-        name: 'LN Reader',
-        short_name: 'LN Reader',
+        name: 'Lyra',
+        short_name: 'Lyra',
         description: 'Bibliothèque locale de light novels et web novels.',
         theme_color: '#09090b',
         background_color: '#09090b',

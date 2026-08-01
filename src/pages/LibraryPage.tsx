@@ -81,7 +81,7 @@ export function LibraryPage() {
   return (
     <main className="shell">
       <header className="topbar">
-        <Link className="wordmark" to="/" aria-label="LN Reader, accueil"><span>LN</span><strong>LN Reader</strong></Link>
+        <Link className="wordmark" to="/" aria-label="Lyra, accueil"><span>Ly</span><strong>Lyra</strong></Link>
         <nav className="topbar__nav" aria-label="Navigation principale">
           <Link className="topbar__nav-link topbar__nav-link--active" to="/">Bibliothèque</Link>
           <Link className="topbar__nav-link" to="/search">Découvrir</Link>

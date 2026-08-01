@@ -165,7 +165,7 @@ export function ReaderPage() {
 
   useEffect(() => {
     if (series && chapter) document.title = `${chapter.title} · ${series.title}`
-    return () => { document.title = 'LN Reader' }
+    return () => { document.title = 'Lyra' }
   }, [series, chapter])
 
   useEffect(() => {
