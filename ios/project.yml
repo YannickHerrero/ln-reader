@@ -1,0 +1,51 @@
+name: Lyra
+options:
+  bundleIdPrefix: com.yannickherrero
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "18.0"
+  xcodeVersion: "26.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.0"
+targets:
+  Lyra:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: Lyra
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: Lyra/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.yannickherrero.lyra
+        PRODUCT_NAME: Lyra
+        SUPPORTS_MACCATALYST: NO
+        TARGETED_DEVICE_FAMILY: "1"
+  LyraTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: LyraTests
+    dependencies:
+      - target: Lyra
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.yannickherrero.lyra.tests
+schemes:
+  Lyra:
+    build:
+      targets:
+        Lyra: all
+        LyraTests: [test]
+    test:
+      gatherCoverageData: true
+      targets:
+        - LyraTests
