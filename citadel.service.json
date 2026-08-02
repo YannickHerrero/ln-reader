@@ -18,7 +18,8 @@
   ],
   "environment": {
     "HOST": "127.0.0.1",
-    "PORT": "4174"
+    "PORT": "4174",
+    "LYRA_DATA_PATH": ".data/lyra.sqlite"
   },
   "healthCheck": {
     "url": "http://127.0.0.1:4174/api/health",

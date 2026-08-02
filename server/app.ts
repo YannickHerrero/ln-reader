@@ -2,7 +2,9 @@ import express, { type NextFunction, type Request, type Response } from 'express
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ApiErrorBody } from '../shared/contracts'
+import { parseSyncRequest } from '../shared/sync'
 import type { SourceService } from './source/types'
+import type { SyncStateStore } from './sync-store'
 
 function queryString(request: Request, name: string): string {
   const value = request.query[name]
@@ -10,14 +12,26 @@ function queryString(request: Request, name: string): string {
   return value
 }
 
-export function createApp(source: SourceService) {
+export function createApp(source: SourceService, syncStore?: SyncStateStore) {
   const app = express()
   app.disable('x-powered-by')
-  app.use(express.json({ limit: '100kb' }))
+  app.use(express.json({ limit: '2mb' }))
 
   app.get('/api/health', (_request, response) => {
     response.json({ ok: true })
   })
+
+  if (syncStore) {
+    app.get('/api/sync', (_request, response) => {
+      response.set('Cache-Control', 'no-store')
+      response.json(syncStore.getState())
+    })
+
+    app.post('/api/sync', (request, response) => {
+      response.set('Cache-Control', 'no-store')
+      response.json(syncStore.applyOperations(parseSyncRequest(request.body).operations))
+    })
+  }
 
   app.get('/api/source/search', async (request, response) => {
     const query = queryString(request, 'q').trim()
