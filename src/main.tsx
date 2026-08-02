@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import { App } from './app/App'
+import { SyncProvider } from './sync/SyncProvider'
 import './styles/global.css'
 
 registerSW({ immediate: true })
@@ -15,8 +16,10 @@ if (!root) {
 
 createRoot(root).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <SyncProvider>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </SyncProvider>
   </StrictMode>,
 )

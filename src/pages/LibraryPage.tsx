@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { CoverArt } from '../components/CoverArt'
+import { SyncStatus } from '../components/SyncStatus'
 import { ThemeToggle } from '../components/ThemeToggle'
 import type { LibrarySeriesRecord } from '../db/database'
 import { libraryRepository, type ContinueReadingEntry } from '../db/repository'
@@ -87,6 +88,7 @@ export function LibraryPage() {
           <Link className="topbar__nav-link" to="/search">Découvrir</Link>
         </nav>
         <div className="topbar__actions">
+          <SyncStatus />
           <ThemeToggle />
           <Link className="primary-button" to="/search"><span aria-hidden="true">＋</span> Ajouter</Link>
         </div>
@@ -101,7 +103,7 @@ export function LibraryPage() {
           <p className="lede">
             {featured
               ? featured.series.description || `Reprenez exactement où vous vous êtes arrêté avec ${featured.chapter.title}.`
-              : 'Explorez des centaines de romans français et gardez progression et téléchargements sur cet appareil.'}
+              : 'Explorez des centaines de romans français et retrouvez votre bibliothèque et votre progression sur tous vos appareils.'}
           </p>
           <div className="home-hero__actions">
             {featured ? (

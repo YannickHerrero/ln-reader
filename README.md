@@ -1,12 +1,13 @@
 # Lyra
 
 A small, personal PWA and native iPhone wrapper for reading French light novels, web novels and novels from
-[Novel-FR](https://novel-fr.net). The library, reading progress and downloaded
-chapters stay in the browser's local IndexedDB database.
+[Novel-FR](https://novel-fr.net). Library membership and reading progress sync
+through the personal server, while downloaded chapters remain on each device.
 
 ## Features
 
-- Local library with Novel-FR search and cached covers
+- Server-synchronized library and reading progress with offline retry
+- Local Novel-FR search, cached covers and explicit chapter downloads
 - Novel-FR discovery, series metadata, chapters, covers and reading content
 - Volume-aware chapter identity that preserves repeated chapter numbers
 - Volume cards with progress, including a `Prologue / Extras` group
@@ -30,13 +31,18 @@ source URLs remain the stable chapter identities. Only chapters explicitly
 downloaded by the user are persisted for offline use.
 
 ```text
-React PWA -> Express API -> novel-fr.net
-    |
-    +-> IndexedDB: library, progress, cached covers and downloads
+React PWA / iPhone WKWebView -> Express API -> novel-fr.net
+              |                    |
+              |                    +-> SQLite: canonical library + progress
+              +-> IndexedDB: local mirror, sync outbox, covers + downloads
 ```
 
-The deployed application requires the Node API; static-only hosting cannot fetch
-Novel-FR content.
+Each browser imports its existing library and progress once, then pushes local
+changes before pulling the canonical server revision. Offline mutations remain in
+a durable outbox and retry after reconnecting. The deployment is intentionally
+single-user: anyone who can access the private server can access its synchronized
+reader state. The deployed application requires the Node API; static-only hosting
+cannot fetch Novel-FR content or synchronize state.
 
 ## Requirements
 
@@ -62,8 +68,10 @@ PORT=4174 pnpm start
 
 The Express process serves both `dist/` and the API at <http://localhost:4174>.
 It binds to `127.0.0.1` by default; set `HOST` only when an intentional non-loopback
-listener is required. `localhost` is treated as a secure PWA context. Installing on
-another device requires an HTTPS reverse proxy and an always-running Node host.
+listener is required. Synchronized state defaults to `.data/lyra.sqlite`; override
+it with `LYRA_DATA_PATH`. `localhost` is treated as a secure PWA context.
+Installing on another device requires an HTTPS reverse proxy and an always-running
+Node host.
 
 ## Managed service
 
@@ -74,7 +82,10 @@ already-built production process. The manifest also exposes a fixed **Rebuild**
 maintenance action backed by `pnpm service:rebuild`: Citadel builds the current
 checkout while the existing process remains available, restarts it only after a
 successful build, and retains the previous process when the build fails. Tailscale
-route changes remain separate deployment operations.
+route changes remain separate deployment operations. Citadel configures
+`LYRA_DATA_PATH=.data/lyra.sqlite`; the ignored `.data/` directory survives normal
+builds and restarts. Back up the entire directory while the service is stopped to
+preserve the SQLite database and journal files.
 
 The existing `pnpm phone` command remains available for an isolated interactive
 session when Citadel is not managing the process.
@@ -126,7 +137,9 @@ privacy indicator remains visible while it is active, but Lyra does not capture
 or retain photos or video.
 
 The native wrapper has its own WebKit storage and does not share the installed
-PWA's IndexedDB data. Use the gear button to change the configured server.
+PWA's IndexedDB files. Pointing both at the same Lyra server synchronizes their
+library and reading progress; chapter downloads and appearance settings remain
+local to each client. Use the gear button to change the configured server.
 
 ### Physical-device prototype checklist
 
@@ -184,12 +197,14 @@ pnpm build      # typecheck and production/PWA build
 ## Offline behavior
 
 - The service worker precaches the application shell.
-- Library metadata, chapter lists, covers and progress are kept in IndexedDB.
-- A chapter is available offline only after using its download button.
-- Search, metadata refreshes and non-downloaded chapters require the source server
-  and a network connection.
-- Browser data is device-local and can be removed by the browser or operating
-  system. There is no account or cloud synchronization.
+- Library metadata and progress are mirrored in IndexedDB and synchronized with
+  the server when connectivity is available.
+- Offline library/progress changes stay queued locally until a later sync.
+- Covers, chapter downloads, themes and reading preferences remain device-local.
+- A chapter is available offline only after using its download button on that
+  device.
+- Search, metadata refreshes, synchronization and non-downloaded chapters require
+  the personal server and a network connection.
 
 ## Source maintenance
 
