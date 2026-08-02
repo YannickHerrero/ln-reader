@@ -1,6 +1,6 @@
 import UIKit
 
-final class ServerConfigurationView: UIView {
+final class ServerConfigurationView: UIView, UIGestureRecognizerDelegate {
     var onConnect: ((URL) -> Void)?
     var onCancel: (() -> Void)?
 
@@ -25,6 +25,11 @@ final class ServerConfigurationView: UIView {
 
     private func configure(currentURL: URL?) {
         backgroundColor = .systemBackground
+
+        let backgroundTap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        backgroundTap.cancelsTouchesInView = false
+        backgroundTap.delegate = self
+        addGestureRecognizer(backgroundTap)
 
         let symbol = UIImageView(image: UIImage(systemName: "book.closed.fill"))
         symbol.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 48, weight: .medium)
@@ -56,6 +61,7 @@ final class ServerConfigurationView: UIView {
         urlField.clearButtonMode = .whileEditing
         urlField.borderStyle = .roundedRect
         urlField.accessibilityLabel = "Adresse du serveur"
+        urlField.accessibilityIdentifier = "server-url"
         urlField.addTarget(self, action: #selector(fieldDidChange), for: .editingChanged)
 
         errorLabel.font = .preferredFont(forTextStyle: .footnote)
@@ -104,6 +110,19 @@ final class ServerConfigurationView: UIView {
 
     @objc private func fieldDidChange() {
         errorLabel.isHidden = true
+    }
+
+    @objc func dismissKeyboard() {
+        endEditing(true)
+    }
+
+    func shouldDismissKeyboard(for touchedView: UIView?) -> Bool {
+        guard let touchedView else { return true }
+        return touchedView !== urlField && !touchedView.isDescendant(of: urlField)
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        shouldDismissKeyboard(for: touch.view)
     }
 
     @objc private func connect() {

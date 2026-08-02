@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */; };
+		323770B66D93FB443F178F7D /* ServerConfigurationViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 575434C38219CC7994D402A7 /* ServerConfigurationViewTests.swift */; };
 		39533125FA3E0937CC438D48 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D34E9FA2157E5A5DDD6933 /* SceneDelegate.swift */; };
 		8DD01FF683627B8E347D43D9 /* ServerConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF20353FB49FB4D595EB1725 /* ServerConfigurationView.swift */; };
 		A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC47E3631299BA40D48DA328 /* AppDelegate.swift */; };
@@ -32,6 +33,7 @@
 /* Begin PBXFileReference section */
 		2BFC37901B41B00319A98FF9 /* LyraTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		575434C38219CC7994D402A7 /* ServerConfigurationViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigurationViewTests.swift; sourceTree = "<group>"; };
 		81A78CC19FCAA7EC3F0FC2DD /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
 		8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStoreTests.swift; sourceTree = "<group>"; };
 		8EDEC2F0228FD3D31FF0B49D /* ReaderPageState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderPageState.swift; sourceTree = "<group>"; };
@@ -68,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				F9E116EFEAF4CE7A252D528E /* ReaderPageStateTests.swift */,
+				575434C38219CC7994D402A7 /* ServerConfigurationViewTests.swift */,
 				8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */,
 			);
 			path = LyraTests;
@@ -197,6 +200,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				DBB33FD1B54E58EE80E9CA00 /* ReaderPageStateTests.swift in Sources */,
+				323770B66D93FB443F178F7D /* ServerConfigurationViewTests.swift in Sources */,
 				10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
