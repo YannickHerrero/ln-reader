@@ -1,5 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { SourceChapter, SourceID, SourceSeries } from '../../shared/contracts'
+import type { SyncOperation } from '../../shared/sync'
 
 export interface LibrarySeriesRecord extends Omit<SourceSeries, 'chapters'> {
   addedAt: number
@@ -33,12 +34,26 @@ export interface CoverRecord {
   blob: Blob
 }
 
+export interface SyncQueueRecord {
+  entityKey: string
+  seriesKey: string
+  operation: SyncOperation
+  queuedAt: number
+}
+
+export interface SyncMetadataRecord {
+  key: string
+  value: string | number | boolean
+}
+
 export class LibraryDatabase extends Dexie {
   series!: EntityTable<LibrarySeriesRecord, 'key'>
   chapters!: EntityTable<ChapterRecord, 'key'>
   progress!: EntityTable<ReadingProgressRecord, 'chapterKey'>
   downloads!: EntityTable<DownloadRecord, 'chapterKey'>
   covers!: EntityTable<CoverRecord, 'seriesKey'>
+  syncQueue!: EntityTable<SyncQueueRecord, 'entityKey'>
+  syncMetadata!: EntityTable<SyncMetadataRecord, 'key'>
 
   constructor(name = 'ln-reader') {
     super(name)
@@ -151,6 +166,11 @@ export class LibraryDatabase extends Dexie {
           await Promise.all([seriesTable.delete(oldSeriesKey), coverTable.delete(oldSeriesKey)])
         }
       }
+    })
+    this.version(4).stores({
+      ...stores,
+      syncQueue: '&entityKey, seriesKey, queuedAt',
+      syncMetadata: '&key',
     })
   }
 }

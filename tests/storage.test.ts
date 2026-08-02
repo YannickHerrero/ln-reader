@@ -67,6 +67,30 @@ describe('local library repository', () => {
     ])
   })
 
+  it('coalesces local mutations into a durable synchronization outbox', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(100)
+    await repository.addOrUpdateSeries(series)
+    now.mockReturnValue(200)
+    await repository.saveProgress(series.key, series.chapters[1]!.key, 0.2)
+    now.mockReturnValue(300)
+    await repository.saveProgress(series.key, series.chapters[1]!.key, 0.7)
+
+    expect(await database.syncQueue.count()).toBe(2)
+    expect((await database.syncQueue.get(`progress:${series.chapters[1]!.key}`))?.operation).toMatchObject({
+      type: 'save-progress',
+      record: { scrollRatio: 0.7, lastReadAt: 300 },
+    })
+
+    now.mockReturnValue(400)
+    await repository.removeSeries(series.key)
+    expect(await database.syncQueue.toArray()).toEqual([
+      expect.objectContaining({
+        entityKey: `series:${series.key}`,
+        operation: expect.objectContaining({ type: 'remove-series', changedAt: 400 }),
+      }),
+    ])
+  })
+
   it('maps legacy merged records to Novel-FR and removes Mangas-Origines-only data', async () => {
     const name = `legacy-${crypto.randomUUID()}`
     const stores = {

@@ -1,4 +1,5 @@
 import type { SourceChapterContent, SourceSeries } from '../../shared/contracts'
+import type { RemoveSeriesOperation, SaveProgressOperation, UpsertSeriesOperation } from '../../shared/sync'
 import {
   db,
   type ChapterRecord,
@@ -7,6 +8,8 @@ import {
   type LibrarySeriesRecord,
   type ReadingProgressRecord,
 } from './database'
+import { progressSyncKey, seriesSyncKey } from '../sync/keys'
+import { scheduleSyncAfterMutation } from '../sync/scheduler'
 
 export interface SeriesProgressSummary {
   current: ReadingProgressRecord | null
@@ -27,64 +30,100 @@ export class LibraryRepository {
     const now = Date.now()
     await this.database.transaction(
       'rw',
-      this.database.series,
-      this.database.chapters,
-      this.database.progress,
-      this.database.downloads,
-      this.database.covers,
+      [
+        this.database.series,
+        this.database.chapters,
+        this.database.progress,
+        this.database.downloads,
+        this.database.covers,
+        this.database.syncQueue,
+      ],
       async () => {
-      const existing = await this.database.series.get(series.key)
-      const record: LibrarySeriesRecord = {
-        key: series.key,
-        title: series.title,
-        sources: series.sources,
-        coverImage: series.coverImage,
-        author: series.author,
-        description: series.description,
-        genres: series.genres,
-        status: series.status,
-        addedAt: existing?.addedAt ?? now,
-        updatedAt: now,
-      }
-      await this.database.series.put(record)
-      const currentKeys = await this.database.chapters.where('seriesKey').equals(series.key).primaryKeys()
-      const refreshedKeys = new Set(series.chapters.map((chapter) => chapter.key))
-      const staleKeys = currentKeys.filter((key) => !refreshedKeys.has(String(key)))
-      await this.database.chapters.bulkPut(series.chapters.map((chapter, position) => ({
-        ...chapter,
-        seriesKey: series.key,
-        position,
-      })))
-      if (staleKeys.length) {
-        await Promise.all([
-          this.database.chapters.bulkDelete(staleKeys),
-          this.database.progress.bulkDelete(staleKeys),
-          this.database.downloads.bulkDelete(staleKeys),
-        ])
-      }
-      if (cover) await this.database.covers.put({ seriesKey: series.key, blob: cover })
-    })
+        const existing = await this.database.series.get(series.key)
+        const record: LibrarySeriesRecord = {
+          key: series.key,
+          title: series.title,
+          sources: series.sources,
+          coverImage: series.coverImage,
+          author: series.author,
+          description: series.description,
+          genres: series.genres,
+          status: series.status,
+          addedAt: existing?.addedAt ?? now,
+          updatedAt: now,
+        }
+        await this.database.series.put(record)
+        const currentKeys = await this.database.chapters.where('seriesKey').equals(series.key).primaryKeys()
+        const refreshedKeys = new Set(series.chapters.map((chapter) => chapter.key))
+        const staleKeys = currentKeys.filter((key) => !refreshedKeys.has(String(key)))
+        await this.database.chapters.bulkPut(series.chapters.map((chapter, position) => ({
+          ...chapter,
+          seriesKey: series.key,
+          position,
+        })))
+        if (staleKeys.length) {
+          await Promise.all([
+            this.database.chapters.bulkDelete(staleKeys),
+            this.database.progress.bulkDelete(staleKeys),
+            this.database.downloads.bulkDelete(staleKeys),
+            this.database.syncQueue.bulkDelete(staleKeys.map((key) => progressSyncKey(String(key)))),
+          ])
+        }
+        if (cover) await this.database.covers.put({ seriesKey: series.key, blob: cover })
+        const operation: UpsertSeriesOperation = {
+          operationId: crypto.randomUUID(),
+          type: 'upsert-series',
+          changedAt: now,
+          record: { series, addedAt: record.addedAt, updatedAt: now },
+        }
+        await this.database.syncQueue.put({
+          entityKey: seriesSyncKey(series.key),
+          seriesKey: series.key,
+          operation,
+          queuedAt: now,
+        })
+      },
+    )
+    scheduleSyncAfterMutation()
   }
 
   async removeSeries(seriesKey: string): Promise<void> {
+    const now = Date.now()
     await this.database.transaction(
       'rw',
-      this.database.series,
-      this.database.chapters,
-      this.database.progress,
-      this.database.downloads,
-      this.database.covers,
+      [
+        this.database.series,
+        this.database.chapters,
+        this.database.progress,
+        this.database.downloads,
+        this.database.covers,
+        this.database.syncQueue,
+      ],
       async () => {
         const chapters = await this.database.chapters.where('seriesKey').equals(seriesKey).primaryKeys()
+        const operation: RemoveSeriesOperation = {
+          operationId: crypto.randomUUID(),
+          type: 'remove-series',
+          seriesKey,
+          changedAt: now,
+        }
         await Promise.all([
           this.database.series.delete(seriesKey),
           this.database.chapters.bulkDelete(chapters),
           this.database.progress.where('seriesKey').equals(seriesKey).delete(),
           this.database.downloads.where('seriesKey').equals(seriesKey).delete(),
           this.database.covers.delete(seriesKey),
+          this.database.syncQueue.where('seriesKey').equals(seriesKey).delete(),
         ])
+        await this.database.syncQueue.put({
+          entityKey: seriesSyncKey(seriesKey),
+          seriesKey,
+          operation,
+          queuedAt: now,
+        })
       },
     )
+    scheduleSyncAfterMutation()
   }
 
   listSeries(): Promise<LibrarySeriesRecord[]> {
@@ -144,14 +183,32 @@ export class LibraryRepository {
     scrollRatio: number,
     completed = false,
   ): Promise<void> {
-    const previous = await this.database.progress.get(chapterKey)
-    await this.database.progress.put({
-      seriesKey,
-      chapterKey,
-      scrollRatio: Math.max(0, Math.min(1, scrollRatio)),
-      completed: completed || previous?.completed || false,
-      lastReadAt: Date.now(),
+    const now = Date.now()
+    await this.database.transaction('rw', this.database.progress, this.database.syncQueue, async () => {
+      const previous = await this.database.progress.get(chapterKey)
+      const record: ReadingProgressRecord = {
+        seriesKey,
+        chapterKey,
+        scrollRatio: Math.max(0, Math.min(1, scrollRatio)),
+        completed: completed || previous?.completed || false,
+        lastReadAt: now,
+      }
+      const operation: SaveProgressOperation = {
+        operationId: crypto.randomUUID(),
+        type: 'save-progress',
+        record,
+      }
+      await Promise.all([
+        this.database.progress.put(record),
+        this.database.syncQueue.put({
+          entityKey: progressSyncKey(chapterKey),
+          seriesKey,
+          operation,
+          queuedAt: now,
+        }),
+      ])
     })
+    scheduleSyncAfterMutation()
   }
 
   getChapterProgress(chapterKey: string): Promise<ReadingProgressRecord | undefined> {
