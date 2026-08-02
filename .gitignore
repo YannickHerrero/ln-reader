@@ -10,4 +10,5 @@ test-results/
 *.dSYM.zip
 *.xcarchive
 ios/fastlane/report.xml
+ios/fastlane/README.md
 ios/fastlane/builds/
