@@ -1,0 +1,2 @@
+app_identifier("com.yannickherrero.lyra")
+team_id(ENV["TEAM_ID"])

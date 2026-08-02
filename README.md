@@ -153,6 +153,23 @@ iPhone. Before relying on the prototype:
    brightness, network, and content. Record start/end battery percentage,
    noticeable heat, and any thermal warning or dimming.
 
+### TestFlight release
+
+Lyra uses Fastlane from [`ios/fastlane/`](ios/fastlane/). Its ignored
+`ios/fastlane/.env` contains only App Store Connect identifiers, the development
+team, and a path to the API private key stored outside the repository. The App
+Store Connect app record is a one-time manual prerequisite because API keys
+cannot create one. From the `ios` directory, the release lane registers the
+bundle ID when needed, verifies the app record, selects the next TestFlight build
+number, signs the archive, and waits for upload processing:
+
+```bash
+cd ios
+fastlane ios beta
+```
+
+Generated IPAs, symbols, reports, and local release configuration are ignored.
+
 ## Commands
 
 ```bash

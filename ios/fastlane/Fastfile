@@ -1,0 +1,104 @@
+require "shellwords"
+
+default_platform(:ios)
+
+APP_ID = "com.yannickherrero.lyra"
+APP_NAME = "Lyra"
+APP_SKU = "lyra-ios"
+
+platform :ios do
+  private_lane :asc_api_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_filepath: File.expand_path(ENV.fetch("ASC_KEY_PATH"))
+    )
+  end
+
+  private_lane :connect_api do
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      filepath: File.expand_path(ENV.fetch("ASC_KEY_PATH"))
+    )
+  end
+
+  desc "Register Lyra's bundle ID and verify its App Store Connect record"
+  lane :setup do
+    connect_api
+
+    if Spaceship::ConnectAPI::BundleId.find(APP_ID).nil?
+      UI.message("Registering bundle ID #{APP_ID}")
+      Spaceship::ConnectAPI::BundleId.create(
+        name: APP_NAME,
+        identifier: APP_ID,
+        platform: "IOS"
+      )
+    end
+
+    if Spaceship::ConnectAPI::App.find(APP_ID).nil?
+      UI.user_error!(<<~MESSAGE)
+        No App Store Connect app record exists for #{APP_ID}. Create it once at
+        https://appstoreconnect.apple.com/apps using name #{APP_NAME}, bundle ID
+        #{APP_ID}, and SKU #{APP_SKU}, then re-run `fastlane ios beta`.
+      MESSAGE
+    end
+  end
+
+  desc "Archive and export a signed App Store IPA"
+  lane :build do |options|
+    setup
+    sh("cd .. && xcodegen generate")
+
+    authentication = [
+      "-allowProvisioningUpdates",
+      "-authenticationKeyPath #{Shellwords.escape(File.expand_path(ENV.fetch('ASC_KEY_PATH')))}",
+      "-authenticationKeyID #{Shellwords.escape(ENV.fetch('ASC_KEY_ID'))}",
+      "-authenticationKeyIssuerID #{Shellwords.escape(ENV.fetch('ASC_ISSUER_ID'))}"
+    ].join(" ")
+
+    build_app(
+      project: "Lyra.xcodeproj",
+      scheme: "Lyra",
+      configuration: "Release",
+      clean: true,
+      export_method: "app-store",
+      export_options: {
+        signingStyle: "automatic",
+        teamID: ENV.fetch("TEAM_ID")
+      },
+      output_directory: "fastlane/builds",
+      output_name: "Lyra.ipa",
+      xcargs: "DEVELOPMENT_TEAM=#{ENV.fetch('TEAM_ID')} CURRENT_PROJECT_VERSION=#{options[:build_number] || 1} #{authentication}",
+      export_xcargs: authentication
+    )
+  end
+
+  desc "Build and upload Lyra to TestFlight"
+  lane :beta do
+    api_key = asc_api_key
+    setup
+
+    build_number = begin
+      latest_testflight_build_number(
+        api_key: api_key,
+        app_identifier: APP_ID,
+        initial_build_number: 0
+      ) + 1
+    rescue StandardError
+      1
+    end
+
+    build(build_number: build_number)
+
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: APP_ID,
+      ipa: "fastlane/builds/Lyra.ipa",
+      distribute_external: false,
+      notify_external_testers: false,
+      skip_submission: true,
+      skip_waiting_for_build_processing: false
+    )
+  end
+end

@@ -6,3 +6,8 @@ test-results/
 .DS_Store
 .env
 *.log
+*.ipa
+*.dSYM.zip
+*.xcarchive
+ios/fastlane/report.xml
+ios/fastlane/builds/
