@@ -40,6 +40,7 @@ final class AppModel {
     var covers: [String: Data] = [:]
     var libraryError: String?
     var isLibraryLoading = true
+    var migrationSummary: String?
 
     init(
         serverStore: ServerURLStore = .shared,
@@ -95,7 +96,10 @@ final class AppModel {
 
     func start() {
         syncCoordinator?.start()
-        Task { await reloadLibrary() }
+        Task {
+            await reloadLibrary()
+            await importWebMigrationIfNeeded()
+        }
     }
 
     func applicationBecameActive() {
@@ -167,13 +171,47 @@ final class AppModel {
         }
     }
 
+    func saveProgress(seriesKey: String, chapterKey: String, ratio: Double, completed: Bool) async {
+        do {
+            try await store.saveProgress(
+                seriesKey: seriesKey,
+                chapterKey: chapterKey,
+                scrollRatio: ratio,
+                completed: completed
+            )
+            syncCoordinator?.localMutation()
+        } catch {
+            libraryError = error.localizedDescription
+        }
+    }
+
+    private func importWebMigrationIfNeeded() async {
+        do {
+            guard let result = try await WebMigrationImporter(defaults: defaults).importIfNeeded(into: store),
+                  !result.wasPending else { return }
+            if let importedAppearance = result.appearance {
+                appearance = importedAppearance
+                defaults.set(importedAppearance.rawValue, forKey: Self.appearanceKey)
+            }
+            await reloadLibrary()
+            if result.downloadCount > 0 || result.coverCount > 0 {
+                migrationSummary = "Migration terminée · \(result.downloadCount) chapitre(s) hors ligne restauré(s)."
+            }
+        } catch {
+            migrationSummary = "La migration locale devra être réessayée."
+        }
+    }
+
     private func configureAPI(for url: URL, client: (any LyraAPI)? = nil) {
         syncCoordinator?.stop()
         let resolvedClient = client ?? APIClient(baseURL: url)
         api = resolvedClient
         let engine = SyncEngine(store: store, api: resolvedClient)
         let coordinator = SyncCoordinator(engine: engine, store: store)
-        coordinator.didSynchronize = { [weak self] in await self?.reloadLibrary() }
+        coordinator.didSynchronize = { [weak self] in
+            await self?.reloadLibrary()
+            await self?.importWebMigrationIfNeeded()
+        }
         syncCoordinator = coordinator
         coordinator.start()
     }

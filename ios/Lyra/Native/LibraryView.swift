@@ -8,6 +8,12 @@ struct LibraryView: View {
         ScrollView {
             LazyVStack(spacing: 26) {
                 header
+                if let summary = model.migrationSummary {
+                    Label(summary, systemImage: "checkmark.circle.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.green)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 hero
                 if !model.continueReading.isEmpty { continueSection }
                 librarySection
@@ -240,12 +246,3 @@ private extension String {
     var nonEmpty: String? { isEmpty ? nil : self }
 }
 
-struct NativeReaderView: View {
-    let seriesKey: String
-    let chapterKey: String
-
-    var body: some View {
-        ContentUnavailableView("Lecteur en préparation", systemImage: "book.pages", description: Text(chapterKey))
-            .navigationTitle("Lecture")
-    }
-}

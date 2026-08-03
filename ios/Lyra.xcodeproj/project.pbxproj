@@ -9,17 +9,23 @@
 /* Begin PBXBuildFile section */
 		03DB4D50FF151EF546FAAA27 /* NativeMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7741B744F1714E86A64AFF2 /* NativeMainView.swift */; };
 		0581FD73D4B8E229E4DEB42F /* SeriesDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EE0E607019F1D61C2D37792 /* SeriesDetailView.swift */; };
+		06C03ACBD9828EE938F65B43 /* ReaderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B730F194E5836A3A781B409 /* ReaderSettingsView.swift */; };
 		10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */; };
 		148E13C936B22F14B4C726BC /* DatabaseRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */; };
 		1B479C1A019FB73F98932B3C /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994321D9D42044F1684487F8 /* APIClient.swift */; };
 		20CFDB347E2E8A495606EE98 /* SyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D9290550BF2956EDD3AC642 /* SyncModels.swift */; };
 		33FCD842A8B0199AE553F4FA /* ServerSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64DEDD27F7FEF02560BAF59 /* ServerSetupView.swift */; };
 		39533125FA3E0937CC438D48 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D34E9FA2157E5A5DDD6933 /* SceneDelegate.swift */; };
+		3A9493C877DE30BE37EFD987 /* NativeReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 693D009D2DEBEEB11B5BF248 /* NativeReaderView.swift */; };
 		3EC814DEC07E48C4A2E0B14D /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A0AC1109F13B85265C7828F /* DiscoverView.swift */; };
 		41E0428AB6F9595EDCD3F8B1 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */; };
+		4866695D58B515A0C4746FBF /* WebMigrationImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B1D5ABD9241FDFC4E0FA8A /* WebMigrationImporter.swift */; };
+		48873B76C996AC8AD5821F0D /* ReaderSegmentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DD4C99FC56C93E21A4A809 /* ReaderSegmentation.swift */; };
 		4F14ED6D144474EF723F9F16 /* NativePersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */; };
+		55A5D7F657528321550CF9CA /* ReaderPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E5A5639A8552FF04062F7AF /* ReaderPreferences.swift */; };
 		65DB4CF071D8BCF028A9745C /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 99CDA3B65EA30801BDD84F85 /* GRDB */; };
 		7F40316C17BA65F846A377CC /* CoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641560FE9E808AA40D02080E /* CoverViews.swift */; };
+		81206F52E8A47F48DC6EA4F5 /* NativeReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720BCF1F484AA7469E875EF8 /* NativeReaderTests.swift */; };
 		84C94B41B4FA7CD830E60E80 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071280987EF29C8C4CDFA86A /* AppModel.swift */; };
 		850B7517FDD56EF90387D2FD /* LyraRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */; };
 		8960097F5FE97C43B3C737BF /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59384E0E9D1113F4ABF6E8A /* LibraryStore.swift */; };
@@ -54,18 +60,24 @@
 		5A0AC1109F13B85265C7828F /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		641560FE9E808AA40D02080E /* CoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverViews.swift; sourceTree = "<group>"; };
 		690117DD184BD4E008D3F353 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		693D009D2DEBEEB11B5BF248 /* NativeReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeReaderView.swift; sourceTree = "<group>"; };
 		71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRecords.swift; sourceTree = "<group>"; };
+		720BCF1F484AA7469E875EF8 /* NativeReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeReaderTests.swift; sourceTree = "<group>"; };
 		780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoordinator.swift; sourceTree = "<group>"; };
 		7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyraRootView.swift; sourceTree = "<group>"; };
+		8B730F194E5836A3A781B409 /* ReaderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSettingsView.swift; sourceTree = "<group>"; };
 		8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStoreTests.swift; sourceTree = "<group>"; };
 		994321D9D42044F1684487F8 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		9E5A5639A8552FF04062F7AF /* ReaderPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderPreferences.swift; sourceTree = "<group>"; };
 		9F083BD95299712C7D005A87 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1D34E9FA2157E5A5DDD6933 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		A1DD4C99FC56C93E21A4A809 /* ReaderSegmentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSegmentation.swift; sourceTree = "<group>"; };
 		A7741B744F1714E86A64AFF2 /* NativeMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMainView.swift; sourceTree = "<group>"; };
 		AC47E3631299BA40D48DA328 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStore.swift; sourceTree = "<group>"; };
 		B71688019E5531D5715BB57C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		C518815C1CA774831A29795F /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
+		C6B1D5ABD9241FDFC4E0FA8A /* WebMigrationImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebMigrationImporter.swift; sourceTree = "<group>"; };
 		E2D829414659EB8D8E5E89B0 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		E64DEDD27F7FEF02560BAF59 /* ServerSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupView.swift; sourceTree = "<group>"; };
 		E788D0078F570D85A61E0F7B /* Lyra.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Lyra.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -115,6 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */,
+				720BCF1F484AA7469E875EF8 /* NativeReaderTests.swift */,
 				8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */,
 			);
 			path = LyraTests;
@@ -148,11 +161,16 @@
 				7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */,
 				E2D829414659EB8D8E5E89B0 /* Models.swift */,
 				A7741B744F1714E86A64AFF2 /* NativeMainView.swift */,
+				693D009D2DEBEEB11B5BF248 /* NativeReaderView.swift */,
+				9E5A5639A8552FF04062F7AF /* ReaderPreferences.swift */,
+				A1DD4C99FC56C93E21A4A809 /* ReaderSegmentation.swift */,
+				8B730F194E5836A3A781B409 /* ReaderSettingsView.swift */,
 				0EE0E607019F1D61C2D37792 /* SeriesDetailView.swift */,
 				E64DEDD27F7FEF02560BAF59 /* ServerSetupView.swift */,
 				780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */,
 				690117DD184BD4E008D3F353 /* SyncEngine.swift */,
 				2D9290550BF2956EDD3AC642 /* SyncModels.swift */,
+				C6B1D5ABD9241FDFC4E0FA8A /* WebMigrationImporter.swift */,
 			);
 			path = Native;
 			sourceTree = "<group>";
@@ -270,6 +288,10 @@
 				850B7517FDD56EF90387D2FD /* LyraRootView.swift in Sources */,
 				9102965BF679867A56F1D20D /* Models.swift in Sources */,
 				03DB4D50FF151EF546FAAA27 /* NativeMainView.swift in Sources */,
+				3A9493C877DE30BE37EFD987 /* NativeReaderView.swift in Sources */,
+				55A5D7F657528321550CF9CA /* ReaderPreferences.swift in Sources */,
+				48873B76C996AC8AD5821F0D /* ReaderSegmentation.swift in Sources */,
+				06C03ACBD9828EE938F65B43 /* ReaderSettingsView.swift in Sources */,
 				39533125FA3E0937CC438D48 /* SceneDelegate.swift in Sources */,
 				0581FD73D4B8E229E4DEB42F /* SeriesDetailView.swift in Sources */,
 				33FCD842A8B0199AE553F4FA /* ServerSetupView.swift in Sources */,
@@ -277,6 +299,7 @@
 				41E0428AB6F9595EDCD3F8B1 /* SyncCoordinator.swift in Sources */,
 				CE4BC971E903C9D40AAC2724 /* SyncEngine.swift in Sources */,
 				20CFDB347E2E8A495606EE98 /* SyncModels.swift in Sources */,
+				4866695D58B515A0C4746FBF /* WebMigrationImporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -285,6 +308,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4F14ED6D144474EF723F9F16 /* NativePersistenceTests.swift in Sources */,
+				81206F52E8A47F48DC6EA4F5 /* NativeReaderTests.swift in Sources */,
 				10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
