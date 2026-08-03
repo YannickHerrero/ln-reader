@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var pendingRemoval: StoredSeries?
 
     var body: some View {
@@ -44,15 +45,36 @@ struct LibraryView: View {
         .task { await model.reloadLibrary() }
     }
 
+    @ViewBuilder
     private var header: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    LyraWordmark(compact: true)
+                    Spacer()
+                    headerActions
+                }
+                SyncStatusPill()
+            }
+            .padding(.top, 10)
+        } else {
+            HStack(spacing: 10) {
+                LyraWordmark(compact: true)
+                Spacer()
+                SyncStatusPill()
+                headerActions
+            }
+            .padding(.top, 10)
+        }
+    }
+
+    private var headerActions: some View {
         HStack(spacing: 10) {
-            LyraWordmark(compact: true)
-            Spacer()
-            SyncStatusPill()
             Button {
                 model.toggleAppearance()
             } label: {
                 Image(systemName: model.appearance == .dark ? "sun.max.fill" : "moon.fill")
+                    .font(.system(size: 18, weight: .semibold))
                     .frame(width: 40, height: 40)
                     .background(LyraDesign.raised, in: Circle())
             }
@@ -61,12 +83,12 @@ struct LibraryView: View {
                 model.showsServerConfiguration = true
             } label: {
                 Image(systemName: "gearshape.fill")
+                    .font(.system(size: 18, weight: .semibold))
                     .frame(width: 40, height: 40)
                     .background(LyraDesign.raised, in: Circle())
             }
             .accessibilityLabel("Configurer le serveur")
         }
-        .padding(.top, 10)
     }
 
     @ViewBuilder
@@ -236,11 +258,19 @@ struct LibraryView: View {
         }
     }
 
+    @ViewBuilder
     private func sectionTitle(_ title: String, detail: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.title2.weight(.black))
-            Spacer()
-            Text(detail).font(.caption).foregroundStyle(.secondary)
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.title2.weight(.black))
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
+        } else {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title).font(.title2.weight(.black))
+                Spacer()
+                Text(detail).font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 }

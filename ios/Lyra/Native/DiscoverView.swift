@@ -55,6 +55,7 @@ struct DiscoverView: View {
                     model.toggleAppearance()
                 } label: {
                     Image(systemName: model.appearance == .dark ? "sun.max.fill" : "moon.fill")
+                        .font(.system(size: 18, weight: .semibold))
                         .frame(width: 42, height: 42)
                         .background(LyraDesign.raised, in: Circle())
                 }
