@@ -6,6 +6,9 @@ protocol LyraAPI: Sendable {
     func search(_ query: String) async throws -> [SourceSearchResult]
     func series(key: String) async throws -> SourceSeries
     func chapter(key: String) async throws -> SourceChapterContent
+    func requestAudiobook(chapterKey: String) async throws -> AudiobookManifest
+    func audiobook(id: String) async throws -> AudiobookManifest
+    func audiobookSegmentURL(path: String) async throws -> URL
     func asset(url: String) async throws -> Data
     func pullSync() async throws -> SyncState
     func pushSync(_ operations: [SyncOperation]) async throws -> SyncState
@@ -29,6 +32,10 @@ enum APIClientError: LocalizedError, Equatable {
             message
         }
     }
+}
+
+private struct AudiobookRequest: Encodable {
+    let key: String
 }
 
 actor APIClient: LyraAPI {
@@ -68,6 +75,37 @@ actor APIClient: LyraAPI {
         )
     }
 
+    func requestAudiobook(chapterKey: String) async throws -> AudiobookManifest {
+        var request = try makeRequest(
+            path: "/api/audio/chapters",
+            query: [],
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(AudiobookRequest(key: chapterKey))
+        return try decode(AudiobookManifest.self, from: await send(request))
+    }
+
+    func audiobook(id: String) async throws -> AudiobookManifest {
+        try await get(
+            path: "/api/audio/chapters/\(id)",
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
+    }
+
+    func audiobookSegmentURL(path: String) async throws -> URL {
+        guard path.hasPrefix("/api/audio/chapters/"),
+              !path.contains(".."),
+              var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false) else {
+            throw APIClientError.invalidServerURL
+        }
+        components.path = path
+        components.query = nil
+        guard let url = components.url else { throw APIClientError.invalidServerURL }
+        return url
+    }
+
     func asset(url: String) async throws -> Data {
         let request = try makeRequest(
             path: "/api/source/asset",
@@ -104,8 +142,12 @@ actor APIClient: LyraAPI {
         cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
     ) async throws -> Value {
         let data = try await send(makeRequest(path: path, query: query, cachePolicy: cachePolicy))
+        return try decode(Value.self, from: data)
+    }
+
+    private func decode<Value: Decodable>(_ type: Value.Type, from data: Data) throws -> Value {
         do {
-            return try decoder.decode(Value.self, from: data)
+            return try decoder.decode(type, from: data)
         } catch {
             throw APIClientError.invalidResponse
         }

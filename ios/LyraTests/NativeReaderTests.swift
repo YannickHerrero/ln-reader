@@ -29,6 +29,22 @@ final class NativeReaderTests: XCTestCase {
         XCTAssertEqual(value.mode, .sentence)
     }
 
+    func testAudiobookCapabilityAndSegmentProgressMapping() {
+        let capabilities = APICapabilities(
+            apiVersion: 1,
+            features: ["sync", "chapterBlocks", "audiobook"]
+        )
+        let segments = [
+            AudiobookSegment(index: 0, url: "/0", progressStart: 0, progressEnd: 0.4),
+            AudiobookSegment(index: 1, url: "/1", progressStart: 0.4, progressEnd: 1),
+        ]
+
+        XCTAssertTrue(capabilities.supportsAudiobooks)
+        XCTAssertEqual(audiobookSegmentIndex(for: 0.25, segments: segments), 0)
+        XCTAssertEqual(audiobookSegmentIndex(for: 0.75, segments: segments), 1)
+        XCTAssertEqual(audiobookLocalProgress(0.7, segment: segments[1]), 0.5, accuracy: 0.0001)
+    }
+
     func testParagraphAndSentenceSegmentationPreserveStructuredText() {
         let blocks = [
             ChapterBlock(kind: .heading2, text: "Un titre"),

@@ -25,6 +25,7 @@
 		55A5D7F657528321550CF9CA /* ReaderPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E5A5639A8552FF04062F7AF /* ReaderPreferences.swift */; };
 		5C953AE794BF6A8C3FF2D67A /* LyraUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C47E20CCF0F694F82C7DF6 /* LyraUITests.swift */; };
 		65DB4CF071D8BCF028A9745C /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 99CDA3B65EA30801BDD84F85 /* GRDB */; };
+		7D75E877ADA0B8812491765A /* AudiobookPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAFDF09CE5C510E1DDC646B2 /* AudiobookPlayer.swift */; };
 		7F40316C17BA65F846A377CC /* CoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641560FE9E808AA40D02080E /* CoverViews.swift */; };
 		81206F52E8A47F48DC6EA4F5 /* NativeReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720BCF1F484AA7469E875EF8 /* NativeReaderTests.swift */; };
 		84C94B41B4FA7CD830E60E80 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071280987EF29C8C4CDFA86A /* AppModel.swift */; };
@@ -95,6 +96,7 @@
 		E788D0078F570D85A61E0F7B /* Lyra.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Lyra.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF80FDDDF6079ECBADE25CE8 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		F59384E0E9D1113F4ABF6E8A /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
+		FAFDF09CE5C510E1DDC646B2 /* AudiobookPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudiobookPlayer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +175,7 @@
 			children = (
 				994321D9D42044F1684487F8 /* APIClient.swift */,
 				071280987EF29C8C4CDFA86A /* AppModel.swift */,
+				FAFDF09CE5C510E1DDC646B2 /* AudiobookPlayer.swift */,
 				641560FE9E808AA40D02080E /* CoverViews.swift */,
 				C518815C1CA774831A29795F /* Database.swift */,
 				71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */,
@@ -324,6 +327,7 @@
 				1B479C1A019FB73F98932B3C /* APIClient.swift in Sources */,
 				A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */,
 				84C94B41B4FA7CD830E60E80 /* AppModel.swift in Sources */,
+				7D75E877ADA0B8812491765A /* AudiobookPlayer.swift in Sources */,
 				7F40316C17BA65F846A377CC /* CoverViews.swift in Sources */,
 				E86F29356AFD8BE0BAB19775 /* Database.swift in Sources */,
 				148E13C936B22F14B4C726BC /* DatabaseRecords.swift in Sources */,

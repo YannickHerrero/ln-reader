@@ -12,10 +12,12 @@ final class AppModel {
     private let defaults: UserDefaults
     private let database: AppDatabase
     let store: LibraryStore
+    let audiobookPlayer = AudiobookPlayer()
 
     var serverURL: URL?
     var api: (any LyraAPI)?
     var syncCoordinator: SyncCoordinator?
+    var serverCapabilities: APICapabilities?
     var appearance: LyraAppearance
     var isConnecting = false
     var setupError: String?
@@ -28,6 +30,8 @@ final class AppModel {
     var libraryError: String?
     var isLibraryLoading = true
     var migrationSummary: String?
+
+    var supportsAudiobooks: Bool { serverCapabilities?.supportsAudiobooks == true }
 
     init(
         serverStore: ServerURLStore = .shared,
@@ -67,9 +71,10 @@ final class AppModel {
         defer { isConnecting = false }
         let client = APIClient(baseURL: url)
         do {
-            _ = try await client.capabilities()
+            let capabilities = try await client.capabilities()
             serverStore.save(url)
             serverURL = url
+            serverCapabilities = capabilities
             configureAPI(for: url, client: client)
             showsServerConfiguration = false
         } catch {
@@ -83,6 +88,8 @@ final class AppModel {
         serverStore.clear()
         serverURL = nil
         api = nil
+        serverCapabilities = nil
+        audiobookPlayer.stop()
         setupError = nil
         showsServerConfiguration = false
     }
@@ -90,6 +97,7 @@ final class AppModel {
     func start() {
         syncCoordinator?.start()
         Task {
+            await reloadCapabilities()
             await reloadLibrary()
             await importWebMigrationIfNeeded()
         }
@@ -176,6 +184,14 @@ final class AppModel {
         } catch {
             libraryError = error.localizedDescription
         }
+    }
+
+    private func reloadCapabilities() async {
+        guard let api else {
+            serverCapabilities = nil
+            return
+        }
+        serverCapabilities = try? await api.capabilities()
     }
 
     private func importWebMigrationIfNeeded() async {

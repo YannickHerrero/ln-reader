@@ -60,6 +60,18 @@ actor UITestFixtureAPI: LyraAPI {
         UITestFixture.content(for: key)
     }
 
+    func requestAudiobook(chapterKey: String) async throws -> AudiobookManifest {
+        throw APIClientError.server(status: 503, message: "Narration indisponible dans cette fixture.")
+    }
+
+    func audiobook(id: String) async throws -> AudiobookManifest {
+        throw APIClientError.server(status: 503, message: "Narration indisponible dans cette fixture.")
+    }
+
+    func audiobookSegmentURL(path: String) async throws -> URL {
+        throw APIClientError.invalidServerURL
+    }
+
     func asset(url: String) async throws -> Data { Data() }
     func pullSync() async throws -> SyncState { SyncState(revision: 1, series: [], progress: []) }
     func pushSync(_ operations: [SyncOperation]) async throws -> SyncState { try await pullSync() }

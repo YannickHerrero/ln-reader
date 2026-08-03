@@ -92,12 +92,47 @@ struct SourceChapterContent: Codable, Hashable, Sendable {
     }
 }
 
+enum AudiobookStatus: String, Codable, Sendable {
+    case queued
+    case generating
+    case ready
+    case failed
+}
+
+struct AudiobookSegment: Codable, Equatable, Sendable {
+    let index: Int
+    let url: String
+    let progressStart: Double
+    let progressEnd: Double
+}
+
+struct AudiobookManifest: Codable, Equatable, Sendable {
+    let id: String
+    let chapterKey: String
+    let chapterTitle: String
+    let contentHash: String
+    let status: AudiobookStatus
+    let provider: String
+    let model: String
+    let voice: String
+    let format: String
+    let generatedSegments: Int
+    let totalSegments: Int
+    let segments: [AudiobookSegment]
+    let disclosure: String
+    let error: String?
+}
+
 struct APICapabilities: Codable, Equatable, Sendable {
     let apiVersion: Int
     let features: [String]
 
     var supportsNativeApp: Bool {
         apiVersion == 1 && features.contains("sync") && features.contains("chapterBlocks")
+    }
+
+    var supportsAudiobooks: Bool {
+        supportsNativeApp && features.contains("audiobook")
     }
 }
 
