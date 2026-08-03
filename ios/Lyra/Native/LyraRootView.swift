@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LyraRootView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         @Bindable var model = model
@@ -17,6 +18,10 @@ struct LyraRootView: View {
         }
         .preferredColorScheme(model.appearance.colorScheme)
         .tint(LyraDesign.accent)
+        .task { model.start() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { model.applicationBecameActive() }
+        }
     }
 }
 

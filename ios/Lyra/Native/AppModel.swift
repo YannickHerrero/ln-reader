@@ -23,9 +23,12 @@ final class AppModel {
 
     private let serverStore: ServerURLStore
     private let defaults: UserDefaults
+    private let database: AppDatabase
+    let store: LibraryStore
 
     var serverURL: URL?
     var api: (any LyraAPI)?
+    var syncCoordinator: SyncCoordinator?
     var appearance: LyraAppearance
     var isConnecting = false
     var setupError: String?
@@ -33,10 +36,14 @@ final class AppModel {
 
     init(
         serverStore: ServerURLStore = .shared,
-        defaults: UserDefaults = .standard
+        defaults: UserDefaults = .standard,
+        database: AppDatabase? = nil
     ) {
+        let resolvedDatabase = database ?? Self.makeLiveDatabase()
         self.serverStore = serverStore
         self.defaults = defaults
+        self.database = resolvedDatabase
+        self.store = LibraryStore(database: resolvedDatabase)
         self.serverURL = serverStore.serverURL
         if let raw = defaults.string(forKey: Self.appearanceKey), let stored = LyraAppearance(rawValue: raw) {
             self.appearance = stored
@@ -44,7 +51,7 @@ final class AppModel {
             self.appearance = UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
         }
         if let serverURL {
-            self.api = APIClient(baseURL: serverURL)
+            configureAPI(for: serverURL)
         }
     }
 
@@ -62,7 +69,7 @@ final class AppModel {
             _ = try await client.capabilities()
             serverStore.save(url)
             serverURL = url
-            api = client
+            configureAPI(for: url, client: client)
             showsServerConfiguration = false
         } catch {
             setupError = error.localizedDescription
@@ -70,6 +77,8 @@ final class AppModel {
     }
 
     func disconnect() {
+        syncCoordinator?.stop()
+        syncCoordinator = nil
         serverStore.clear()
         serverURL = nil
         api = nil
@@ -77,8 +86,33 @@ final class AppModel {
         showsServerConfiguration = false
     }
 
+    func start() {
+        syncCoordinator?.start()
+    }
+
+    func applicationBecameActive() {
+        syncCoordinator?.applicationBecameActive()
+    }
+
     func toggleAppearance() {
         appearance = appearance.toggled
         defaults.set(appearance.rawValue, forKey: Self.appearanceKey)
+    }
+
+    private func configureAPI(for url: URL, client: (any LyraAPI)? = nil) {
+        syncCoordinator?.stop()
+        let resolvedClient = client ?? APIClient(baseURL: url)
+        api = resolvedClient
+        let engine = SyncEngine(store: store, api: resolvedClient)
+        syncCoordinator = SyncCoordinator(engine: engine, store: store)
+        syncCoordinator?.start()
+    }
+
+    private static func makeLiveDatabase() -> AppDatabase {
+        do {
+            return try AppDatabase.live()
+        } catch {
+            fatalError("Unable to open Lyra database: \(error)")
+        }
     }
 }

@@ -7,6 +7,8 @@ protocol LyraAPI: Sendable {
     func series(key: String) async throws -> SourceSeries
     func chapter(key: String) async throws -> SourceChapterContent
     func asset(url: String) async throws -> Data
+    func pullSync() async throws -> SyncState
+    func pushSync(_ operations: [SyncOperation]) async throws -> SyncState
 }
 
 enum APIClientError: LocalizedError, Equatable {
@@ -73,6 +75,27 @@ actor APIClient: LyraAPI {
             cachePolicy: .returnCacheDataElseLoad
         )
         return try await send(request)
+    }
+
+    func pullSync() async throws -> SyncState {
+        try await get(path: "/api/sync", cachePolicy: .reloadIgnoringLocalCacheData)
+    }
+
+    func pushSync(_ operations: [SyncOperation]) async throws -> SyncState {
+        var request = try makeRequest(
+            path: "/api/sync",
+            query: [],
+            cachePolicy: .reloadIgnoringLocalCacheData
+        )
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(SyncRequest(operations: operations))
+        let data = try await send(request)
+        do {
+            return try decoder.decode(SyncState.self, from: data)
+        } catch {
+            throw APIClientError.invalidResponse
+        }
     }
 
     private func get<Value: Decodable>(
