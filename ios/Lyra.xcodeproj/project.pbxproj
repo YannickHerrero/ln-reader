@@ -8,15 +8,24 @@
 
 /* Begin PBXBuildFile section */
 		10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */; };
+		148E13C936B22F14B4C726BC /* DatabaseRecords.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */; };
 		1B479C1A019FB73F98932B3C /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994321D9D42044F1684487F8 /* APIClient.swift */; };
+		20CFDB347E2E8A495606EE98 /* SyncModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D9290550BF2956EDD3AC642 /* SyncModels.swift */; };
 		33FCD842A8B0199AE553F4FA /* ServerSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E64DEDD27F7FEF02560BAF59 /* ServerSetupView.swift */; };
 		39533125FA3E0937CC438D48 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1D34E9FA2157E5A5DDD6933 /* SceneDelegate.swift */; };
+		41E0428AB6F9595EDCD3F8B1 /* SyncCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */; };
+		4F14ED6D144474EF723F9F16 /* NativePersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */; };
+		65DB4CF071D8BCF028A9745C /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 99CDA3B65EA30801BDD84F85 /* GRDB */; };
 		84C94B41B4FA7CD830E60E80 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 071280987EF29C8C4CDFA86A /* AppModel.swift */; };
 		850B7517FDD56EF90387D2FD /* LyraRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */; };
+		8960097F5FE97C43B3C737BF /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59384E0E9D1113F4ABF6E8A /* LibraryStore.swift */; };
 		8D5C1714109C836FAA775780 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71688019E5531D5715BB57C /* DesignSystem.swift */; };
 		9102965BF679867A56F1D20D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D829414659EB8D8E5E89B0 /* Models.swift */; };
 		A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC47E3631299BA40D48DA328 /* AppDelegate.swift */; };
+		C19494E789EDE6B494544748 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 90B76D3AAFB8FF223C5A2B53 /* GRDB */; };
+		CE4BC971E903C9D40AAC2724 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 690117DD184BD4E008D3F353 /* SyncEngine.swift */; };
 		DC76BBAC6873C3C5D828704D /* ServerURLStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */; };
+		E86F29356AFD8BE0BAB19775 /* Database.swift in Sources */ = {isa = PBXBuildFile; fileRef = C518815C1CA774831A29795F /* Database.swift */; };
 		FF657CA70BCE119A83F082C7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -33,7 +42,12 @@
 /* Begin PBXFileReference section */
 		071280987EF29C8C4CDFA86A /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		2BFC37901B41B00319A98FF9 /* LyraTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D9290550BF2956EDD3AC642 /* SyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncModels.swift; sourceTree = "<group>"; };
+		3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePersistenceTests.swift; sourceTree = "<group>"; };
 		54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		690117DD184BD4E008D3F353 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
+		71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRecords.swift; sourceTree = "<group>"; };
+		780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoordinator.swift; sourceTree = "<group>"; };
 		7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyraRootView.swift; sourceTree = "<group>"; };
 		8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStoreTests.swift; sourceTree = "<group>"; };
 		994321D9D42044F1684487F8 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
@@ -42,10 +56,31 @@
 		AC47E3631299BA40D48DA328 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStore.swift; sourceTree = "<group>"; };
 		B71688019E5531D5715BB57C /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		C518815C1CA774831A29795F /* Database.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Database.swift; sourceTree = "<group>"; };
 		E2D829414659EB8D8E5E89B0 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		E64DEDD27F7FEF02560BAF59 /* ServerSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSetupView.swift; sourceTree = "<group>"; };
 		E788D0078F570D85A61E0F7B /* Lyra.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Lyra.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F59384E0E9D1113F4ABF6E8A /* LibraryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		101246333DFC0EA78C167E74 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				65DB4CF071D8BCF028A9745C /* GRDB in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEEACDE7B6D99805F84EDFC2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C19494E789EDE6B494544748 /* GRDB in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		4433F5487468CCF5408C22B3 = {
@@ -69,6 +104,7 @@
 		A222AEDBFAEEB3B36D000F72 /* LyraTests */ = {
 			isa = PBXGroup;
 			children = (
+				3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */,
 				8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */,
 			);
 			path = LyraTests;
@@ -92,10 +128,16 @@
 			children = (
 				994321D9D42044F1684487F8 /* APIClient.swift */,
 				071280987EF29C8C4CDFA86A /* AppModel.swift */,
+				C518815C1CA774831A29795F /* Database.swift */,
+				71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */,
 				B71688019E5531D5715BB57C /* DesignSystem.swift */,
+				F59384E0E9D1113F4ABF6E8A /* LibraryStore.swift */,
 				7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */,
 				E2D829414659EB8D8E5E89B0 /* Models.swift */,
 				E64DEDD27F7FEF02560BAF59 /* ServerSetupView.swift */,
+				780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */,
+				690117DD184BD4E008D3F353 /* SyncEngine.swift */,
+				2D9290550BF2956EDD3AC642 /* SyncModels.swift */,
 			);
 			path = Native;
 			sourceTree = "<group>";
@@ -108,6 +150,7 @@
 			buildConfigurationList = B4474A186B1E915088816F5E /* Build configuration list for PBXNativeTarget "LyraTests" */;
 			buildPhases = (
 				F670EEC93FA8DEE97D5320BE /* Sources */,
+				101246333DFC0EA78C167E74 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -116,6 +159,7 @@
 			);
 			name = LyraTests;
 			packageProductDependencies = (
+				99CDA3B65EA30801BDD84F85 /* GRDB */,
 			);
 			productName = LyraTests;
 			productReference = 2BFC37901B41B00319A98FF9 /* LyraTests.xctest */;
@@ -127,6 +171,7 @@
 			buildPhases = (
 				10F6E341F0C5625728617CB2 /* Sources */,
 				DE4272F0E77047D3192E37F1 /* Resources */,
+				BEEACDE7B6D99805F84EDFC2 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -134,6 +179,7 @@
 			);
 			name = Lyra;
 			packageProductDependencies = (
+				90B76D3AAFB8FF223C5A2B53 /* GRDB */,
 			);
 			productName = Lyra;
 			productReference = E788D0078F570D85A61E0F7B /* Lyra.app */;
@@ -166,6 +212,9 @@
 			);
 			mainGroup = 4433F5487468CCF5408C22B3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6809242098D1DCFDCBB3A0D0 /* XCRemoteSwiftPackageReference "GRDB.swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 9734FB8F43025E39ACD3642E /* Products */;
 			projectDirPath = "";
@@ -196,12 +245,18 @@
 				1B479C1A019FB73F98932B3C /* APIClient.swift in Sources */,
 				A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */,
 				84C94B41B4FA7CD830E60E80 /* AppModel.swift in Sources */,
+				E86F29356AFD8BE0BAB19775 /* Database.swift in Sources */,
+				148E13C936B22F14B4C726BC /* DatabaseRecords.swift in Sources */,
 				8D5C1714109C836FAA775780 /* DesignSystem.swift in Sources */,
+				8960097F5FE97C43B3C737BF /* LibraryStore.swift in Sources */,
 				850B7517FDD56EF90387D2FD /* LyraRootView.swift in Sources */,
 				9102965BF679867A56F1D20D /* Models.swift in Sources */,
 				39533125FA3E0937CC438D48 /* SceneDelegate.swift in Sources */,
 				33FCD842A8B0199AE553F4FA /* ServerSetupView.swift in Sources */,
 				DC76BBAC6873C3C5D828704D /* ServerURLStore.swift in Sources */,
+				41E0428AB6F9595EDCD3F8B1 /* SyncCoordinator.swift in Sources */,
+				CE4BC971E903C9D40AAC2724 /* SyncEngine.swift in Sources */,
+				20CFDB347E2E8A495606EE98 /* SyncModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -209,6 +264,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4F14ED6D144474EF723F9F16 /* NativePersistenceTests.swift in Sources */,
 				10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -460,6 +516,30 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6809242098D1DCFDCBB3A0D0 /* XCRemoteSwiftPackageReference "GRDB.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.11.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		90B76D3AAFB8FF223C5A2B53 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6809242098D1DCFDCBB3A0D0 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+		99CDA3B65EA30801BDD84F85 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6809242098D1DCFDCBB3A0D0 /* XCRemoteSwiftPackageReference "GRDB.swift" */;
+			productName = GRDB;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AAE96C742830217FB796E898 /* Project object */;
 }

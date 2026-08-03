@@ -5,6 +5,10 @@ options:
   deploymentTarget:
     iOS: "18.0"
   xcodeVersion: "26.0"
+packages:
+  GRDB:
+    url: https://github.com/groue/GRDB.swift.git
+    from: 7.11.1
 settings:
   base:
     SWIFT_VERSION: "6.0"
@@ -19,6 +23,8 @@ targets:
     deploymentTarget: "18.0"
     sources:
       - path: Lyra
+    dependencies:
+      - package: GRDB
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -37,6 +43,7 @@ targets:
       - path: LyraTests
     dependencies:
       - target: Lyra
+      - package: GRDB
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
