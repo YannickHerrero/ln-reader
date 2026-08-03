@@ -1,5 +1,5 @@
 import { MemoryRouter } from 'react-router-dom'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SourceSeries } from '../shared/contracts'
@@ -51,6 +51,38 @@ describe('reader page', () => {
     expect(screen.getByText(/Disponible hors ligne/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Chapitre 2/ })).toBeInTheDocument()
     expect(fetchMock).not.toHaveBeenCalled()
+
+    unmount()
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  })
+
+  it('does not reload chapter content when synchronization updates its metadata', async () => {
+    const chapterKey = series.chapters[1]!.key
+    await libraryRepository.removeDownload(chapterKey)
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      key: chapterKey,
+      title: 'Chapitre 1',
+      html: '<p>Contenu en ligne stable.</p>',
+      source: 'novelFr',
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+    const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(chapterKey)}`
+    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
+
+    expect(await screen.findByText('Contenu en ligne stable.')).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    const chapter = await db.chapters.get(chapterKey)
+    await act(async () => {
+      await db.chapters.put({ ...chapter!, title: 'Chapitre 1 synchronisé' })
+    })
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Chapitre 1 synchronisé' })).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('Contenu en ligne stable.')).toBeInTheDocument()
 
     unmount()
     await new Promise((resolve) => setTimeout(resolve, 0))

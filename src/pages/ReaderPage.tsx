@@ -55,6 +55,7 @@ export function ReaderPage() {
   const latestRatio = useRef(0)
 
   const chapter = chapters.find((candidate) => candidate.key === chapterKey)
+  const chapterIsAvailable = chapter?.key === chapterKey
   const volumeChapters = chapter
     ? chapters.filter((candidate) => sameVolume(candidate.volume, chapter.volume))
     : chapters
@@ -81,7 +82,7 @@ export function ReaderPage() {
     setFocusedIndex(0)
     setContent(null)
     setError(null)
-    if (download === undefined || !chapterKey || !chapter) return
+    if (download === undefined || !chapterKey || !chapterIsAvailable) return
 
     if (download) {
       setContent({
@@ -108,7 +109,7 @@ export function ReaderPage() {
       })
       .finally(() => setLoading(false))
     return () => controller.abort()
-  }, [chapterKey, chapter, download])
+  }, [chapterKey, chapterIsAvailable, download])
 
   useEffect(() => {
     if (!content || content.key !== chapterKey || !chapterKey || !seriesKey
