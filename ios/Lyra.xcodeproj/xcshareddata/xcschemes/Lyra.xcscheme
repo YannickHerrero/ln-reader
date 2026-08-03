@@ -35,6 +35,20 @@
                ReferencedContainer = "container:Lyra.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9B96AF5310237CD348AA0077"
+               BuildableName = "LyraUITests.xctest"
+               BlueprintName = "LyraUITests"
+               ReferencedContainer = "container:Lyra.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -62,6 +76,17 @@
                BlueprintIdentifier = "2656256E64E978000368ACA9"
                BuildableName = "LyraTests.xctest"
                BlueprintName = "LyraTests"
+               ReferencedContainer = "container:Lyra.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9B96AF5310237CD348AA0077"
+               BuildableName = "LyraUITests.xctest"
+               BlueprintName = "LyraUITests"
                ReferencedContainer = "container:Lyra.xcodeproj">
             </BuildableReference>
          </TestableReference>

@@ -23,6 +23,7 @@
 		48873B76C996AC8AD5821F0D /* ReaderSegmentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1DD4C99FC56C93E21A4A809 /* ReaderSegmentation.swift */; };
 		4F14ED6D144474EF723F9F16 /* NativePersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */; };
 		55A5D7F657528321550CF9CA /* ReaderPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E5A5639A8552FF04062F7AF /* ReaderPreferences.swift */; };
+		5C953AE794BF6A8C3FF2D67A /* LyraUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C47E20CCF0F694F82C7DF6 /* LyraUITests.swift */; };
 		65DB4CF071D8BCF028A9745C /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 99CDA3B65EA30801BDD84F85 /* GRDB */; };
 		7F40316C17BA65F846A377CC /* CoverViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641560FE9E808AA40D02080E /* CoverViews.swift */; };
 		81206F52E8A47F48DC6EA4F5 /* NativeReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 720BCF1F484AA7469E875EF8 /* NativeReaderTests.swift */; };
@@ -33,6 +34,7 @@
 		9102965BF679867A56F1D20D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D829414659EB8D8E5E89B0 /* Models.swift */; };
 		A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC47E3631299BA40D48DA328 /* AppDelegate.swift */; };
 		C19494E789EDE6B494544748 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 90B76D3AAFB8FF223C5A2B53 /* GRDB */; };
+		C53E22C9475DC44F19D8A61B /* UITestFixture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67AB98BA6FF3CE09A9C57652 /* UITestFixture.swift */; };
 		CE4BC971E903C9D40AAC2724 /* SyncEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 690117DD184BD4E008D3F353 /* SyncEngine.swift */; };
 		DC76BBAC6873C3C5D828704D /* ServerURLStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */; };
 		DFF16BCA8A3968803477E782 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF80FDDDF6079ECBADE25CE8 /* LibraryView.swift */; };
@@ -48,17 +50,27 @@
 			remoteGlobalIDString = E372207A5839862C925C2051;
 			remoteInfo = Lyra;
 		};
+		58B93AFD9DF310229790B247 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AAE96C742830217FB796E898 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E372207A5839862C925C2051;
+			remoteInfo = Lyra;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		04C47E20CCF0F694F82C7DF6 /* LyraUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyraUITests.swift; sourceTree = "<group>"; };
 		071280987EF29C8C4CDFA86A /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		0EE0E607019F1D61C2D37792 /* SeriesDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SeriesDetailView.swift; sourceTree = "<group>"; };
+		1D92CAB0C87AE1A3609333DE /* LyraUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyraUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BFC37901B41B00319A98FF9 /* LyraTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = LyraTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D9290550BF2956EDD3AC642 /* SyncModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncModels.swift; sourceTree = "<group>"; };
 		3C74DB3DF34C22485A014062 /* NativePersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePersistenceTests.swift; sourceTree = "<group>"; };
 		54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		5A0AC1109F13B85265C7828F /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
 		641560FE9E808AA40D02080E /* CoverViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoverViews.swift; sourceTree = "<group>"; };
+		67AB98BA6FF3CE09A9C57652 /* UITestFixture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UITestFixture.swift; sourceTree = "<group>"; };
 		690117DD184BD4E008D3F353 /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		693D009D2DEBEEB11B5BF248 /* NativeReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeReaderView.swift; sourceTree = "<group>"; };
 		71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRecords.swift; sourceTree = "<group>"; };
@@ -105,11 +117,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		02151E600A7218196CA4DA83 /* LyraUITests */ = {
+			isa = PBXGroup;
+			children = (
+				04C47E20CCF0F694F82C7DF6 /* LyraUITests.swift */,
+			);
+			path = LyraUITests;
+			sourceTree = "<group>";
+		};
 		4433F5487468CCF5408C22B3 = {
 			isa = PBXGroup;
 			children = (
 				B26B695774E918E53117A056 /* Lyra */,
 				A222AEDBFAEEB3B36D000F72 /* LyraTests */,
+				02151E600A7218196CA4DA83 /* LyraUITests */,
 				9734FB8F43025E39ACD3642E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -119,6 +140,7 @@
 			children = (
 				E788D0078F570D85A61E0F7B /* Lyra.app */,
 				2BFC37901B41B00319A98FF9 /* LyraTests.xctest */,
+				1D92CAB0C87AE1A3609333DE /* LyraUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -170,6 +192,7 @@
 				780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */,
 				690117DD184BD4E008D3F353 /* SyncEngine.swift */,
 				2D9290550BF2956EDD3AC642 /* SyncModels.swift */,
+				67AB98BA6FF3CE09A9C57652 /* UITestFixture.swift */,
 				C6B1D5ABD9241FDFC4E0FA8A /* WebMigrationImporter.swift */,
 			);
 			path = Native;
@@ -197,6 +220,24 @@
 			productName = LyraTests;
 			productReference = 2BFC37901B41B00319A98FF9 /* LyraTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		9B96AF5310237CD348AA0077 /* LyraUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A70986D8D175F714C2B2178C /* Build configuration list for PBXNativeTarget "LyraUITests" */;
+			buildPhases = (
+				3398E23EA3FACF5D939C0D38 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				EDE00DB95F2FF65058E48C70 /* PBXTargetDependency */,
+			);
+			name = LyraUITests;
+			packageProductDependencies = (
+			);
+			productName = LyraUITests;
+			productReference = 1D92CAB0C87AE1A3609333DE /* LyraUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 		E372207A5839862C925C2051 /* Lyra */ = {
 			isa = PBXNativeTarget;
@@ -230,6 +271,10 @@
 					2656256E64E978000368ACA9 = {
 						DevelopmentTeam = KY6RHJR4LZ;
 					};
+					9B96AF5310237CD348AA0077 = {
+						DevelopmentTeam = KY6RHJR4LZ;
+						TestTargetID = E372207A5839862C925C2051;
+					};
 					E372207A5839862C925C2051 = {
 						DevelopmentTeam = KY6RHJR4LZ;
 						ProvisioningStyle = Automatic;
@@ -255,6 +300,7 @@
 			targets = (
 				E372207A5839862C925C2051 /* Lyra */,
 				2656256E64E978000368ACA9 /* LyraTests */,
+				9B96AF5310237CD348AA0077 /* LyraUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -299,7 +345,16 @@
 				41E0428AB6F9595EDCD3F8B1 /* SyncCoordinator.swift in Sources */,
 				CE4BC971E903C9D40AAC2724 /* SyncEngine.swift in Sources */,
 				20CFDB347E2E8A495606EE98 /* SyncModels.swift in Sources */,
+				C53E22C9475DC44F19D8A61B /* UITestFixture.swift in Sources */,
 				4866695D58B515A0C4746FBF /* WebMigrationImporter.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3398E23EA3FACF5D939C0D38 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5C953AE794BF6A8C3FF2D67A /* LyraUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -321,9 +376,32 @@
 			target = E372207A5839862C925C2051 /* Lyra */;
 			targetProxy = 47FC62D58665451187154BA9 /* PBXContainerItemProxy */;
 		};
+		EDE00DB95F2FF65058E48C70 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E372207A5839862C925C2051 /* Lyra */;
+			targetProxy = 58B93AFD9DF310229790B247 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		01514FEE2FA0D365BBA7FE6E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannickherrero.lyra.ui-tests";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Lyra;
+			};
+			name = Debug;
+		};
 		0349DF4A142F037DD4D0A5C0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -529,6 +607,24 @@
 			};
 			name = Debug;
 		};
+		FB6313A3C06F20DE6734C56D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = "com.yannickherrero.lyra.ui-tests";
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Lyra;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -546,6 +642,15 @@
 			buildConfigurations = (
 				B5FBB991BA617DD35147CBB4 /* Debug */,
 				4B4F40024B795B221B67312F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A70986D8D175F714C2B2178C /* Build configuration list for PBXNativeTarget "LyraUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				01514FEE2FA0D365BBA7FE6E /* Debug */,
+				FB6313A3C06F20DE6734C56D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

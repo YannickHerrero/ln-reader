@@ -45,7 +45,9 @@ final class AppModel {
     init(
         serverStore: ServerURLStore = .shared,
         defaults: UserDefaults = .standard,
-        database: AppDatabase? = nil
+        database: AppDatabase? = nil,
+        client: (any LyraAPI)? = nil,
+        synchronizationEnabled: Bool = true
     ) {
         let resolvedDatabase = database ?? Self.makeLiveDatabase()
         self.serverStore = serverStore
@@ -59,7 +61,11 @@ final class AppModel {
             self.appearance = UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
         }
         if let serverURL {
-            configureAPI(for: serverURL)
+            if let client, !synchronizationEnabled {
+                api = client
+            } else {
+                configureAPI(for: serverURL, client: client)
+            }
         }
     }
 

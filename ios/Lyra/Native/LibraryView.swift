@@ -22,6 +22,7 @@ struct LibraryView: View {
             .padding(.bottom, 28)
         }
         .background(LyraDesign.background)
+        .accessibilityIdentifier("library-screen")
         .refreshable {
             model.syncCoordinator?.requestSync()
             await model.reloadLibrary()
@@ -96,6 +97,7 @@ struct LibraryView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("continue-reading-primary")
             .accessibilityLabel("Continuer \(featured.series.series.title), \(featured.chapter.chapter.title)")
         } else {
             VStack(alignment: .leading, spacing: 18) {
@@ -218,6 +220,7 @@ struct LibraryView: View {
                 }
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("library-series-card")
 
             Button {
                 pendingRemoval = item

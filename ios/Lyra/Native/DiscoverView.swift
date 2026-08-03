@@ -40,6 +40,7 @@ struct DiscoverView: View {
             .padding(.bottom, 30)
         }
         .background(LyraDesign.background)
+        .accessibilityIdentifier("discover-screen")
         .navigationBarHidden(true)
         .task { await loadDiscovery() }
         .task(id: query) { await searchIfNeeded() }

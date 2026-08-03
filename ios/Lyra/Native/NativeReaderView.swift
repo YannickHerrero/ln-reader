@@ -92,6 +92,7 @@ struct NativeReaderView: View {
         }
         .animation(.easeOut(duration: 0.2), value: controlsVisible)
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $showsSettings) {
             ReaderSettingsView(preferences: preferences, onSave: applyPreferences)
                 .presentationDetents([.medium, .large])
@@ -478,6 +479,7 @@ private struct FocusedNativeReader<Footer: View>: View {
                 move(by: value.translation.width < 0 ? 1 : -1)
             })
             .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("focused-reader")
             .accessibilityLabel(current?.text ?? "Chapitre vide")
             .accessibilityValue("Page \(min(index + 1, units.count)) sur \(units.count)")
             .accessibilityAdjustableAction { direction in

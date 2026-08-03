@@ -48,13 +48,28 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.yannickherrero.lyra.tests
+  LyraUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: LyraUITests
+    dependencies:
+      - target: Lyra
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.yannickherrero.lyra.ui-tests
+        TEST_TARGET_NAME: Lyra
 schemes:
   Lyra:
     build:
       targets:
         Lyra: all
         LyraTests: [test]
+        LyraUITests: [test]
     test:
       gatherCoverageData: true
       targets:
         - LyraTests
+        - LyraUITests

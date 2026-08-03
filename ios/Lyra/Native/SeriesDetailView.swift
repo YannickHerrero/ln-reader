@@ -71,6 +71,7 @@ struct SeriesDetailView: View {
             }
         }
         .background(LyraDesign.background)
+        .accessibilityIdentifier("series-detail-screen")
         .navigationTitle(series?.series.title ?? "Série")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
