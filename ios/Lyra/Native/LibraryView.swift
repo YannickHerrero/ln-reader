@@ -3,6 +3,7 @@ import SwiftUI
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.lyraPalette) private var palette
     @State private var pendingRemoval: StoredSeries?
 
     var body: some View {
@@ -12,7 +13,7 @@ struct LibraryView: View {
                 if let summary = model.migrationSummary {
                     Label(summary, systemImage: "checkmark.circle.fill")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.green)
+                        .foregroundStyle(palette.green)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 hero
@@ -22,7 +23,8 @@ struct LibraryView: View {
             .padding(.horizontal, 18)
             .padding(.bottom, 28)
         }
-        .background(LyraDesign.background)
+        .background { LyraBackground() }
+        .foregroundStyle(palette.foreground)
         .accessibilityIdentifier("library-screen")
         .refreshable {
             model.syncCoordinator?.requestSync()
@@ -75,17 +77,21 @@ struct LibraryView: View {
             } label: {
                 Image(systemName: model.appearance == .mocha ? "sun.max.fill" : "moon.fill")
                     .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 40, height: 40)
-                    .background(LyraDesign.raised, in: Circle())
+                    .foregroundStyle(palette.muted)
+                    .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                    .background(palette.surface, in: Circle())
+                    .overlay { Circle().stroke(palette.border) }
             }
-            .accessibilityLabel("Changer l’apparence")
+            .accessibilityLabel("Activer \(model.appearance.toggled.displayName)")
             Button {
                 model.showsServerConfiguration = true
             } label: {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 40, height: 40)
-                    .background(LyraDesign.raised, in: Circle())
+                    .foregroundStyle(palette.muted)
+                    .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                    .background(palette.surface, in: Circle())
+                    .overlay { Circle().stroke(palette.border) }
             }
             .accessibilityLabel("Configurer le serveur")
         }
@@ -105,7 +111,7 @@ struct LibraryView: View {
                         Text("VOTRE LECTURE DU MOMENT")
                             .font(.caption.weight(.black))
                             .tracking(2)
-                            .foregroundStyle(LyraDesign.accent)
+                            .foregroundStyle(palette.accent)
                         Text(featured.series.series.title)
                             .font(.system(size: 34, weight: .black, design: .rounded))
                             .foregroundStyle(.white)
@@ -126,12 +132,12 @@ struct LibraryView: View {
                 Text("VOTRE BIBLIOTHÈQUE PERSONNELLE")
                     .font(.caption.weight(.black))
                     .tracking(2)
-                    .foregroundStyle(LyraDesign.accent)
+                    .foregroundStyle(palette.accent)
                 Text("Toutes vos histoires.\nUn seul endroit.")
                     .font(.system(size: 41, weight: .black, design: .rounded))
                 Text("Explorez des centaines de romans français et retrouvez votre progression sur tous vos appareils.")
                     .font(.title3)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.muted)
                 Button("Découvrir le catalogue") { model.selectedTab = 1 }
                     .buttonStyle(LyraPrimaryButtonStyle())
             }
@@ -157,13 +163,13 @@ struct LibraryView: View {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text("REPRENDRE")
                                         .font(.caption2.weight(.black))
-                                        .foregroundStyle(LyraDesign.accent)
+                                        .foregroundStyle(palette.accent)
                                     Text(item.series.series.title)
                                         .font(.headline)
                                         .lineLimit(3)
                                     Text(item.chapter.chapter.title)
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(palette.muted)
                                         .lineLimit(2)
                                 }
                                 .frame(width: 180, alignment: .leading)
@@ -226,7 +232,7 @@ struct LibraryView: View {
                                 Capsule()
                                     .fill(.white.opacity(0.3))
                                     .overlay(alignment: .leading) {
-                                        Capsule().fill(LyraDesign.accent).frame(width: proxy.size.width * percent)
+                                        Capsule().fill(palette.accent).frame(width: proxy.size.width * percent)
                                     }
                             }
                             .frame(height: 4)
@@ -237,7 +243,7 @@ struct LibraryView: View {
                         .lineLimit(2)
                     Text(item.series.genres.filter { $0.lowercased() != "novel" }.prefix(2).joined(separator: " · ").nonEmpty ?? "Roman")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.muted)
                         .lineLimit(1)
                 }
             }
@@ -263,13 +269,13 @@ struct LibraryView: View {
         if dynamicTypeSize.isAccessibilitySize {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.title2.weight(.black))
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text(detail).font(.caption).foregroundStyle(palette.muted)
             }
         } else {
             HStack(alignment: .firstTextBaseline) {
                 Text(title).font(.title2.weight(.black))
                 Spacer()
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text(detail).font(.caption).foregroundStyle(palette.muted)
             }
         }
     }

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NativeMainView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.lyraPalette) private var palette
 
     var body: some View {
         @Bindable var model = model
@@ -18,6 +19,8 @@ struct NativeMainView: View {
             .tabItem { Label("Découvrir", systemImage: "sparkles") }
             .tag(1)
         }
-        .tint(LyraDesign.accent)
+        .tint(palette.accent)
+        .toolbarBackground(palette.surface.opacity(0.96), for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 }

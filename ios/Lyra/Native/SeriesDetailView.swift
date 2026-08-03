@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SeriesDetailView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.lyraPalette) private var palette
     let seriesKey: String
 
     @State private var series: StoredSeries?
@@ -70,10 +71,13 @@ struct SeriesDetailView: View {
                     .padding(.top, 100)
             }
         }
-        .background(LyraDesign.background)
+        .background { LyraBackground() }
+        .foregroundStyle(palette.foreground)
         .accessibilityIdentifier("series-detail-screen")
         .navigationTitle(series?.series.title ?? "Série")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(palette.surface.opacity(0.96), for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button {
@@ -106,7 +110,7 @@ struct SeriesDetailView: View {
                 .scaleEffect(1.12)
                 .opacity(0.55)
             LinearGradient(
-                colors: [.black.opacity(0.1), Color(uiColor: .systemBackground)],
+                colors: [.clear, palette.background.opacity(0.84), palette.background],
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -118,12 +122,12 @@ struct SeriesDetailView: View {
                 Text(item.series.status ?? "Roman")
                     .font(.caption.weight(.black))
                     .tracking(2)
-                    .foregroundStyle(LyraDesign.accent)
+                    .foregroundStyle(palette.accent)
                 Text(item.series.title)
                     .font(.system(size: 31, weight: .black, design: .rounded))
                     .multilineTextAlignment(.center)
                 if let author = item.series.author {
-                    Text("par \(author)").foregroundStyle(.secondary)
+                    Text("par \(author)").foregroundStyle(palette.muted)
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
@@ -132,14 +136,15 @@ struct SeriesDetailView: View {
                                 .font(.caption.weight(.semibold))
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 6)
-                                .background(LyraDesign.raised, in: Capsule())
+                                .background(palette.surface, in: Capsule())
+                                .overlay { Capsule().stroke(palette.border) }
                         }
                     }
                 }
                 if let description = item.series.description {
                     Text(description)
                         .font(.body)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.muted)
                         .lineLimit(6)
                         .multilineTextAlignment(.center)
                 }
@@ -166,15 +171,16 @@ struct SeriesDetailView: View {
                 Spacer()
                 Text("\(chapters.count) disponibles")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.muted)
             }
             if let message {
                 Text(message)
                     .font(.footnote)
-                    .foregroundStyle(message.contains("échoué") ? .red : .secondary)
+                    .foregroundStyle(message.contains("échoué") ? palette.red : palette.muted)
             }
             Toggle("Masquer les chapitres lus", isOn: $hideRead)
                 .font(.subheadline.weight(.semibold))
+                .tint(palette.accent)
 
             if groups.count > 1 || chapters.contains(where: { $0.chapter.volume != nil }) {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -188,14 +194,18 @@ struct SeriesDetailView: View {
                                     Text("\(group.completedCount)/\(group.totalCount) lus")
                                         .font(.caption)
                                     ProgressView(value: Double(group.completedCount), total: Double(max(1, group.totalCount)))
-                                        .tint(LyraDesign.accent)
+                                        .tint(palette.accent)
                                 }
                                 .frame(width: 150, alignment: .leading)
                                 .padding(12)
                                 .background(
-                                    group.key == selectedGroup?.key ? LyraDesign.accent.opacity(0.14) : LyraDesign.raised,
+                                    group.key == selectedGroup?.key ? palette.accent.opacity(0.14) : palette.surface,
                                     in: RoundedRectangle(cornerRadius: 16)
                                 )
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(group.key == selectedGroup?.key ? palette.accent : palette.border)
+                                }
                             }
                             .buttonStyle(.plain)
                         }
@@ -224,18 +234,18 @@ struct SeriesDetailView: View {
             } label: {
                 HStack(spacing: 12) {
                     Image(systemName: chapterProgress?.completed == true ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(chapterProgress?.completed == true ? LyraDesign.accent : .secondary)
+                        .foregroundStyle(chapterProgress?.completed == true ? palette.accent : palette.muted)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.chapter.title)
                             .font(.headline)
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(palette.foreground)
                             .multilineTextAlignment(.leading)
                         HStack {
                             if let published = item.chapter.publishedAt { Text(published) }
                             Text("Novel-FR")
                         }
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(palette.muted)
                     }
                 }
             }

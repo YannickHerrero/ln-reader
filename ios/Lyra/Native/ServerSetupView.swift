@@ -3,6 +3,7 @@ import SwiftUI
 struct ServerSetupView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.lyraPalette) private var palette
     @FocusState private var fieldFocused: Bool
     @State private var input = ""
 
@@ -21,7 +22,7 @@ struct ServerSetupView: View {
                             .multilineTextAlignment(.center)
                         Text("Connectez Lyra à votre serveur personnel pour retrouver votre bibliothèque et votre progression.")
                             .font(.body)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(palette.muted)
                             .multilineTextAlignment(.center)
                     }
 
@@ -35,10 +36,11 @@ struct ServerSetupView: View {
                             .textContentType(.URL)
                             .submitLabel(.go)
                             .padding(14)
-                            .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .foregroundStyle(palette.foreground)
+                            .background(palette.background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .overlay {
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(LyraDesign.border, lineWidth: 1)
+                                    .stroke(palette.border, lineWidth: 1)
                             }
                             .focused($fieldFocused)
                             .accessibilityIdentifier("server-url")
@@ -47,14 +49,14 @@ struct ServerSetupView: View {
                         if let error = model.setupError {
                             Text(error)
                                 .font(.footnote)
-                                .foregroundStyle(.red)
+                                .foregroundStyle(palette.red)
                                 .accessibilityIdentifier("server-error")
                         }
                     }
 
                     Button(action: connect) {
                         HStack {
-                            if model.isConnecting { ProgressView().tint(.white) }
+                            if model.isConnecting { ProgressView().tint(palette.onAccent) }
                             Text(model.isConnecting ? "Connexion…" : "Ouvrir Lyra")
                         }
                     }
@@ -66,7 +68,11 @@ struct ServerSetupView: View {
                 .padding(.bottom, 36)
             }
             .scrollDismissesKeyboard(.interactively)
+            .background { LyraBackground() }
+            .foregroundStyle(palette.foreground)
             .navigationTitle(allowsCancel ? "Serveur" : "")
+            .toolbarBackground(palette.surface.opacity(0.96), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 if allowsCancel {

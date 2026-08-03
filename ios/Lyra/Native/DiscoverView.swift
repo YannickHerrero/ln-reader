@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiscoverView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.lyraPalette) private var palette
     @State private var query = ""
     @State private var discovery: SourceDiscovery?
     @State private var results: [SourceSearchResult] = []
@@ -23,12 +24,12 @@ struct DiscoverView: View {
                 if let errorMessage {
                     Label(errorMessage, systemImage: "exclamationmark.triangle.fill")
                         .font(.footnote)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(palette.red)
                 }
                 if let notice {
                     Label(notice, systemImage: "checkmark.circle.fill")
                         .font(.footnote)
-                        .foregroundStyle(.green)
+                        .foregroundStyle(palette.green)
                 }
                 if query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     discoveryContent
@@ -39,7 +40,8 @@ struct DiscoverView: View {
             .padding(.horizontal, 18)
             .padding(.bottom, 30)
         }
-        .background(LyraDesign.background)
+        .background { LyraBackground() }
+        .foregroundStyle(palette.foreground)
         .accessibilityIdentifier("discover-screen")
         .navigationBarHidden(true)
         .task { await loadDiscovery() }
@@ -56,42 +58,46 @@ struct DiscoverView: View {
                 } label: {
                     Image(systemName: model.appearance == .mocha ? "sun.max.fill" : "moon.fill")
                         .font(.system(size: 18, weight: .semibold))
-                        .frame(width: 42, height: 42)
-                        .background(LyraDesign.raised, in: Circle())
+                        .foregroundStyle(palette.muted)
+                        .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                        .background(palette.surface, in: Circle())
+                        .overlay { Circle().stroke(palette.border) }
                 }
-                .accessibilityLabel("Changer l’apparence")
+                .accessibilityLabel("Activer \(model.appearance.toggled.displayName)")
             }
             .padding(.top, 10)
             Text("NOVEL-FR")
                 .font(.caption.weight(.black))
                 .tracking(2)
-                .foregroundStyle(LyraDesign.accent)
+                .foregroundStyle(palette.accent)
                 .padding(.top, 12)
             Text("Trouvez votre prochaine obsession.")
                 .font(.system(size: 38, weight: .black, design: .rounded))
             Text("Romans, light novels et web novels français, réunis dans un catalogue.")
                 .font(.title3)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.muted)
         }
     }
 
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
+                .foregroundStyle(palette.muted)
             TextField("Rechercher un light novel…", text: $query)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
+                .foregroundStyle(palette.foreground)
                 .accessibilityIdentifier("native-search")
             if !query.isEmpty {
                 Button { query = "" } label: { Image(systemName: "xmark.circle.fill") }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.muted)
                     .accessibilityLabel("Effacer la recherche")
             }
         }
         .padding(15)
-        .background(LyraDesign.raised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay { RoundedRectangle(cornerRadius: 16).stroke(LyraDesign.border) }
+        .background(palette.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay { RoundedRectangle(cornerRadius: 16).stroke(palette.border) }
+        .shadow(color: palette.foreground.opacity(0.06), radius: 18, y: 10)
     }
 
     @ViewBuilder
@@ -137,7 +143,7 @@ struct DiscoverView: View {
                 Spacer()
                 Text(isSearching ? "Recherche…" : "\(results.count) trouvé\(results.count > 1 ? "s" : "")")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(palette.muted)
             }
             if isSearching {
                 ProgressView().frame(maxWidth: .infinity).padding(30)
@@ -148,13 +154,13 @@ struct DiscoverView: View {
                     HStack(spacing: 14) {
                         Image(systemName: "text.book.closed.fill")
                             .font(.title2)
-                            .foregroundStyle(LyraDesign.accent)
+                            .foregroundStyle(palette.accent)
                             .frame(width: 48, height: 62)
-                            .background(LyraDesign.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
+                            .background(palette.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Novel-FR · Français")
                                 .font(.caption2.weight(.bold))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(palette.muted)
                             Text(item.title).font(.headline)
                         }
                         Spacer()
@@ -173,7 +179,7 @@ struct DiscoverView: View {
             add(key, title)
         }
         .buttonStyle(.borderedProminent)
-        .tint(LyraDesign.accent)
+        .tint(palette.accent)
         .disabled(added || busyKey != nil)
     }
 
@@ -229,6 +235,7 @@ struct DiscoverView: View {
 }
 
 private struct DiscoverySectionView: View {
+    @Environment(\.lyraPalette) private var palette
     let title: String
     let subtitle: String
     let items: [SourceBrowseResult]
@@ -240,7 +247,7 @@ private struct DiscoverySectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(title).font(.title2.weight(.black))
-            Text(subtitle).font(.subheadline).foregroundStyle(.secondary)
+            Text(subtitle).font(.subheadline).foregroundStyle(palette.muted)
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 14) {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
@@ -265,7 +272,7 @@ private struct DiscoverySectionView: View {
                                 onAdd(item.key, item.title)
                             }
                             .buttonStyle(.bordered)
-                            .tint(LyraDesign.accent)
+                            .tint(palette.accent)
                             .disabled(addedTitles.contains(normalizedTitle(item.title)) || busyKey != nil)
                         }
                     }

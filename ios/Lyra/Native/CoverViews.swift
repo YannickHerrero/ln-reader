@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 
 struct CoverArtView: View {
+    @Environment(\.lyraPalette) private var palette
     let data: Data?
     let title: String
 
@@ -14,13 +15,13 @@ struct CoverArtView: View {
             } else {
                 ZStack {
                     LinearGradient(
-                        colors: [LyraDesign.accent.opacity(0.9), .black],
+                        colors: [palette.accent, palette.mauve],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                     Text(title.prefix(1).uppercased())
                         .font(.system(size: 44, weight: .black, design: .serif))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(palette.onAccent)
                 }
             }
         }
@@ -46,6 +47,7 @@ struct RemoteCoverView: View {
 
 struct SyncStatusPill: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.lyraPalette) private var palette
 
     private var phase: NativeSyncPhase {
         model.syncCoordinator?.phase ?? .idle
@@ -61,7 +63,9 @@ struct SyncStatusPill: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
-        .background(LyraDesign.raised, in: Capsule())
+        .foregroundStyle(palette.muted)
+        .background(palette.surface, in: Capsule())
+        .overlay { Capsule().stroke(palette.border) }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Synchronisation : \(label)")
     }
@@ -78,11 +82,11 @@ struct SyncStatusPill: View {
 
     private var color: Color {
         switch phase {
-        case .idle: .secondary
-        case .syncing: .orange
-        case .synced: .green
-        case .offline: .secondary
-        case .error: .red
+        case .idle: palette.muted
+        case .syncing: palette.peach
+        case .synced: palette.green
+        case .offline: palette.muted
+        case .error: palette.red
         }
     }
 }
