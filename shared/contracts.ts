@@ -2,7 +2,33 @@ export type SourceID = 'novelFr'
 
 export interface ApiCapabilities {
   apiVersion: 1
-  features: Array<'chapterBlocks' | 'sync'>
+  features: Array<'chapterBlocks' | 'sync' | 'audiobook'>
+}
+
+export type AudiobookStatus = 'queued' | 'generating' | 'ready' | 'failed'
+
+export interface AudiobookSegment {
+  index: number
+  url: string
+  progressStart: number
+  progressEnd: number
+}
+
+export interface AudiobookManifest {
+  id: string
+  chapterKey: string
+  chapterTitle: string
+  contentHash: string
+  status: AudiobookStatus
+  provider: string
+  model: string
+  voice: string
+  format: 'mp3'
+  generatedSegments: number
+  totalSegments: number
+  segments: AudiobookSegment[]
+  disclosure: string
+  error?: string
 }
 
 export interface SourceReference {

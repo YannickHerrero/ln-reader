@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { ApiCapabilities, ApiErrorBody } from '../shared/contracts'
 import { parseSyncRequest } from '../shared/sync'
+import type { AudiobookLibrary } from './audio/audiobook-service'
 import type { SourceService } from './source/types'
 import type { SyncStateStore } from './sync-store'
 
@@ -12,7 +13,11 @@ function queryString(request: Request, name: string): string {
   return value
 }
 
-export function createApp(source: SourceService, syncStore?: SyncStateStore) {
+export function createApp(
+  source: SourceService,
+  syncStore?: SyncStateStore,
+  audiobookLibrary?: AudiobookLibrary,
+) {
   const app = express()
   app.disable('x-powered-by')
   app.use(express.json({ limit: '2mb' }))
@@ -23,7 +28,9 @@ export function createApp(source: SourceService, syncStore?: SyncStateStore) {
 
   app.get('/api/capabilities', (_request, response: Response<ApiCapabilities>) => {
     response.set('Cache-Control', 'private, max-age=300')
-    response.json({ apiVersion: 1, features: ['chapterBlocks', 'sync'] })
+    const features: ApiCapabilities['features'] = ['chapterBlocks', 'sync']
+    if (audiobookLibrary) features.push('audiobook')
+    response.json({ apiVersion: 1, features })
   })
 
   if (syncStore) {
@@ -64,6 +71,49 @@ export function createApp(source: SourceService, syncStore?: SyncStateStore) {
     const asset = await source.asset(queryString(request, 'url'))
     response.set('Cache-Control', 'public, max-age=86400')
     response.type(asset.contentType).send(asset.body)
+  })
+
+  app.post('/api/audio/chapters', async (request, response) => {
+    response.set('Cache-Control', 'no-store')
+    if (!audiobookLibrary) {
+      response.status(503).json({ error: "La narration OpenAI n’est pas configurée sur ce serveur." })
+      return
+    }
+    const key = request.body?.key
+    if (typeof key !== 'string' || key.length === 0 || key.length > 500) {
+      throw new Error('Invalid chapter key.')
+    }
+    const manifest = await audiobookLibrary.request(await source.chapter(key))
+    response.status(manifest.status === 'ready' ? 200 : 202).json(manifest)
+  })
+
+  app.get('/api/audio/chapters/:id', async (request, response) => {
+    response.set('Cache-Control', 'no-store')
+    if (!audiobookLibrary) {
+      response.status(503).json({ error: "La narration OpenAI n’est pas configurée sur ce serveur." })
+      return
+    }
+    const manifest = await audiobookLibrary.manifest(request.params.id)
+    if (!manifest) {
+      response.status(404).json({ error: 'Cette narration est introuvable.' })
+      return
+    }
+    response.json(manifest)
+  })
+
+  app.get('/api/audio/chapters/:id/segments/:index', async (request, response) => {
+    if (!audiobookLibrary) {
+      response.status(503).json({ error: "La narration OpenAI n’est pas configurée sur ce serveur." })
+      return
+    }
+    const index = Number(request.params.index)
+    const path = await audiobookLibrary.segmentPath(request.params.id, index)
+    if (!path) {
+      response.status(404).json({ error: 'Ce segment audio est introuvable.' })
+      return
+    }
+    response.set('Cache-Control', 'private, max-age=31536000, immutable')
+    response.type('audio/mpeg').sendFile(path)
   })
 
   const distPath = resolve(process.cwd(), 'dist')

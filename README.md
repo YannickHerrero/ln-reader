@@ -19,6 +19,7 @@ through the personal server, while downloaded chapters remain on each device.
 - Continuous, page-free reading
 - Per-chapter progress and automatic completion near the end
 - Explicit chapter downloads for offline reading
+- Optional OpenAI audiobook narration in the native iPhone reader
 - Installable PWA with an offline application shell
 - Responsive phone and desktop interface
 
@@ -74,6 +75,27 @@ listener is required. Synchronized state defaults to `.data/lyra.sqlite`; overri
 it with `LYRA_DATA_PATH`. `localhost` is treated as a secure PWA context.
 Installing on another device requires an HTTPS reverse proxy and an always-running
 Node host.
+
+### OpenAI audiobook narration
+
+The native reader advertises audiobook controls only when the server has an OpenAI
+API key. Keep that secret outside the repository in
+`~/.config/ln-reader/server.env`, with owner-only permissions:
+
+```bash
+mkdir -p ~/.config/ln-reader
+chmod 700 ~/.config/ln-reader
+printf 'OPENAI_API_KEY=%s\n' 'replace-me' > ~/.config/ln-reader/server.env
+chmod 600 ~/.config/ln-reader/server.env
+```
+
+The server loads that file automatically. Set `LYRA_ENV_PATH` to use a different
+external credential file. Optional non-secret settings are `OPENAI_TTS_MODEL`
+(default `gpt-4o-mini-tts`), `OPENAI_TTS_VOICE` (default `coral`) and
+`LYRA_AUDIO_PATH` (default `.data/audio` beside the sync database). Generated MP3
+segments are cached by chapter text, model, voice and narration instructions, so
+a cached narration does not incur another synthesis request. Never commit the
+credential file or place the key in the iOS application.
 
 ## Managed service
 
