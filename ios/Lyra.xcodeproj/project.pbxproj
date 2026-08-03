@@ -13,10 +13,7 @@
 		8DD01FF683627B8E347D43D9 /* ServerConfigurationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF20353FB49FB4D595EB1725 /* ServerConfigurationView.swift */; };
 		A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC47E3631299BA40D48DA328 /* AppDelegate.swift */; };
 		BC34CC295F4FC91688CF14BD /* ReaderViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81A78CC19FCAA7EC3F0FC2DD /* ReaderViewController.swift */; };
-		D9A83BB87FEBAB5D214738B2 /* ReaderPageState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EDEC2F0228FD3D31FF0B49D /* ReaderPageState.swift */; };
-		DBB33FD1B54E58EE80E9CA00 /* ReaderPageStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9E116EFEAF4CE7A252D528E /* ReaderPageStateTests.swift */; };
 		DC76BBAC6873C3C5D828704D /* ServerURLStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */; };
-		EC59F192AD3C41797AE8B627 /* ReaderCameraController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCDE38D9A2900F52FCC6B711 /* ReaderCameraController.swift */; };
 		FF657CA70BCE119A83F082C7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -36,14 +33,11 @@
 		575434C38219CC7994D402A7 /* ServerConfigurationViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigurationViewTests.swift; sourceTree = "<group>"; };
 		81A78CC19FCAA7EC3F0FC2DD /* ReaderViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderViewController.swift; sourceTree = "<group>"; };
 		8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStoreTests.swift; sourceTree = "<group>"; };
-		8EDEC2F0228FD3D31FF0B49D /* ReaderPageState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderPageState.swift; sourceTree = "<group>"; };
 		9F083BD95299712C7D005A87 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		A1D34E9FA2157E5A5DDD6933 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		AC47E3631299BA40D48DA328 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B33C899BACCF70F3A6E1AB00 /* ServerURLStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerURLStore.swift; sourceTree = "<group>"; };
-		DCDE38D9A2900F52FCC6B711 /* ReaderCameraController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderCameraController.swift; sourceTree = "<group>"; };
 		E788D0078F570D85A61E0F7B /* Lyra.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Lyra.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F9E116EFEAF4CE7A252D528E /* ReaderPageStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderPageStateTests.swift; sourceTree = "<group>"; };
 		FF20353FB49FB4D595EB1725 /* ServerConfigurationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerConfigurationView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -69,7 +63,6 @@
 		A222AEDBFAEEB3B36D000F72 /* LyraTests */ = {
 			isa = PBXGroup;
 			children = (
-				F9E116EFEAF4CE7A252D528E /* ReaderPageStateTests.swift */,
 				575434C38219CC7994D402A7 /* ServerConfigurationViewTests.swift */,
 				8E5652DB8F99129A282C8A30 /* ServerURLStoreTests.swift */,
 			);
@@ -82,8 +75,6 @@
 				AC47E3631299BA40D48DA328 /* AppDelegate.swift */,
 				54CC2C68C2E3F48ADC423DF0 /* Assets.xcassets */,
 				9F083BD95299712C7D005A87 /* Info.plist */,
-				DCDE38D9A2900F52FCC6B711 /* ReaderCameraController.swift */,
-				8EDEC2F0228FD3D31FF0B49D /* ReaderPageState.swift */,
 				81A78CC19FCAA7EC3F0FC2DD /* ReaderViewController.swift */,
 				A1D34E9FA2157E5A5DDD6933 /* SceneDelegate.swift */,
 				FF20353FB49FB4D595EB1725 /* ServerConfigurationView.swift */,
@@ -186,8 +177,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */,
-				EC59F192AD3C41797AE8B627 /* ReaderCameraController.swift in Sources */,
-				D9A83BB87FEBAB5D214738B2 /* ReaderPageState.swift in Sources */,
 				BC34CC295F4FC91688CF14BD /* ReaderViewController.swift in Sources */,
 				39533125FA3E0937CC438D48 /* SceneDelegate.swift in Sources */,
 				8DD01FF683627B8E347D43D9 /* ServerConfigurationView.swift in Sources */,
@@ -199,7 +188,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DBB33FD1B54E58EE80E9CA00 /* ReaderPageStateTests.swift in Sources */,
 				323770B66D93FB443F178F7D /* ServerConfigurationViewTests.swift in Sources */,
 				10E0543EF552EAB9CF684959 /* ServerURLStoreTests.swift in Sources */,
 			);
