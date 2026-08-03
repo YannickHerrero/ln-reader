@@ -1,6 +1,6 @@
 import Foundation
 
-final class ServerURLStore {
+final class ServerURLStore: @unchecked Sendable {
     static let shared = ServerURLStore()
 
     private let defaults: UserDefaults
@@ -18,6 +18,10 @@ final class ServerURLStore {
 
     func save(_ url: URL) {
         defaults.set(url.absoluteString, forKey: key)
+    }
+
+    func clear() {
+        defaults.removeObject(forKey: key)
     }
 
     static func normalizedURL(from input: String) -> URL? {
