@@ -41,8 +41,43 @@ final class LyraUITests: XCTestCase {
         XCTAssertTrue(element("series-detail-screen", app: app).waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Volume 1"].exists)
         XCTAssertTrue(app.staticTexts["Volume 2"].exists)
-        XCTAssertTrue(app.staticTexts["Chapitre 2 · Le réveil"].exists)
+        let volumeOne = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Volume 1'")).firstMatch
+        XCTAssertTrue(volumeOne.exists)
+        volumeOne.tap()
+        XCTAssertTrue(app.staticTexts["Chapitre 2 · Le réveil"].waitForExistence(timeout: 3))
         capture("05-series-detail", app: app)
+    }
+
+    @MainActor
+    func testCatppuccinAppearanceAcrossNativeSurfaces() throws {
+        let app = launchApp(theme: "latte")
+        defer { app.terminate() }
+
+        let activateMocha = app.buttons["Activer Catppuccin Mocha"]
+        XCTAssertTrue(activateMocha.waitForExistence(timeout: 3))
+        capture("07-latte-library", app: app)
+        activateMocha.tap()
+        XCTAssertTrue(app.buttons["Activer Catppuccin Latte"].waitForExistence(timeout: 3))
+        capture("08-mocha-library", app: app)
+
+        element("continue-reading-primary", app: app).tap()
+        XCTAssertTrue(app.buttons["Réglages de lecture"].waitForExistence(timeout: 5))
+        capture("09-mocha-reader", app: app)
+        app.buttons["Réglages de lecture"].tap()
+        XCTAssertTrue(app.navigationBars["Réglages de lecture"].waitForExistence(timeout: 3))
+        capture("10-mocha-reader-settings", app: app)
+        app.buttons["Annuler"].tap()
+        app.buttons["Retour à la série"].tap()
+        XCTAssertTrue(element("library-screen", app: app).waitForExistence(timeout: 3))
+
+        app.tabBars.buttons["Découvrir"].tap()
+        XCTAssertTrue(element("discover-screen", app: app).waitForExistence(timeout: 5))
+        capture("11-mocha-discovery", app: app)
+
+        app.tabBars.buttons["Bibliothèque"].tap()
+        element("library-series-card", app: app).tap()
+        XCTAssertTrue(element("series-detail-screen", app: app).waitForExistence(timeout: 5))
+        capture("12-mocha-series-detail", app: app)
     }
 
     @MainActor
@@ -71,10 +106,13 @@ final class LyraUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchApp() -> XCUIApplication {
+    private func launchApp(theme: String = "latte") -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--ui-testing", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments = [
+            "--ui-testing", "--lyra-theme", theme,
+            "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR",
+        ]
         app.launch()
         XCTAssertTrue(element("library-screen", app: app).waitForExistence(timeout: 8))
         return app

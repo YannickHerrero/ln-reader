@@ -16,10 +16,14 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let rootView: AnyView
 #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--ui-testing") {
+            let arguments = ProcessInfo.processInfo.arguments
             let suite = "LyraUITestFixture.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suite) ?? .standard
+            let requestedTheme = arguments.firstIndex(of: "--lyra-theme")
+                .flatMap { index in arguments.indices.contains(index + 1) ? LyraAppearance(persistedValue: arguments[index + 1]) : nil }
+                ?? .latte
             defaults.set("https://fixture.test", forKey: "lyra.serverURL")
-            defaults.set(LyraAppearance.latte.rawValue, forKey: "lyra.native.appearance")
+            defaults.set(requestedTheme.rawValue, forKey: "lyra.native.appearance")
             ReaderPreferenceStore().save(.defaults)
             let serverStore = ServerURLStore(defaults: defaults)
             let database = try! AppDatabase.temporary()
