@@ -13,7 +13,7 @@ through the personal server, while downloaded chapters remain on each device.
 - Volume cards with progress, including a `Prologue / Extras` group
 - Persistent show/hide control for read chapters and fully completed volumes
 - Series details and sticky `1→N` / `N→1` volume and chapter sorting
-- Cinematic, responsive interface with a persistent light/dark appearance toggle
+- Cinematic, responsive interface with persistent Catppuccin Latte and Mocha appearances
 - Reader-only typography, line spacing, font family and paper appearance controls
 - Focused paragraph and sentence modes with centered text, tap zones and unit-by-unit navigation
 - Continuous, page-free reading
@@ -131,7 +131,7 @@ open Lyra.xcodeproj
 
 Select a personal development team in Xcode, connect the iPhone, and run the
 `Lyra` scheme. Pointing the PWA and native app at the same server synchronizes
-library membership and reading progress. Downloads, cached covers, appearance,
+library membership and reading progress. Downloads, cached covers, Catppuccin Latte/Mocha appearance,
 and reader preferences remain local to each client. Use the gear button to change
 the configured server.
 
