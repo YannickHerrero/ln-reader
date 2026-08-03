@@ -16,6 +16,14 @@ final class LyraUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Supprimer le téléchargement"].exists)
         capture("02-continuous-reader", app: app)
 
+        let narration = app.buttons["Démarrer la narration"]
+        XCTAssertTrue(narration.waitForExistence(timeout: 3))
+        narration.tap()
+        XCTAssertTrue(element("audiobook-controls", app: app).waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Voix IA OpenAI'")).firstMatch.waitForExistence(timeout: 5))
+        capture("02b-audiobook-controls", app: app)
+        app.buttons["Arrêter la narration"].tap()
+
         app.buttons["Réglages de lecture"].tap()
         XCTAssertTrue(app.navigationBars["Réglages de lecture"].waitForExistence(timeout: 3))
         app.buttons["Paragraphe"].tap()

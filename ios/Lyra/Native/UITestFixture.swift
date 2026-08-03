@@ -31,7 +31,7 @@ struct UITestBootstrapView: View {
 
 actor UITestFixtureAPI: LyraAPI {
     func capabilities() async throws -> APICapabilities {
-        APICapabilities(apiVersion: 1, features: ["sync", "chapterBlocks"])
+        APICapabilities(apiVersion: 1, features: ["sync", "chapterBlocks", "audiobook"])
     }
 
     func discover() async throws -> SourceDiscovery {
@@ -61,15 +61,15 @@ actor UITestFixtureAPI: LyraAPI {
     }
 
     func requestAudiobook(chapterKey: String) async throws -> AudiobookManifest {
-        throw APIClientError.server(status: 503, message: "Narration indisponible dans cette fixture.")
+        UITestFixture.audiobookManifest(chapterKey: chapterKey)
     }
 
     func audiobook(id: String) async throws -> AudiobookManifest {
-        throw APIClientError.server(status: 503, message: "Narration indisponible dans cette fixture.")
+        UITestFixture.audiobookManifest(chapterKey: UITestFixture.librarySeries.chapters[1].key)
     }
 
     func audiobookSegmentURL(path: String) async throws -> URL {
-        throw APIClientError.invalidServerURL
+        try UITestFixture.audiobookURL()
     }
 
     func asset(url: String) async throws -> Data { Data() }
@@ -118,6 +118,64 @@ enum UITestFixture {
         coverImage: nil,
         sources: catalogSeries.sources
     )
+
+    static func audiobookManifest(chapterKey: String) -> AudiobookManifest {
+        AudiobookManifest(
+            id: "fixture-audiobook",
+            chapterKey: chapterKey,
+            chapterTitle: "Chapitre audio de démonstration",
+            contentHash: "fixture",
+            status: .ready,
+            provider: "openai",
+            model: "fixture",
+            voice: "coral",
+            format: "wav",
+            generatedSegments: 1,
+            totalSegments: 1,
+            segments: [AudiobookSegment(
+                index: 0,
+                url: "/api/audio/chapters/fixture/segments/0",
+                progressStart: 0,
+                progressEnd: 1
+            )],
+            disclosure: "Narration générée par une voix artificielle OpenAI.",
+            error: nil
+        )
+    }
+
+    static func audiobookURL() throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("lyra-ui-audiobook-v2.wav")
+        if FileManager.default.fileExists(atPath: url.path) { return url }
+
+        let sampleRate: UInt32 = 8_000
+        let duration: UInt32 = 60
+        let channels: UInt16 = 1
+        let bitsPerSample: UInt16 = 16
+        let dataSize = sampleRate * duration * UInt32(channels) * UInt32(bitsPerSample / 8)
+        var data = Data()
+        data.append(contentsOf: Data("RIFF".utf8))
+        appendLittleEndian(36 + dataSize, to: &data)
+        data.append(contentsOf: Data("WAVEfmt ".utf8))
+        appendLittleEndian(UInt32(16), to: &data)
+        appendLittleEndian(UInt16(1), to: &data)
+        appendLittleEndian(channels, to: &data)
+        appendLittleEndian(sampleRate, to: &data)
+        appendLittleEndian(sampleRate * UInt32(channels) * UInt32(bitsPerSample / 8), to: &data)
+        appendLittleEndian(UInt16(channels * bitsPerSample / 8), to: &data)
+        appendLittleEndian(bitsPerSample, to: &data)
+        data.append(contentsOf: Data("data".utf8))
+        appendLittleEndian(dataSize, to: &data)
+        data.append(Data(repeating: 0, count: Int(dataSize)))
+        try data.write(to: url, options: .atomic)
+        return url
+    }
+
+    private static func appendLittleEndian<Value: FixedWidthInteger>(_ value: Value, to data: inout Data) {
+        var littleEndian = value.littleEndian
+        Swift.withUnsafeBytes(of: &littleEndian) { bytes in
+            data.append(contentsOf: bytes)
+        }
+    }
 
     static func seed(_ store: LibraryStore) async throws {
         try await store.addOrUpdateSeries(librarySeries)

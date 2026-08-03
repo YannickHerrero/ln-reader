@@ -44,6 +44,19 @@ struct NativeReaderView: View {
         return index > 0 ? volumeChapters[index - 1] : nil
     }
 
+    private var audiobookAccessibilityLabel: String {
+        let player = model.audiobookPlayer
+        guard player.isCurrent(chapterKey: chapterKey) else { return "Démarrer la narration" }
+        switch player.state {
+        case .preparing: return "Annuler la préparation de la narration"
+        case .playing: return "Mettre la narration en pause"
+        case .paused: return "Reprendre la narration"
+        case .finished: return "Relancer la narration"
+        case .failed: return "Réessayer la narration"
+        case .idle: return "Démarrer la narration"
+        }
+    }
+
     var body: some View {
         ZStack {
             palette.background.ignoresSafeArea()
@@ -98,6 +111,18 @@ struct NativeReaderView: View {
                 .presentationDetents([.medium, .large])
         }
         .task(id: chapterKey) { await load() }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if model.audiobookPlayer.isCurrent(chapterKey: chapterKey) {
+                AudiobookControlsView(player: model.audiobookPlayer, palette: palette)
+            }
+        }
+        .onChange(of: model.audiobookPlayer.chapterProgress) { _, nextProgress in
+            guard model.audiobookPlayer.chapterKey == chapterKey else { return }
+            ratio = nextProgress
+            if preferences.mode != .continuous {
+                focusedIndex = unitIndex(for: nextProgress, count: focusedUnits.count)
+            }
+        }
         .onDisappear {
             saveTask?.cancel()
             Task {
@@ -127,6 +152,27 @@ struct NativeReaderView: View {
                         .lineLimit(1)
                 }
                 Spacer(minLength: 4)
+                if model.supportsAudiobooks {
+                    Button(action: toggleAudiobook) {
+                        Group {
+                            let player = model.audiobookPlayer
+                            if player.isCurrent(chapterKey: chapterKey), player.state == .preparing {
+                                ProgressView()
+                            } else if player.isCurrent(chapterKey: chapterKey), player.state == .playing {
+                                Image(systemName: "pause.fill")
+                            } else if player.isCurrent(chapterKey: chapterKey), player.state == .failed {
+                                Image(systemName: "exclamationmark.waveform")
+                            } else {
+                                Image(systemName: "waveform")
+                            }
+                        }
+                        .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                        .background(palette.surface, in: Circle())
+                        .overlay { Circle().stroke(palette.border) }
+                    }
+                    .disabled(content == nil || model.api == nil)
+                    .accessibilityLabel(audiobookAccessibilityLabel)
+                }
                 Button { showsSettings = true } label: {
                     Image(systemName: "textformat.size")
                         .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
@@ -288,6 +334,44 @@ struct NativeReaderView: View {
             ratio: nextRatio,
             completed: nextRatio >= 0.98
         )
+    }
+
+    private func toggleAudiobook() {
+        let player = model.audiobookPlayer
+        if player.isCurrent(chapterKey: chapterKey) {
+            switch player.state {
+            case .preparing:
+                player.stop()
+            case .failed, .idle:
+                startAudiobook()
+            case .playing, .paused, .finished:
+                player.togglePlayback()
+            }
+        } else {
+            startAudiobook()
+        }
+    }
+
+    private func startAudiobook() {
+        guard let api = model.api else {
+            errorMessage = "Le serveur audio est indisponible."
+            return
+        }
+        let title = chapter?.chapter.title ?? content?.title ?? "Chapitre"
+        model.audiobookPlayer.prepareAndPlay(
+            chapterKey: chapterKey,
+            chapterTitle: title,
+            startProgress: ratio,
+            api: api
+        ) { [weak model] nextProgress, completed in
+            guard let model else { return }
+            await model.saveProgress(
+                seriesKey: seriesKey,
+                chapterKey: chapterKey,
+                ratio: nextProgress,
+                completed: completed || nextProgress >= 0.98
+            )
+        }
     }
 
     private func toggleDownload() {

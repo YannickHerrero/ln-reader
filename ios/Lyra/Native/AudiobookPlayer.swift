@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import MediaPlayer
 import Observation
 
 nonisolated enum AudiobookPlayerState: Equatable, Sendable {
@@ -57,9 +58,13 @@ final class AudiobookPlayer {
     @ObservationIgnored private var preparationTask: Task<Void, Never>?
     @ObservationIgnored nonisolated(unsafe) private var timeObserver: Any?
     @ObservationIgnored nonisolated(unsafe) private var endObserver: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var interruptionObserver: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var routeObserver: NSObjectProtocol?
+    @ObservationIgnored nonisolated(unsafe) private var remoteCommandTargets: [(MPRemoteCommand, Any)] = []
     @ObservationIgnored private var progressHandler: ProgressHandler?
     @ObservationIgnored private var lastReportedProgress = -1.0
     @ObservationIgnored private var lastReportedAt = Date.distantPast
+    @ObservationIgnored private var wasPlayingBeforeInterruption = false
 
     init() {
         timeObserver = player.addPeriodicTimeObserver(
@@ -68,18 +73,32 @@ final class AudiobookPlayer {
         ) { [weak self] time in
             Task { @MainActor [weak self] in self?.updateProgress(time) }
         }
-        endObserver = NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: nil,
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
             queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in self?.itemDidFinish() }
+        ) { [weak self] notification in
+            let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            let options = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt
+            Task { @MainActor [weak self] in self?.handleInterruption(type: type, options: options) }
         }
+        routeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { [weak self] notification in
+            let reason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
+            Task { @MainActor [weak self] in self?.handleRouteChange(reason: reason) }
+        }
+        configureRemoteCommands()
     }
 
     deinit {
         if let timeObserver { player.removeTimeObserver(timeObserver) }
         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
+        if let interruptionObserver { NotificationCenter.default.removeObserver(interruptionObserver) }
+        if let routeObserver { NotificationCenter.default.removeObserver(routeObserver) }
+        for (command, target) in remoteCommandTargets { command.removeTarget(target) }
     }
 
     var isActive: Bool {
@@ -147,13 +166,10 @@ final class AudiobookPlayer {
     func togglePlayback() {
         switch state {
         case .playing:
-            player.pause()
-            state = .paused
+            pause()
             reportProgress(force: true, completed: false)
         case .paused:
-            player.play()
-            player.rate = Float(playbackRate)
-            state = .playing
+            play()
         case .finished:
             preparationTask = Task { [weak self] in
                 guard let self else { return }
@@ -172,6 +188,44 @@ final class AudiobookPlayer {
     func setPlaybackRate(_ rate: Double) {
         playbackRate = min(2, max(0.75, rate))
         if state == .playing { player.rate = Float(playbackRate) }
+        updateNowPlaying()
+    }
+
+    func skip(by seconds: Double) {
+        guard state == .playing || state == .paused else { return }
+        let autoplay = state == .playing
+        let target = elapsed + seconds
+        if target < 0, currentSegmentIndex > 0 {
+            preparationTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await beginSegment(
+                        index: currentSegmentIndex - 1,
+                        localProgress: 1,
+                        autoplay: autoplay
+                    )
+                } catch {
+                    fail(error)
+                }
+            }
+            return
+        }
+        if duration > 0, target > duration, currentSegmentIndex + 1 < segmentURLs.count {
+            preparationTask = Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await beginSegment(
+                        index: currentSegmentIndex + 1,
+                        localProgress: 0,
+                        autoplay: autoplay
+                    )
+                } catch {
+                    fail(error)
+                }
+            }
+            return
+        }
+        seekCurrentSegment(to: target)
     }
 
     func stop() {
@@ -193,6 +247,13 @@ final class AudiobookPlayer {
         progressHandler = nil
         lastReportedProgress = -1
         lastReportedAt = .distantPast
+        if let endObserver {
+            NotificationCenter.default.removeObserver(endObserver)
+            self.endObserver = nil
+        }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        MPNowPlayingInfoCenter.default().playbackState = .stopped
+        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     private func updateGenerationProgress(_ manifest: AudiobookManifest) {
@@ -208,9 +269,18 @@ final class AudiobookPlayer {
         let loadedDuration = try await asset.load(.duration)
         try Task.checkCancellation()
         let item = AVPlayerItem(asset: asset)
+        try configureAudioSession()
         currentSegmentIndex = index
         duration = loadedDuration.seconds.isFinite ? max(0, loadedDuration.seconds) : 0
         elapsed = duration * min(1, max(0, localProgress))
+        if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
+        endObserver = NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in self?.itemDidFinish() }
+        }
         player.replaceCurrentItem(with: item)
         if elapsed > 0 {
             await player.seek(
@@ -220,11 +290,9 @@ final class AudiobookPlayer {
             )
         }
         if autoplay {
-            player.play()
-            player.rate = Float(playbackRate)
-            state = .playing
+            play()
         } else {
-            state = .paused
+            pause()
         }
     }
 
@@ -233,6 +301,7 @@ final class AudiobookPlayer {
             chapterProgress = 1
             elapsed = duration
             state = .finished
+            updateNowPlaying()
             reportProgress(force: true, completed: true)
             return
         }
@@ -259,6 +328,7 @@ final class AudiobookPlayer {
         let segment = manifest.segments[currentSegmentIndex]
         chapterProgress = segment.progressStart
             + (segment.progressEnd - segment.progressStart) * localProgress
+        updateNowPlaying()
         if state == .playing { reportProgress(force: false, completed: false) }
     }
 
@@ -274,9 +344,141 @@ final class AudiobookPlayer {
         Task { await progressHandler(progress, completed) }
     }
 
+    private func configureAudioSession() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(
+            .playback,
+            mode: .spokenAudio,
+            options: [.allowAirPlay, .allowBluetoothA2DP]
+        )
+        try session.setActive(true)
+    }
+
+    private func play() {
+        try? AVAudioSession.sharedInstance().setActive(true)
+        player.play()
+        player.rate = Float(playbackRate)
+        state = .playing
+        updateNowPlaying()
+    }
+
+    private func pause() {
+        player.pause()
+        if state != .finished { state = .paused }
+        updateNowPlaying()
+    }
+
+    private func seekCurrentSegment(to seconds: Double) {
+        guard duration > 0 else { return }
+        elapsed = min(duration, max(0, seconds))
+        player.seek(
+            to: CMTime(seconds: elapsed, preferredTimescale: 600),
+            toleranceBefore: .zero,
+            toleranceAfter: .zero
+        )
+        updateProgress(CMTime(seconds: elapsed, preferredTimescale: 600))
+    }
+
+    private func configureRemoteCommands() {
+        let center = MPRemoteCommandCenter.shared()
+        center.playCommand.isEnabled = true
+        center.pauseCommand.isEnabled = true
+        center.togglePlayPauseCommand.isEnabled = true
+        center.stopCommand.isEnabled = true
+        center.skipBackwardCommand.isEnabled = true
+        center.skipForwardCommand.isEnabled = true
+        center.changePlaybackPositionCommand.isEnabled = true
+        center.skipBackwardCommand.preferredIntervals = [15]
+        center.skipForwardCommand.preferredIntervals = [15]
+
+        remoteCommandTargets.append((center.playCommand, center.playCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if state == .paused || state == .finished { togglePlayback() }
+            }
+            return .success
+        }))
+        remoteCommandTargets.append((center.pauseCommand, center.pauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, state == .playing else { return }
+                togglePlayback()
+            }
+            return .success
+        }))
+        remoteCommandTargets.append((center.togglePlayPauseCommand, center.togglePlayPauseCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.togglePlayback() }
+            return .success
+        }))
+        remoteCommandTargets.append((center.stopCommand, center.stopCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.stop() }
+            return .success
+        }))
+        remoteCommandTargets.append((center.skipBackwardCommand, center.skipBackwardCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.skip(by: -15) }
+            return .success
+        }))
+        remoteCommandTargets.append((center.skipForwardCommand, center.skipForwardCommand.addTarget { [weak self] _ in
+            Task { @MainActor [weak self] in self?.skip(by: 15) }
+            return .success
+        }))
+        remoteCommandTargets.append((center.changePlaybackPositionCommand, center.changePlaybackPositionCommand.addTarget { [weak self] event in
+            let position = (event as? MPChangePlaybackPositionCommandEvent)?.positionTime
+            Task { @MainActor [weak self] in
+                guard let position else { return }
+                self?.seekCurrentSegment(to: position)
+            }
+            return .success
+        }))
+    }
+
+    private func handleInterruption(type: UInt?, options: UInt?) {
+        guard let type, let interruption = AVAudioSession.InterruptionType(rawValue: type) else { return }
+        switch interruption {
+        case .began:
+            wasPlayingBeforeInterruption = state == .playing
+            if state == .playing { pause() }
+        case .ended:
+            let shouldResume = options.map(AVAudioSession.InterruptionOptions.init(rawValue:))?.contains(.shouldResume) == true
+            if wasPlayingBeforeInterruption && shouldResume { play() }
+            wasPlayingBeforeInterruption = false
+        @unknown default:
+            break
+        }
+    }
+
+    private func handleRouteChange(reason: UInt?) {
+        guard let reason,
+              AVAudioSession.RouteChangeReason(rawValue: reason) == .oldDeviceUnavailable,
+              state == .playing else { return }
+        pause()
+        reportProgress(force: true, completed: false)
+    }
+
+    private func updateNowPlaying() {
+        guard let chapterTitle else { return }
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: chapterTitle,
+            MPMediaItemPropertyAlbumTitle: "Lyra · Livre audio",
+            MPMediaItemPropertyArtist: "Voix IA OpenAI",
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
+            MPNowPlayingInfoPropertyElapsedPlaybackTime: elapsed,
+            MPNowPlayingInfoPropertyPlaybackRate: state == .playing ? playbackRate : 0,
+            MPNowPlayingInfoPropertyDefaultPlaybackRate: playbackRate,
+        ]
+        if duration > 0 { info[MPMediaItemPropertyPlaybackDuration] = duration }
+        if let manifest {
+            info[MPNowPlayingInfoPropertyExternalContentIdentifier] = manifest.id
+            info[MPMediaItemPropertyAlbumTrackNumber] = currentSegmentIndex + 1
+            info[MPMediaItemPropertyAlbumTrackCount] = manifest.totalSegments
+        }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        MPNowPlayingInfoCenter.default().playbackState = state == .playing ? .playing : .paused
+    }
+
     private func fail(_ error: Error) {
         player.pause()
         state = .failed
         errorMessage = error.localizedDescription
+        updateNowPlaying()
     }
 }

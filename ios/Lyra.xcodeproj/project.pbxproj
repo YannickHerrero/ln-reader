@@ -32,6 +32,7 @@
 		850B7517FDD56EF90387D2FD /* LyraRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */; };
 		8960097F5FE97C43B3C737BF /* LibraryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F59384E0E9D1113F4ABF6E8A /* LibraryStore.swift */; };
 		8D5C1714109C836FAA775780 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B71688019E5531D5715BB57C /* DesignSystem.swift */; };
+		8F532F15F1560D94AB378159 /* AudiobookControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 741857F6C6200F21A9BB74FD /* AudiobookControlsView.swift */; };
 		9102965BF679867A56F1D20D /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2D829414659EB8D8E5E89B0 /* Models.swift */; };
 		A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC47E3631299BA40D48DA328 /* AppDelegate.swift */; };
 		C19494E789EDE6B494544748 /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = 90B76D3AAFB8FF223C5A2B53 /* GRDB */; };
@@ -76,6 +77,7 @@
 		693D009D2DEBEEB11B5BF248 /* NativeReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeReaderView.swift; sourceTree = "<group>"; };
 		71B059A12A9B16EC73F7B04A /* DatabaseRecords.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRecords.swift; sourceTree = "<group>"; };
 		720BCF1F484AA7469E875EF8 /* NativeReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeReaderTests.swift; sourceTree = "<group>"; };
+		741857F6C6200F21A9BB74FD /* AudiobookControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudiobookControlsView.swift; sourceTree = "<group>"; };
 		780DA3BEAEF8595072E9939B /* SyncCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncCoordinator.swift; sourceTree = "<group>"; };
 		7E2D820FB8DED5B26E4601CB /* LyraRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyraRootView.swift; sourceTree = "<group>"; };
 		8B730F194E5836A3A781B409 /* ReaderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderSettingsView.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 			children = (
 				994321D9D42044F1684487F8 /* APIClient.swift */,
 				071280987EF29C8C4CDFA86A /* AppModel.swift */,
+				741857F6C6200F21A9BB74FD /* AudiobookControlsView.swift */,
 				FAFDF09CE5C510E1DDC646B2 /* AudiobookPlayer.swift */,
 				641560FE9E808AA40D02080E /* CoverViews.swift */,
 				C518815C1CA774831A29795F /* Database.swift */,
@@ -327,6 +330,7 @@
 				1B479C1A019FB73F98932B3C /* APIClient.swift in Sources */,
 				A4749F0B5EFF9DAD1D292B38 /* AppDelegate.swift in Sources */,
 				84C94B41B4FA7CD830E60E80 /* AppModel.swift in Sources */,
+				8F532F15F1560D94AB378159 /* AudiobookControlsView.swift in Sources */,
 				7D75E877ADA0B8812491765A /* AudiobookPlayer.swift in Sources */,
 				7F40316C17BA65F846A377CC /* CoverViews.swift in Sources */,
 				E86F29356AFD8BE0BAB19775 /* Database.swift in Sources */,
