@@ -45,6 +45,75 @@ final class NativeReaderTests: XCTestCase {
         XCTAssertEqual(sentences.map(\.index), Array(0..<4))
     }
 
+    func testReaderTextNormalizationMatchesPWA() {
+        XCTAssertEqual(normalizedReaderText("  Une\u{00A0}première\nligne\t réunie.  "), "Une première ligne réunie.")
+    }
+
+    func testSentenceSegmentationKeepsAbbreviationsDecimalsAndFrenchDialogueContinuations() {
+        XCTAssertEqual(
+            splitReaderSentences([
+                "Mme. Layvin nota 3.14 points. Elle dit : « Parfait ! » Puis Dr. Kane sourit.",
+            ]),
+            [
+                "Mme. Layvin nota 3.14 points.",
+                "Elle dit : « Parfait ! » Puis Dr. Kane sourit.",
+            ]
+        )
+    }
+
+    func testSentenceSegmentationKeepsClosingQuotesWithTheirSentences() {
+        XCTAssertEqual(
+            splitReaderSentences(["Il dit: \"Bonjour.\" Elle hocha la tête."]),
+            ["Il dit: \"Bonjour.\"", "Elle hocha la tête."]
+        )
+    }
+
+    func testSentenceSegmentationKeepsQuotedDialogueTagsInsideSentences() {
+        XCTAssertEqual(
+            splitReaderSentences(["« Je vois... » dit-il. Elle partit."]),
+            ["« Je vois... » dit-il.", "Elle partit."]
+        )
+    }
+
+    func testSentenceSegmentationKeepsLowercaseEllipsisContinuations() {
+        XCTAssertEqual(
+            splitReaderSentences(["Je pensais... peut-être trop. Puis il bougea."]),
+            ["Je pensais... peut-être trop.", "Puis il bougea."]
+        )
+    }
+
+    func testSentenceSegmentationKeepsNarrativeContinuationsAfterFrenchDialogue() {
+        XCTAssertEqual(
+            splitReaderSentences(["« Haha… Surprise ! » J’ai levé les bras, en riant faiblement."]),
+            ["« Haha… Surprise ! » J’ai levé les bras, en riant faiblement."]
+        )
+        XCTAssertEqual(
+            splitReaderSentences(["« Kuu~ ! » Sylvie s’est précipitée vers moi."]),
+            ["« Kuu~ ! » Sylvie s’est précipitée vers moi."]
+        )
+    }
+
+    func testSentenceSegmentationKeepsTrailingPeriodAfterFrenchQuote() {
+        XCTAssertEqual(
+            splitReaderSentences(["Elle demanda : « Ça va papa ? ». Vincent répondit."]),
+            ["Elle demanda : « Ça va papa ? ».", "Vincent répondit."]
+        )
+    }
+
+    func testSentenceSegmentationKeepsFrenchQuoteCloserAfterLineBreak() {
+        XCTAssertEqual(
+            splitReaderSentences(["« C’est fou.\n» « Quoi ?! » s’écria Tabitha."]),
+            ["« C’est fou. »", "« Quoi ?! » s’écria Tabitha."]
+        )
+    }
+
+    func testSentenceSegmentationKeepsPunctuationClustersAndParagraphBoundaries() {
+        XCTAssertEqual(
+            splitReaderSentences(["Vraiment ?! Oui…", "Nouveau paragraphe."]),
+            ["Vraiment ?!", "Oui…", "Nouveau paragraphe."]
+        )
+    }
+
     func testFocusedProgressConversionsAreStable() {
         XCTAssertEqual(ratioForUnit(index: 2, count: 5), 0.5)
         XCTAssertEqual(unitIndex(for: 0.5, count: 5), 2)
