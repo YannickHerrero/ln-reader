@@ -2,6 +2,17 @@ import XCTest
 @testable import Lyra
 
 final class NativeReaderTests: XCTestCase {
+    func testCatppuccinAppearancesIncludeLegacyPersistenceValues() {
+        XCTAssertEqual(LyraAppearance.allCases, [.latte, .mocha])
+        XCTAssertEqual(LyraAppearance.latte.displayName, "Catppuccin Latte")
+        XCTAssertEqual(LyraAppearance.mocha.displayName, "Catppuccin Mocha")
+        XCTAssertEqual(LyraAppearance(persistedValue: "light"), .latte)
+        XCTAssertEqual(LyraAppearance(persistedValue: "dark"), .mocha)
+        XCTAssertEqual(LyraAppearance.latte.toggled, .mocha)
+        XCTAssertEqual(LyraAppearance.mocha.toggled, .latte)
+        XCTAssertNil(LyraAppearance(persistedValue: "unknown"))
+    }
+
     func testReaderPreferencesNormalizeSupportedBounds() {
         let value = ReaderPreferences(
             fontSize: 60,
@@ -80,7 +91,7 @@ final class NativeReaderTests: XCTestCase {
         let cover = try await store.cover(seriesKey: series.key)
         XCTAssertEqual(result?.downloadCount, 1)
         XCTAssertEqual(result?.coverCount, 1)
-        XCTAssertEqual(result?.appearance, .light)
+        XCTAssertEqual(result?.appearance, .latte)
         XCTAssertEqual(downloaded?.readableBlocks, content.blocks)
         XCTAssertEqual(cover, Data("cover".utf8))
         XCTAssertEqual(ReaderPreferenceStore(defaults: defaults).load().mode, .paragraph)

@@ -19,7 +19,7 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let suite = "LyraUITestFixture.\(UUID().uuidString)"
             let defaults = UserDefaults(suiteName: suite) ?? .standard
             defaults.set("https://fixture.test", forKey: "lyra.serverURL")
-            defaults.set(LyraAppearance.light.rawValue, forKey: "lyra.native.appearance")
+            defaults.set(LyraAppearance.latte.rawValue, forKey: "lyra.native.appearance")
             ReaderPreferenceStore().save(.defaults)
             let serverStore = ServerURLStore(defaults: defaults)
             let database = try! AppDatabase.temporary()

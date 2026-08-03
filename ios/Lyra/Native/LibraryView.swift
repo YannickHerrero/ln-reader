@@ -73,7 +73,7 @@ struct LibraryView: View {
             Button {
                 model.toggleAppearance()
             } label: {
-                Image(systemName: model.appearance == .dark ? "sun.max.fill" : "moon.fill")
+                Image(systemName: model.appearance == .mocha ? "sun.max.fill" : "moon.fill")
                     .font(.system(size: 18, weight: .semibold))
                     .frame(width: 40, height: 40)
                     .background(LyraDesign.raised, in: Circle())

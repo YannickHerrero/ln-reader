@@ -99,7 +99,7 @@ struct WebMigrationImporter {
             defaults.set(archive.preferences.chapterOrder, forKey: "lyra.native.chapter-order")
         }
         defaults.set(archive.preferences.hideReadChapters, forKey: "lyra.native.hide-read")
-        let appearance = archive.preferences.theme.flatMap(LyraAppearance.init(rawValue:))
+        let appearance = archive.preferences.theme.flatMap(LyraAppearance.init(persistedValue:))
         defaults.set(true, forKey: Self.completedKey)
         return WebMigrationResult(
             downloadCount: importedDownloads,

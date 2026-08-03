@@ -3,19 +3,6 @@ import Observation
 import SwiftUI
 import UIKit
 
-enum LyraAppearance: String, CaseIterable, Codable, Sendable {
-    case light
-    case dark
-
-    var colorScheme: ColorScheme {
-        self == .dark ? .dark : .light
-    }
-
-    var toggled: LyraAppearance {
-        self == .dark ? .light : .dark
-    }
-}
-
 @MainActor
 @Observable
 final class AppModel {
@@ -55,10 +42,10 @@ final class AppModel {
         self.database = resolvedDatabase
         self.store = LibraryStore(database: resolvedDatabase)
         self.serverURL = serverStore.serverURL
-        if let raw = defaults.string(forKey: Self.appearanceKey), let stored = LyraAppearance(rawValue: raw) {
+        if let raw = defaults.string(forKey: Self.appearanceKey), let stored = LyraAppearance(persistedValue: raw) {
             self.appearance = stored
         } else {
-            self.appearance = UITraitCollection.current.userInterfaceStyle == .dark ? .dark : .light
+            self.appearance = UITraitCollection.current.userInterfaceStyle == .dark ? .mocha : .latte
         }
         if let serverURL {
             if let client, !synchronizationEnabled {

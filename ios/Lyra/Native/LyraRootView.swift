@@ -16,8 +16,7 @@ struct LyraRootView: View {
                     }
             }
         }
-        .preferredColorScheme(model.appearance.colorScheme)
-        .tint(LyraDesign.accent)
+        .lyraTheme(model.appearance)
         .task { model.start() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { model.applicationBecameActive() }
