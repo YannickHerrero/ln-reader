@@ -25,6 +25,13 @@ afterEach(() => {
 })
 
 describe('sync API', () => {
+  it('advertises the native client contract', async () => {
+    const response = await request(createApp(sourceMock(), store)).get('/api/capabilities')
+
+    expect(response.status).toBe(200)
+    expect(response.body).toEqual({ apiVersion: 1, features: ['chapterBlocks', 'sync'] })
+  })
+
   it('returns an empty no-store state before the first device syncs', async () => {
     const response = await request(createApp(sourceMock(), store)).get('/api/sync')
 

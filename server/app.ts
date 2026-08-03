@@ -1,7 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import type { ApiErrorBody } from '../shared/contracts'
+import type { ApiCapabilities, ApiErrorBody } from '../shared/contracts'
 import { parseSyncRequest } from '../shared/sync'
 import type { SourceService } from './source/types'
 import type { SyncStateStore } from './sync-store'
@@ -19,6 +19,11 @@ export function createApp(source: SourceService, syncStore?: SyncStateStore) {
 
   app.get('/api/health', (_request, response) => {
     response.json({ ok: true })
+  })
+
+  app.get('/api/capabilities', (_request, response: Response<ApiCapabilities>) => {
+    response.set('Cache-Control', 'private, max-age=300')
+    response.json({ apiVersion: 1, features: ['chapterBlocks', 'sync'] })
   })
 
   if (syncStore) {

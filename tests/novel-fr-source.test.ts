@@ -57,6 +57,7 @@ describe('Novel-FR source', () => {
       key: 'novelFr:/the-beginning-after-the-end-chapitre-32/',
       title: 'Chapitre 32',
       html: '<p>Texte</p>',
+      blocks: [{ kind: 'paragraph', text: 'Texte' }],
       source: 'novelFr',
     })
   })

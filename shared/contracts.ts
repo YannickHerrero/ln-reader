@@ -1,5 +1,10 @@
 export type SourceID = 'novelFr'
 
+export interface ApiCapabilities {
+  apiVersion: 1
+  features: Array<'chapterBlocks' | 'sync'>
+}
+
 export interface SourceReference {
   source: SourceID
   key: string
@@ -46,10 +51,18 @@ export interface SourceSeries {
   chapters: SourceChapter[]
 }
 
+export type SourceChapterBlockKind = 'paragraph' | 'heading2' | 'heading3' | 'blockquote' | 'listItem' | 'divider'
+
+export interface SourceChapterBlock {
+  kind: SourceChapterBlockKind
+  text: string
+}
+
 export interface SourceChapterContent {
   key: string
   title: string
   html: string
+  blocks?: SourceChapterBlock[]
   source: SourceID
 }
 

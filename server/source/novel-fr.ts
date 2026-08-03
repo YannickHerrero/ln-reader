@@ -7,6 +7,7 @@ import type {
   SourceSearchResult,
   SourceSeries,
 } from '../../shared/contracts'
+import { chapterBlocksFromHtml } from './chapter-document'
 import { sanitizeChapterHtml } from './sanitize-chapter'
 import type { NovelSource } from './types'
 
@@ -200,7 +201,7 @@ export class NovelFrSource implements NovelSource {
     const title = $('h1.entry-title').first().text().replace(/\s+/g, ' ').trim() || 'Chapitre'
     const html = sanitizeChapterHtml($('.entry-content.epcontent').first().html() ?? '')
     if (!html) throw new Error('Novel-FR returned an empty chapter.')
-    return { key, title, html, source: 'novelFr' }
+    return { key, title, html, blocks: chapterBlocksFromHtml(html), source: 'novelFr' }
   }
 
   ownsAsset(url: URL): boolean {
