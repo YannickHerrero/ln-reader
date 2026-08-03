@@ -3,7 +3,7 @@ import SwiftUI
 struct NativeReaderView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.lyraPalette) private var appPalette
 
     let seriesKey: String
     let chapterKey: String
@@ -25,7 +25,7 @@ struct NativeReaderView: View {
     @State private var restorationToken = 0
     @State private var saveTask: Task<Void, Never>?
 
-    private var palette: ReaderPalette { ReaderPalette.resolve(preferences.paper, colorScheme: colorScheme) }
+    private var palette: ReaderPalette { ReaderPalette.resolve(preferences.paper, appPalette: appPalette) }
     private var blocks: [ChapterBlock] { content?.readableBlocks ?? [] }
     private var focusedUnits: [FocusedReaderUnit] { readerUnits(blocks: blocks, mode: preferences.mode) }
 
@@ -112,8 +112,9 @@ struct NativeReaderView: View {
             HStack(spacing: 10) {
                 Button { dismiss() } label: {
                     Image(systemName: "chevron.left")
-                        .frame(width: 38, height: 38)
-                        .background(palette.foreground.opacity(0.08), in: Circle())
+                        .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                        .background(palette.surface, in: Circle())
+                        .overlay { Circle().stroke(palette.border) }
                 }
                 .accessibilityLabel("Retour à la série")
                 VStack(alignment: .leading, spacing: 2) {
@@ -128,16 +129,22 @@ struct NativeReaderView: View {
                 Spacer(minLength: 4)
                 Button { showsSettings = true } label: {
                     Image(systemName: "textformat.size")
-                        .frame(width: 38, height: 38)
+                        .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                        .background(palette.surface, in: Circle())
+                        .overlay { Circle().stroke(palette.border) }
                 }
                 .accessibilityLabel("Réglages de lecture")
                 Button(action: toggleDownload) {
-                    if isDownloadBusy {
-                        ProgressView().frame(width: 38, height: 38)
-                    } else {
-                        Image(systemName: isDownloaded ? "checkmark.circle.fill" : "arrow.down.circle")
-                            .frame(width: 38, height: 38)
+                    Group {
+                        if isDownloadBusy {
+                            ProgressView()
+                        } else {
+                            Image(systemName: isDownloaded ? "checkmark.circle.fill" : "arrow.down.circle")
+                        }
                     }
+                    .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
+                    .background(palette.surface, in: Circle())
+                    .overlay { Circle().stroke(palette.border) }
                 }
                 .disabled(isDownloadBusy || content == nil)
                 .accessibilityLabel(isDownloaded ? "Supprimer le téléchargement" : "Télécharger ce chapitre")
@@ -146,11 +153,12 @@ struct NativeReaderView: View {
             .padding(.top, 6)
             .padding(.bottom, 8)
             ProgressView(value: ratio)
-                .tint(LyraDesign.accent)
+                .tint(palette.accent)
                 .scaleEffect(x: 1, y: 0.65, anchor: .center)
         }
         .foregroundStyle(palette.foreground)
-        .background(palette.background.opacity(0.96))
+        .background(palette.surface.opacity(0.96))
+        .overlay(alignment: .bottom) { Rectangle().fill(palette.border).frame(height: 1) }
     }
 
     @ViewBuilder
@@ -182,7 +190,7 @@ struct NativeReaderView: View {
             }
         }
         .font(.subheadline.weight(.bold))
-        .foregroundStyle(LyraDesign.accent)
+        .foregroundStyle(palette.accent)
         .padding(.horizontal, 22)
         .padding(.vertical, 30)
     }
@@ -327,7 +335,7 @@ private struct ContinuousReaderContent<Navigation: View>: View {
                         }
                         .font(.caption2.weight(.black))
                         .tracking(1.2)
-                        .foregroundStyle(LyraDesign.accent)
+                        .foregroundStyle(palette.accent)
                         Text(chapterTitle)
                             .font(.system(size: 38, weight: .black, design: .rounded))
                             .foregroundStyle(palette.foreground)
@@ -397,10 +405,10 @@ private struct ReaderBlockView: View {
                 Text(block.text)
                     .font(bodyFont.italic())
                     .padding(.leading, 16)
-                    .overlay(alignment: .leading) { Rectangle().fill(LyraDesign.accent).frame(width: 3) }
+                    .overlay(alignment: .leading) { Rectangle().fill(palette.accent).frame(width: 3) }
             case .listItem:
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text("•").foregroundStyle(LyraDesign.accent)
+                    Text("•").foregroundStyle(palette.accent)
                     Text(block.text).font(bodyFont)
                 }
             case .divider:

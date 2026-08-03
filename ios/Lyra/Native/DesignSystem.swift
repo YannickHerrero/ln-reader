@@ -110,11 +110,6 @@ enum LyraAppearance: String, CaseIterable, Codable, Sendable {
 }
 
 enum LyraDesign {
-    static let accent = Color.accentColor
-    static let background = Color(uiColor: .systemBackground)
-    static let raised = Color(uiColor: .secondarySystemBackground)
-    static let muted = Color(uiColor: .secondaryLabel)
-    static let border = Color(uiColor: .separator).opacity(0.45)
     static let cornerRadius: CGFloat = 22
     static let minimumTarget: CGFloat = 44
 }

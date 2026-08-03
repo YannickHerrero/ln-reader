@@ -255,11 +255,11 @@ struct SeriesDetailView: View {
                 toggleDownload(item.id)
             } label: {
                 if busyChapter == item.id {
-                    ProgressView().frame(width: 38, height: 38)
+                    ProgressView().frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
                 } else {
                     Image(systemName: downloaded ? "checkmark.circle.fill" : "arrow.down.circle")
                         .font(.title2)
-                        .frame(width: 38, height: 38)
+                        .frame(width: LyraDesign.minimumTarget, height: LyraDesign.minimumTarget)
                 }
             }
             .disabled(busyChapter != nil)

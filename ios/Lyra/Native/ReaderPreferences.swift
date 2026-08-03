@@ -92,23 +92,59 @@ struct ReaderPreferenceStore {
 
 struct ReaderPalette {
     let background: Color
+    let surface: Color
     let foreground: Color
     let secondary: Color
+    let border: Color
+    let accent: Color
 
-    static func resolve(_ paper: ReaderPaper, colorScheme: ColorScheme) -> ReaderPalette {
+    static func resolve(_ paper: ReaderPaper, appPalette: LyraPalette) -> ReaderPalette {
         switch paper {
         case .auto:
-            colorScheme == .dark
-                ? ReaderPalette(background: Color(red: 0.035, green: 0.035, blue: 0.04), foreground: .white, secondary: Color.white.opacity(0.62))
-                : ReaderPalette(background: Color(red: 0.97, green: 0.97, blue: 0.975), foreground: Color(red: 0.08, green: 0.08, blue: 0.09), secondary: Color.black.opacity(0.58))
+            ReaderPalette(
+                background: appPalette.background,
+                surface: appPalette.surface,
+                foreground: appPalette.foreground,
+                secondary: appPalette.muted,
+                border: appPalette.border,
+                accent: appPalette.accent
+            )
         case .ivory:
-            ReaderPalette(background: Color(red: 0.957, green: 0.937, blue: 0.894), foreground: Color(red: 0.16, green: 0.15, blue: 0.125), secondary: Color.black.opacity(0.55))
+            ReaderPalette(
+                background: Color(red: 0.957, green: 0.937, blue: 0.894),
+                surface: Color(red: 0.985, green: 0.972, blue: 0.94),
+                foreground: Color(red: 0.16, green: 0.15, blue: 0.125),
+                secondary: Color.black.opacity(0.55),
+                border: Color.black.opacity(0.14),
+                accent: appPalette.accent
+            )
         case .white:
-            ReaderPalette(background: .white, foreground: Color(red: 0.07, green: 0.07, blue: 0.075), secondary: Color.black.opacity(0.55))
+            ReaderPalette(
+                background: .white,
+                surface: Color(red: 0.965, green: 0.965, blue: 0.97),
+                foreground: Color(red: 0.07, green: 0.07, blue: 0.075),
+                secondary: Color.black.opacity(0.55),
+                border: Color.black.opacity(0.12),
+                accent: appPalette.accent
+            )
         case .black:
-            ReaderPalette(background: Color(red: 0.02, green: 0.02, blue: 0.024), foreground: .white, secondary: Color.white.opacity(0.6))
+            ReaderPalette(
+                background: Color(red: 0.02, green: 0.02, blue: 0.024),
+                surface: Color(red: 0.075, green: 0.075, blue: 0.085),
+                foreground: .white,
+                secondary: Color.white.opacity(0.6),
+                border: Color.white.opacity(0.14),
+                accent: appPalette.accent
+            )
         case .softDark:
-            ReaderPalette(background: Color(red: 0.067, green: 0.075, blue: 0.094), foreground: Color(red: 0.84, green: 0.84, blue: 0.86), secondary: Color.white.opacity(0.56))
+            ReaderPalette(
+                background: Color(red: 0.067, green: 0.075, blue: 0.094),
+                surface: Color(red: 0.105, green: 0.115, blue: 0.14),
+                foreground: Color(red: 0.84, green: 0.84, blue: 0.86),
+                secondary: Color.white.opacity(0.56),
+                border: Color.white.opacity(0.14),
+                accent: appPalette.accent
+            )
         }
     }
 }

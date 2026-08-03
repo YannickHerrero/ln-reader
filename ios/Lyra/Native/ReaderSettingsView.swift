@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReaderSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.lyraPalette) private var palette
     @State private var draft: ReaderPreferences
     let onSave: (ReaderPreferences) -> Void
 
@@ -21,6 +22,7 @@ struct ReaderSettingsView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                .listRowBackground(palette.surface)
 
                 Section("Texte") {
                     Picker("Police", selection: $draft.fontFamily) {
@@ -31,11 +33,12 @@ struct ReaderSettingsView: View {
                     .pickerStyle(.segmented)
                     LabeledContent("Taille", value: "\(Int(draft.fontSize)) pt")
                     Slider(value: $draft.fontSize, in: 15...28, step: 1)
-                        .tint(LyraDesign.accent)
+                        .tint(palette.accent)
                     LabeledContent("Interligne", value: draft.lineHeight.formatted(.number.precision(.fractionLength(1))))
                     Slider(value: $draft.lineHeight, in: 1.4...2.2, step: 0.1)
-                        .tint(LyraDesign.accent)
+                        .tint(palette.accent)
                 }
+                .listRowBackground(palette.surface)
 
                 Section("Papier") {
                     ForEach(ReaderPaper.allCases, id: \.self) { paper in
@@ -46,20 +49,26 @@ struct ReaderSettingsView: View {
                                 Circle()
                                     .fill(paperPreview(paper))
                                     .frame(width: 28, height: 28)
-                                    .overlay(Circle().stroke(.secondary.opacity(0.25)))
-                                Text(paper.label).foregroundStyle(.primary)
+                                    .overlay(Circle().stroke(palette.border))
+                                Text(paper.label).foregroundStyle(palette.foreground)
                                 Spacer()
                                 if draft.paper == paper {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(LyraDesign.accent)
+                                        .foregroundStyle(palette.accent)
                                 }
                             }
                         }
                     }
                 }
+                .listRowBackground(palette.surface)
             }
+            .scrollContentBackground(.hidden)
+            .background { LyraBackground() }
+            .foregroundStyle(palette.foreground)
             .navigationTitle("Réglages de lecture")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(palette.surface.opacity(0.96), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Annuler") { dismiss() }
@@ -77,7 +86,7 @@ struct ReaderSettingsView: View {
 
     private func paperPreview(_ paper: ReaderPaper) -> Color {
         switch paper {
-        case .auto: Color(uiColor: .secondarySystemBackground)
+        case .auto: palette.background
         case .ivory: Color(red: 0.957, green: 0.937, blue: 0.894)
         case .white: .white
         case .black: .black
