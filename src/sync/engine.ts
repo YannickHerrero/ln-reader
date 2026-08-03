@@ -159,6 +159,10 @@ export class SyncEngine {
 
         const currentRevision = Number((await this.database.syncMetadata.get(REVISION_KEY))?.value ?? 0)
         if (state.revision < currentRevision) return
+        if (state.revision === currentRevision && sentQueue.length === 0) {
+          await this.database.syncMetadata.put({ key: LAST_SYNCED_AT_KEY, value: this.now() })
+          return
+        }
 
         const remainingQueue = await this.database.syncQueue.toArray()
         const protectedSeries = new Set(

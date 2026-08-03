@@ -190,6 +190,29 @@ describe('sync engine', () => {
     expect(await database.covers.count()).toBe(0)
   })
 
+  it('does not rewrite local entities when a pull has the applied revision', async () => {
+    await seedSeries(localSeries)
+    await database.syncMetadata.bulkPut([
+      { key: 'server-sync-bootstrap-v1', value: true },
+      { key: 'server-sync-revision', value: 2 },
+    ])
+    const seriesPut = vi.spyOn(database.series, 'put')
+    const chaptersPut = vi.spyOn(database.chapters, 'bulkPut')
+    const progressPut = vi.spyOn(database.progress, 'put')
+
+    await new SyncEngine(
+      database,
+      new FakeTransport({ revision: 2, series: [localSeries], progress: [] }),
+      undefined,
+      () => 500,
+    ).synchronize()
+
+    expect(seriesPut).not.toHaveBeenCalled()
+    expect(chaptersPut).not.toHaveBeenCalled()
+    expect(progressPut).not.toHaveBeenCalled()
+    expect(await database.syncMetadata.get('server-sync-last-synced-at')).toMatchObject({ value: 500 })
+  })
+
   it('does not apply an older response over a newer local revision', async () => {
     await seedSeries(localSeries)
     await database.syncMetadata.bulkPut([
