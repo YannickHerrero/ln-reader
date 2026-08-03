@@ -221,32 +221,6 @@ describe('reader page', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
   })
 
-  it('synchronizes focused pages with the Lyra native bridge', async () => {
-    await libraryRepository.downloadChapter(series.key, {
-      key: series.chapters[1]!.key,
-      title: 'Chapitre 1',
-      html: '<p>Première phrase. Deuxième phrase. Troisième phrase.</p>',
-      source: 'novelFr',
-    })
-    localStorage.setItem('ln-reader-reading-preferences', JSON.stringify({ mode: 'sentence' }))
-    vi.stubGlobal('fetch', vi.fn())
-    const postMessage = vi.fn()
-    vi.stubGlobal('webkit', { messageHandlers: { lyraReader: { postMessage } } })
-    const route = `/read/${encodeRouteKey(series.key)}/${encodeRouteKey(series.chapters[1]!.key)}`
-    const { unmount } = render(<MemoryRouter initialEntries={[route]}><App /></MemoryRouter>)
-
-    expect(await screen.findByText('Première phrase.')).toBeInTheDocument()
-    await waitFor(() => expect(postMessage).toHaveBeenCalledWith({ active: true, index: 0, count: 3 }))
-
-    fireEvent(window, new CustomEvent('lyra:set-page', { detail: { index: 2 } }))
-    expect(screen.getByText('Troisième phrase.')).toBeInTheDocument()
-    await waitFor(() => expect(postMessage).toHaveBeenCalledWith({ active: true, index: 2, count: 3 }))
-
-    unmount()
-    expect(postMessage).toHaveBeenLastCalledWith({ active: false, index: 0, count: 0 })
-    await new Promise((resolve) => setTimeout(resolve, 0))
-  })
-
   it('navigates sentence mode with the keyboard', async () => {
     await libraryRepository.downloadChapter(series.key, {
       key: series.chapters[1]!.key,

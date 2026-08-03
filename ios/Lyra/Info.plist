@@ -27,8 +27,6 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-	<key>NSCameraUsageDescription</key>
-	<string>Lyra utilise une session caméra pendant la lecture ciblée afin d’activer Camera Control. Aucune image n’est enregistrée.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
