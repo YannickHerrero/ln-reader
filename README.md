@@ -1,6 +1,6 @@
 # Lyra
 
-A small, personal PWA and native iPhone wrapper for reading French light novels, web novels and novels from
+A small, personal PWA and native iPhone reader for French light novels, web novels and novels from
 [Novel-FR](https://novel-fr.net). Library membership and reading progress sync
 through the personal server, while downloaded chapters remain on each device.
 
@@ -31,18 +31,20 @@ source URLs remain the stable chapter identities. Only chapters explicitly
 downloaded by the user are persisted for offline use.
 
 ```text
-React PWA / iPhone WKWebView -> Express API -> novel-fr.net
-              |                    |
-              |                    +-> SQLite: canonical library + progress
-              +-> IndexedDB: local mirror, sync outbox, covers + downloads
+React PWA ------> Express API ------> novel-fr.net
+  |                   |
+  |                   +-> SQLite: canonical library + progress
+  +-> IndexedDB: local mirror, sync outbox, covers + downloads
+
+Native iPhone --> Express API
+  +-> GRDB/SQLite: local mirror, sync outbox, covers + downloads
 ```
 
-Each browser imports its existing library and progress once, then pushes local
-changes before pulling the canonical server revision. Offline mutations remain in
-a durable outbox and retry after reconnecting. The deployment is intentionally
-single-user: anyone who can access the private server can access its synchronized
-reader state. The deployed application requires the Node API; static-only hosting
-cannot fetch Novel-FR content or synchronize state.
+Each client pushes local changes before pulling the canonical server revision.
+Offline mutations remain in a durable outbox and retry after reconnecting. The
+deployment is intentionally single-user: anyone who can access the private server
+can access its synchronized reader state. The deployed application requires the
+Node API; static-only hosting cannot fetch Novel-FR content or synchronize state.
 
 ## Requirements
 
@@ -113,13 +115,13 @@ The script refuses to replace an occupied local or Tailscale port. Tailscale Ser
 provides the secure context required for PWA installation and offline support;
 opening the Node server directly through a `100.x.y.z` HTTP address does not.
 
-## Native iPhone wrapper
+## Native iPhone app
 
-The [`ios/`](ios/) project provides a personal iPhone wrapper named **Lyra** for
-iOS 18 or later. It loads the same HTTPS application through `WKWebView` and
-adds a native Camera Control bridge for paragraph and sentence reading modes.
-On first launch, enter the HTTPS URL printed by `pnpm phone` or the persistent
-Tailscale Serve URL for the managed service.
+The [`ios/`](ios/) project provides a SwiftUI app named **Lyra** for iOS 18 or
+later. It uses native networking, GRDB persistence, discovery, library, series,
+download, and reader interfaces; it contains no embedded browser or camera
+capture feature. On first launch, enter the HTTPS URL printed by `pnpm phone` or
+the persistent Tailscale Serve URL for the managed service.
 
 ```bash
 cd ios
@@ -128,43 +130,38 @@ open Lyra.xcodeproj
 ```
 
 Select a personal development team in Xcode, connect the iPhone, and run the
-`Lyra` scheme. Camera Control requires a supported physical iPhone and cannot be
-verified in Simulator. While a focused reader with multiple pages is visible,
-Lyra starts a low-frame-rate camera session and exposes a **Page** control; use a
-light press to reveal the control and slide in either direction to change pages.
-The session stops when focused reading ends or the app backgrounds. The camera
-privacy indicator remains visible while it is active, but Lyra does not capture
-or retain photos or video.
+`Lyra` scheme. Pointing the PWA and native app at the same server synchronizes
+library membership and reading progress. Downloads, cached covers, appearance,
+and reader preferences remain local to each client. Use the gear button to change
+the configured server.
 
-The native wrapper has its own WebKit storage and does not share the installed
-PWA's IndexedDB files. Pointing both at the same Lyra server synchronizes their
-library and reading progress; chapter downloads and appearance settings remain
-local to each client. Use the gear button to change the configured server.
+### Wrapper-to-native migration
 
-### Physical-device prototype checklist
+TestFlight 1.0 (3) is the one-time migration build for users of the former iPhone
+wrapper. Open that build while online and wait for **Migration prête ✓** before
+installing the native release over it. The native app imports compatible local
+chapter downloads, covers, appearance, and reader preferences after it loads the
+synchronized library. Keep the migration build installed until the native import
+has been confirmed.
 
-Camera Control and its capture-session lifecycle require a supported physical
-iPhone. Before relying on the prototype:
+Safari and installed PWA data cannot be imported because browser storage is in a
+separate sandbox. Download those chapters again in the native app.
 
-1. Open a downloaded chapter in paragraph or sentence focus mode with multiple
-   pages. Grant camera access and confirm the green camera privacy indicator
-   appears only after focus mode becomes active.
-2. Light-press Camera Control to reveal **Page**, then slide both directions.
-   Confirm each selection changes the focused page, respects the first and last
-   pages, and stays synchronized with on-screen navigation.
-3. Leave focus mode, open the server configuration, background and foreground
-   Lyra, and lock and unlock the phone. Confirm the privacy indicator disappears
-   promptly whenever focused reading is inactive or Lyra is not foregrounded,
-   and returns only when focused reading resumes.
-4. Trigger an interruption such as Control Center or an incoming call and verify
-   reading remains usable after returning. Confirm no photo or video appears in
-   Photos.
-5. Repeat the reader checks on an iPhone without Camera Control, if available;
-   the web reader must remain usable without a native **Page** control.
-6. Measure power and heat on the target phone: compare one hour of ordinary
-   reading with one hour of focused Camera Control reading using the same
-   brightness, network, and content. Record start/end battery percentage,
-   noticeable heat, and any thermal warning or dimming.
+### Physical-device checklist
+
+1. Confirm TestFlight 1.0 (3) reports **Migration prête ✓**, then install the
+   native build over it and verify the expected downloads and preferences import.
+2. Connect through the persistent Tailscale HTTPS URL and verify library changes
+   and reading progress synchronize with the PWA in both directions.
+3. Download a chapter, disable connectivity, relaunch Lyra, and verify the
+   library, series, and downloaded chapter remain readable while network-only
+   actions fail clearly.
+4. Exercise continuous, paragraph, and sentence modes, including progress
+   restoration, tap/swipe navigation, chapter boundaries, and settings changes.
+5. Check Dynamic Type, VoiceOver labels/actions, contrast, reduced motion, and
+   one-handed touch targets on the physical iPhone.
+6. Read a long chapter online and offline while monitoring launch time, scrolling,
+   memory, battery, heat, and any thermal warning or unexpected termination.
 
 ### TestFlight release
 
