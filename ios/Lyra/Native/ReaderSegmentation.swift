@@ -221,6 +221,20 @@ nonisolated func normalizedReaderText(_ text: String) -> String {
     return normalized
 }
 
+nonisolated func readerPositionIsCompleted(
+    mode: ReaderMode,
+    ratio: Double,
+    focusedIndex: Int,
+    focusedCount: Int
+) -> Bool {
+    switch mode {
+    case .continuous:
+        return ratio >= 0.98
+    case .paragraph, .sentence:
+        return focusedCount > 0 && focusedIndex == focusedCount - 1
+    }
+}
+
 nonisolated func ratioForUnit(index: Int, count: Int) -> Double {
     let maximum = max(0, count - 1)
     guard maximum > 0 else { return 1 }

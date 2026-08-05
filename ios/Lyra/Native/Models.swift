@@ -44,6 +44,11 @@ struct SourceChapter: Codable, Hashable, Identifiable, Sendable {
     var id: String { key }
 }
 
+struct NativeReaderRoute: Hashable, Sendable {
+    let seriesKey: String
+    let chapterKey: String
+}
+
 struct SourceSeries: Codable, Hashable, Identifiable, Sendable {
     let key: String
     let title: String

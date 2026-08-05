@@ -100,9 +100,10 @@ struct LibraryView: View {
     @ViewBuilder
     private var hero: some View {
         if let featured = model.continueReading.first {
-            NavigationLink {
-                NativeReaderView(seriesKey: featured.series.id, chapterKey: featured.chapter.id)
-            } label: {
+            NavigationLink(value: NativeReaderRoute(
+                seriesKey: featured.series.id,
+                chapterKey: featured.chapter.id
+            )) {
                 ZStack(alignment: .bottomLeading) {
                     CoverArtView(data: model.covers[featured.series.id], title: featured.series.series.title)
                         .frame(height: 360)
@@ -153,9 +154,10 @@ struct LibraryView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack(spacing: 14) {
                     ForEach(model.continueReading) { item in
-                        NavigationLink {
-                            NativeReaderView(seriesKey: item.series.id, chapterKey: item.chapter.id)
-                        } label: {
+                        NavigationLink(value: NativeReaderRoute(
+                            seriesKey: item.series.id,
+                            chapterKey: item.chapter.id
+                        )) {
                             HStack(spacing: 12) {
                                 CoverArtView(data: model.covers[item.series.id], title: item.series.series.title)
                                     .frame(width: 82, height: 110)

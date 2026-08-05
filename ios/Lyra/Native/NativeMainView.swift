@@ -9,12 +9,18 @@ struct NativeMainView: View {
         TabView(selection: $model.selectedTab) {
             NavigationStack {
                 LibraryView()
+                    .navigationDestination(for: NativeReaderRoute.self) { route in
+                        NativeReaderView(seriesKey: route.seriesKey, chapterKey: route.chapterKey)
+                    }
             }
             .tabItem { Label("Bibliothèque", systemImage: "books.vertical.fill") }
             .tag(0)
 
             NavigationStack {
                 DiscoverView()
+                    .navigationDestination(for: NativeReaderRoute.self) { route in
+                        NativeReaderView(seriesKey: route.seriesKey, chapterKey: route.chapterKey)
+                    }
             }
             .tabItem { Label("Découvrir", systemImage: "sparkles") }
             .tag(1)

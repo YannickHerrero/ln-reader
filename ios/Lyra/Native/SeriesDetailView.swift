@@ -149,9 +149,10 @@ struct SeriesDetailView: View {
                         .multilineTextAlignment(.center)
                 }
                 if let startChapter {
-                    NavigationLink {
-                        NativeReaderView(seriesKey: seriesKey, chapterKey: startChapter.id)
-                    } label: {
+                    NavigationLink(value: NativeReaderRoute(
+                        seriesKey: seriesKey,
+                        chapterKey: startChapter.id
+                    )) {
                         Label(currentProgress == nil ? "Commencer · \(startChapter.chapter.title)" : "Continuer · \(startChapter.chapter.title)", systemImage: "play.fill")
                     }
                     .buttonStyle(LyraPrimaryButtonStyle())
@@ -229,9 +230,10 @@ struct SeriesDetailView: View {
         let chapterProgress = progress[item.id]
         let downloaded = downloadedKeys.contains(item.id)
         return HStack(spacing: 12) {
-            NavigationLink {
-                NativeReaderView(seriesKey: seriesKey, chapterKey: item.id)
-            } label: {
+            NavigationLink(value: NativeReaderRoute(
+                seriesKey: seriesKey,
+                chapterKey: item.id
+            )) {
                 HStack(spacing: 12) {
                     Image(systemName: chapterProgress?.completed == true ? "checkmark.circle.fill" : "circle")
                         .foregroundStyle(chapterProgress?.completed == true ? palette.accent : palette.muted)

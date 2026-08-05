@@ -28,6 +28,14 @@ struct NativeReaderView: View {
     private var palette: ReaderPalette { ReaderPalette.resolve(preferences.paper, appPalette: appPalette) }
     private var blocks: [ChapterBlock] { content?.readableBlocks ?? [] }
     private var focusedUnits: [FocusedReaderUnit] { readerUnits(blocks: blocks, mode: preferences.mode) }
+    private var currentPositionIsCompleted: Bool {
+        readerPositionIsCompleted(
+            mode: preferences.mode,
+            ratio: ratio,
+            focusedIndex: focusedIndex,
+            focusedCount: focusedUnits.count
+        )
+    }
 
     private var volumeChapters: [StoredChapter] {
         guard let chapter else { return chapters }
@@ -125,8 +133,10 @@ struct NativeReaderView: View {
         }
         .onDisappear {
             saveTask?.cancel()
+            let finalRatio = ratio
+            let completed = currentPositionIsCompleted
             Task {
-                await persistProgress(ratio)
+                await persistProgress(finalRatio, completed: completed)
                 await model.reloadLibrary()
             }
         }
@@ -211,9 +221,10 @@ struct NativeReaderView: View {
     private var chapterNavigation: some View {
         HStack(alignment: .top, spacing: 12) {
             if let previousChapter {
-                NavigationLink {
-                    NativeReaderView(seriesKey: seriesKey, chapterKey: previousChapter.id)
-                } label: {
+                NavigationLink(value: NativeReaderRoute(
+                    seriesKey: seriesKey,
+                    chapterKey: previousChapter.id
+                )) {
                     Label(previousChapter.chapter.title, systemImage: "arrow.left")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -221,9 +232,10 @@ struct NativeReaderView: View {
                 Spacer()
             }
             if let nextChapter {
-                NavigationLink {
-                    NativeReaderView(seriesKey: seriesKey, chapterKey: nextChapter.id)
-                } label: {
+                NavigationLink(value: NativeReaderRoute(
+                    seriesKey: seriesKey,
+                    chapterKey: nextChapter.id
+                )) {
                     HStack {
                         Text(nextChapter.chapter.title)
                         Image(systemName: "arrow.right")
@@ -245,9 +257,10 @@ struct NativeReaderView: View {
     private var focusedFooter: some View {
         if focusedIndex == max(0, focusedUnits.count - 1) {
             if let nextChapter {
-                NavigationLink {
-                    NativeReaderView(seriesKey: seriesKey, chapterKey: nextChapter.id)
-                } label: {
+                NavigationLink(value: NativeReaderRoute(
+                    seriesKey: seriesKey,
+                    chapterKey: nextChapter.id
+                )) {
                     Label("Chapitre suivant", systemImage: "arrow.right.circle.fill")
                 }
                 .buttonStyle(LyraPrimaryButtonStyle())
@@ -287,7 +300,9 @@ struct NativeReaderView: View {
             }
             focusedIndex = unitIndex(for: ratio, count: focusedUnits.count)
             restorationToken += 1
-            if content != nil { await persistProgress(ratio) }
+            if content != nil {
+                await persistProgress(ratio, completed: currentPositionIsCompleted)
+            }
         } catch {
             if content == nil {
                 errorMessage = "Ce chapitre n’est pas disponible hors ligne. \(error.localizedDescription)"
@@ -308,13 +323,16 @@ struct NativeReaderView: View {
         } else {
             focusedIndex = unitIndex(for: currentRatio, count: focusedUnits.count)
         }
-        Task { await persistProgress(currentRatio) }
+        let completed = currentPositionIsCompleted
+        Task { await persistProgress(currentRatio, completed: completed) }
     }
 
     private func focusedIndexChanged(_ index: Int) {
         focusedIndex = min(max(0, index), max(0, focusedUnits.count - 1))
         ratio = ratioForUnit(index: focusedIndex, count: focusedUnits.count)
-        Task { await persistProgress(ratio) }
+        let currentRatio = ratio
+        let completed = currentPositionIsCompleted
+        Task { await persistProgress(currentRatio, completed: completed) }
     }
 
     private func scheduleProgressSave(_ nextRatio: Double) {
@@ -323,16 +341,16 @@ struct NativeReaderView: View {
         saveTask = Task {
             try? await Task.sleep(for: .milliseconds(350))
             guard !Task.isCancelled else { return }
-            await persistProgress(nextRatio)
+            await persistProgress(nextRatio, completed: nextRatio >= 0.98)
         }
     }
 
-    private func persistProgress(_ nextRatio: Double) async {
+    private func persistProgress(_ nextRatio: Double, completed: Bool) async {
         await model.saveProgress(
             seriesKey: seriesKey,
             chapterKey: chapterKey,
             ratio: nextRatio,
-            completed: nextRatio >= 0.98
+            completed: completed
         )
     }
 
@@ -369,7 +387,7 @@ struct NativeReaderView: View {
                 seriesKey: seriesKey,
                 chapterKey: chapterKey,
                 ratio: nextProgress,
-                completed: completed || nextProgress >= 0.98
+                completed: completed
             )
         }
     }
