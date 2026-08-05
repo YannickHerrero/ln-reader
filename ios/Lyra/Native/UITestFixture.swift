@@ -22,6 +22,19 @@ struct UITestBootstrapView: View {
                 try await UITestFixture.seed(model.store)
                 await model.reloadLibrary()
                 ready = true
+                if UITestFixture.simulatesReaderSync {
+                    Task {
+                        try? await Task.sleep(for: .seconds(4))
+                        let chapter = UITestFixture.librarySeries.chapters[2]
+                        try? await model.store.saveProgress(
+                            seriesKey: UITestFixture.librarySeries.key,
+                            chapterKey: chapter.key,
+                            scrollRatio: 1,
+                            completed: true
+                        )
+                        await model.reloadLibrary()
+                    }
+                }
             } catch {
                 self.error = error.localizedDescription
             }
@@ -78,6 +91,18 @@ actor UITestFixtureAPI: LyraAPI {
 }
 
 enum UITestFixture {
+    static var usesLongReader: Bool {
+        ProcessInfo.processInfo.arguments.contains("--long-reader-fixture")
+    }
+
+    static var startsNearReaderEnd: Bool {
+        ProcessInfo.processInfo.arguments.contains("--near-reader-end")
+    }
+
+    static var simulatesReaderSync: Bool {
+        ProcessInfo.processInfo.arguments.contains("--simulate-reader-sync")
+    }
+
     static let librarySeries = SourceSeries(
         key: "novelFr:/series/fixture/",
         title: "La Bibliothèque des étoiles",
@@ -179,19 +204,30 @@ enum UITestFixture {
 
     static func seed(_ store: LibraryStore) async throws {
         try await store.addOrUpdateSeries(librarySeries)
+        let chapter = startsNearReaderEnd ? librarySeries.chapters[2] : librarySeries.chapters[1]
         try await store.saveProgress(
             seriesKey: librarySeries.key,
-            chapterKey: librarySeries.chapters[1].key,
-            scrollRatio: 0
+            chapterKey: chapter.key,
+            scrollRatio: startsNearReaderEnd ? ratioForUnit(index: 114, count: 117) : 0
         )
         try await store.download(
             seriesKey: librarySeries.key,
-            content: content(for: librarySeries.chapters[1].key)
+            content: content(for: chapter.key)
         )
     }
 
     static func content(for key: String) -> SourceChapterContent {
         let title = (librarySeries.chapters + catalogSeries.chapters).first(where: { $0.key == key })?.title ?? "Chapitre"
+        if usesLongReader, key == librarySeries.chapters[2].key {
+            let text = (1...117).map { "Phrase \($0)." }.joined(separator: " ")
+            return SourceChapterContent(
+                key: key,
+                title: title,
+                html: "<p>\(text)</p>",
+                blocks: [ChapterBlock(kind: .paragraph, text: text)],
+                source: .novelFr
+            )
+        }
         return SourceChapterContent(
             key: key,
             title: title,

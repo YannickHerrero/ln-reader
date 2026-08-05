@@ -57,6 +57,40 @@ final class LyraUITests: XCTestCase {
     }
 
     @MainActor
+    func testFocusedCompletionRequiresExplicitNextChapterNavigation() throws {
+        let app = launchApp(additionalArguments: [
+            "--reader-mode", "sentence",
+            "--long-reader-fixture",
+            "--near-reader-end",
+            "--simulate-reader-sync",
+        ])
+        defer { app.terminate() }
+
+        element("continue-reading-primary", app: app).tap()
+        let focused = element("focused-reader", app: app)
+        XCTAssertTrue(focused.waitForExistence(timeout: 5))
+        XCTAssertEqual(focused.label, "Phrase 115.")
+
+        Thread.sleep(forTimeInterval: 5)
+        XCTAssertEqual(element("focused-reader", app: app).label, "Phrase 115.")
+        XCTAssertTrue(app.staticTexts["Chapitre 1 · Le départ"].exists)
+
+        focused.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        XCTAssertEqual(element("focused-reader", app: app).label, "Phrase 116.")
+        element("focused-reader", app: app).coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        XCTAssertEqual(element("focused-reader", app: app).label, "Phrase 117.")
+        XCTAssertTrue(app.buttons["Chapitre suivant"].waitForExistence(timeout: 3))
+
+        Thread.sleep(forTimeInterval: 2)
+        XCTAssertEqual(element("focused-reader", app: app).label, "Phrase 117.")
+        XCTAssertTrue(app.staticTexts["Chapitre 1 · Le départ"].exists)
+        capture("13-focused-completion-awaiting-next", app: app)
+
+        app.buttons["Chapitre suivant"].tap()
+        XCTAssertTrue(app.staticTexts["Chapitre 2 · Le réveil"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testCatppuccinAppearanceAcrossNativeSurfaces() throws {
         let app = launchApp(theme: "latte")
         defer { app.terminate() }
@@ -114,13 +148,16 @@ final class LyraUITests: XCTestCase {
     }
 
     @MainActor
-    private func launchApp(theme: String = "latte") -> XCUIApplication {
+    private func launchApp(
+        theme: String = "latte",
+        additionalArguments: [String] = []
+    ) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = [
             "--ui-testing", "--lyra-theme", theme,
             "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR",
-        ]
+        ] + additionalArguments
         app.launch()
         XCTAssertTrue(element("library-screen", app: app).waitForExistence(timeout: 8))
         return app

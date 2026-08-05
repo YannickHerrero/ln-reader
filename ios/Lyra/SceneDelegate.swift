@@ -24,7 +24,13 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                 ?? .latte
             defaults.set("https://fixture.test", forKey: "lyra.serverURL")
             defaults.set(requestedTheme.rawValue, forKey: "lyra.native.appearance")
-            ReaderPreferenceStore().save(.defaults)
+            var readerPreferences = ReaderPreferences.defaults
+            if let modeIndex = arguments.firstIndex(of: "--reader-mode"),
+               arguments.indices.contains(modeIndex + 1),
+               let mode = ReaderMode(rawValue: arguments[modeIndex + 1]) {
+                readerPreferences.mode = mode
+            }
+            ReaderPreferenceStore().save(readerPreferences)
             let serverStore = ServerURLStore(defaults: defaults)
             let database = try! AppDatabase.temporary()
             model = AppModel(

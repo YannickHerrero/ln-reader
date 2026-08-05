@@ -137,6 +137,30 @@ final class NativeReaderTests: XCTestCase {
         XCTAssertEqual(unitIndex(for: 3, count: 5), 4)
     }
 
+    func testFocusedCompletionRequiresTheActualLastUnit() {
+        let nearEndRatio = ratioForUnit(index: 114, count: 117)
+
+        XCTAssertGreaterThan(nearEndRatio, 0.98)
+        XCTAssertFalse(readerPositionIsCompleted(
+            mode: .sentence,
+            ratio: nearEndRatio,
+            focusedIndex: 114,
+            focusedCount: 117
+        ))
+        XCTAssertTrue(readerPositionIsCompleted(
+            mode: .sentence,
+            ratio: 1,
+            focusedIndex: 116,
+            focusedCount: 117
+        ))
+        XCTAssertTrue(readerPositionIsCompleted(
+            mode: .continuous,
+            ratio: 0.98,
+            focusedIndex: 0,
+            focusedCount: 0
+        ))
+    }
+
     @MainActor
     func testImportsMigrationArchiveIntoNativeStoresAndPreferences() async throws {
         let database = try AppDatabase.temporary()
